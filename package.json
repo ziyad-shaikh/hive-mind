@@ -1,0 +1,376 @@
+{
+  "name": "hive-mind",
+  "displayName": "Hive Mind - Code Dependency Graph",
+  "description": "Visualizes code dependencies as an interactive Obsidian-style graph and provides Copilot tools to analyze change impact across your codebase.",
+  "version": "0.1.0",
+  "publisher": "hive-mind",
+  "engines": {
+    "vscode": "^1.87.0"
+  },
+  "categories": ["Other", "Visualization"],
+  "keywords": ["dependency", "graph", "copilot", "impact", "visualization", "architecture"],
+  "activationEvents": ["onStartupFinished"],
+  "main": "./out/extension.js",
+  "contributes": {
+    "chatParticipants": [
+      {
+        "id": "hivemind.hivemind",
+        "name": "hivemind",
+        "fullName": "Hive Mind",
+        "description": "Ask about code dependencies, impact analysis, and related files",
+        "isSticky": true,
+        "commands": [
+          {
+            "name": "impact",
+            "description": "Analyze which files are affected if the current file changes"
+          },
+          {
+            "name": "deps",
+            "description": "Show dependencies of the current file"
+          },
+          {
+            "name": "cycles",
+            "description": "Detect circular dependencies in the workspace"
+          }
+        ],
+        "disambiguation": [
+          {
+            "category": "dependency-analysis",
+            "description": "The user wants to understand code dependencies, imports, file relationships, or how files connect to each other in the codebase.",
+            "examples": [
+              "What files does this file depend on?",
+              "Show me the dependency graph",
+              "What imports does this module have?",
+              "Which files are related to this one?"
+            ]
+          },
+          {
+            "category": "impact-analysis",
+            "description": "The user wants to know which files would be affected by changing a specific file, or wants to understand the downstream impact of a code change.",
+            "examples": [
+              "What would break if I change this file?",
+              "Which files depend on this module?",
+              "What is the impact of modifying this code?",
+              "Show me what files I need to update if I change this"
+            ]
+          },
+          {
+            "category": "circular-dependencies",
+            "description": "The user wants to find circular or cyclic dependencies in the codebase.",
+            "examples": [
+              "Are there any circular dependencies?",
+              "Find import cycles in my project",
+              "Show me cyclic dependencies"
+            ]
+          }
+        ]
+      }
+    ],
+    "commands": [
+      {
+        "command": "hiveMind.showGraph",
+        "title": "Hive Mind: Show Full Code Graph"
+      },
+      {
+        "command": "hiveMind.showFileGraph",
+        "title": "Hive Mind: Focus Graph on Current File"
+      },
+      {
+        "command": "hiveMind.analyzeWorkspace",
+        "title": "Hive Mind: Re-analyze Workspace"
+      },
+      {
+        "command": "hiveMind.showIndexedFiles",
+        "title": "Hive Mind: Show Indexed Files"
+      },
+      {
+        "command": "hiveMind.showCycles",
+        "title": "Hive Mind: Show Circular Dependencies"
+      },
+      {
+        "command": "hiveMind.showStats",
+        "title": "Hive Mind: Show Workspace Stats"
+      },
+      {
+        "command": "hiveMind.scaffoldInstructions",
+        "title": "Hive Mind: Scaffold AI Instructions & Skills"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "hiveMind.showFileGraph",
+          "group": "navigation",
+          "when": "resourceScheme == file"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "hiveMind.showFileGraph",
+          "group": "hivemind"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Hive Mind",
+      "properties": {
+        "hiveMind.maxFiles": {
+          "type": "number",
+          "default": 5000,
+          "minimum": 100,
+          "maximum": 50000,
+          "description": "Maximum number of source files to index. Increase for very large workspaces."
+        },
+        "hiveMind.ignoredDirectories": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "Additional directory names to exclude from analysis (on top of the built-in list like node_modules, .git, dist, etc.)."
+        }
+      }
+    },
+    "languageModelTools": [
+      {
+        "name": "hivemind_getDependencies",
+        "toolReferenceName": "hivemindDeps",
+        "tags": ["hivemind", "dependencies", "imports", "code-graph"],
+        "displayName": "Get File Dependencies",
+        "modelDescription": "Returns all files that a given source file imports or depends on (direct and transitive). Use this to understand what a file relies on before modifying it.",
+        "canBeReferencedInPrompt": true,
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "filePath": {
+              "type": "string",
+              "description": "Path to the file — relative to workspace root or absolute. Fuzzy matching is supported (e.g. just the filename)."
+            },
+            "depth": {
+              "type": "number",
+              "description": "Traversal depth. 1 = direct only, -1 = all transitive. Defaults to 2."
+            }
+          },
+          "required": ["filePath"]
+        }
+      },
+      {
+        "name": "hivemind_getImpact",
+        "toolReferenceName": "hivemindImpact",
+        "tags": ["hivemind", "impact", "change", "code-graph"],
+        "displayName": "Get Change Impact",
+        "modelDescription": "Given a file being modified, returns all other files that import or depend on it — i.e., files that may need to be updated as a result of the change. Always call this when editing a file to check for downstream impact.",
+        "canBeReferencedInPrompt": true,
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "filePath": {
+              "type": "string",
+              "description": "Path to the file being changed — relative to workspace root or absolute"
+            }
+          },
+          "required": ["filePath"]
+        }
+      },
+      {
+        "name": "hivemind_getRelatedFiles",
+        "toolReferenceName": "hivemindRelated",
+        "tags": ["hivemind", "related", "connections", "code-graph"],
+        "displayName": "Get Related Files",
+        "modelDescription": "Returns all files directly connected to a given file in the dependency graph — both what it imports and what imports it. Use to get a complete picture of a file's role in the codebase.",
+        "canBeReferencedInPrompt": true,
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "filePath": {
+              "type": "string",
+              "description": "Path to the file"
+            }
+          },
+          "required": ["filePath"]
+        }
+      },
+      {
+        "name": "hivemind_getFullGraph",
+        "toolReferenceName": "hivemindGraph",
+        "tags": ["hivemind", "graph", "architecture", "code-graph"],
+        "displayName": "Get Full Dependency Graph",
+        "modelDescription": "Returns the complete dependency graph of the workspace as structured data including hub files, language breakdown, and circular dependencies. Use this to understand overall architecture.",
+        "canBeReferencedInPrompt": true,
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "maxNodes": {
+              "type": "number",
+              "description": "Maximum number of nodes to return. Defaults to 150."
+            }
+          }
+        }
+      },
+      {
+        "name": "hivemind_detectCycles",
+        "toolReferenceName": "hivemindCycles",
+        "tags": ["hivemind", "circular", "cycle", "code-graph"],
+        "displayName": "Detect Circular Dependencies",
+        "modelDescription": "Detects and returns all circular dependency chains in the workspace. Use when investigating build issues, module coupling, or architecture health.",
+        "canBeReferencedInPrompt": true,
+        "inputSchema": {
+          "type": "object",
+          "properties": {}
+        }
+      },
+      {
+        "name": "hivemind_getTestFiles",
+        "toolReferenceName": "hivemindTests",
+        "tags": ["hivemind", "test", "testing", "code-graph"],
+        "displayName": "Get Related Test Files",
+        "modelDescription": "Given a source file, returns its associated test files (e.g. foo.test.ts for foo.ts). Given a test file, returns the source file it tests. Use this to find tests that should be updated when modifying source code.",
+        "canBeReferencedInPrompt": true,
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "filePath": {
+              "type": "string",
+              "description": "Path to the source or test file"
+            }
+          },
+          "required": ["filePath"]
+        }
+      },
+      {
+        "name": "hivemind_findSymbol",
+        "toolReferenceName": "hivemindSymbol",
+        "tags": ["hivemind", "symbol", "function", "class", "code-graph"],
+        "displayName": "Find Symbol Across Workspace",
+        "modelDescription": "Searches for a function, class, interface, type, or variable by name across all indexed workspace files. Returns file locations and symbol kinds. Use this to find where a symbol is defined.",
+        "canBeReferencedInPrompt": true,
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "symbolName": {
+              "type": "string",
+              "description": "The name of the symbol to search for (function, class, type, variable, etc.)"
+            }
+          },
+          "required": ["symbolName"]
+        }
+      },
+      {
+        "name": "hivemind_coChanged",
+        "toolReferenceName": "hivemindCoChanged",
+        "tags": ["hivemind", "git", "history", "coupling", "code-graph"],
+        "displayName": "Get Co-Changed Files",
+        "modelDescription": "Returns files that frequently change together with the given file based on git history. These are historically coupled files that may need to be updated together even without direct import relationships.",
+        "canBeReferencedInPrompt": true,
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "filePath": {
+              "type": "string",
+              "description": "Path to the file to find co-changed files for"
+            }
+          },
+          "required": ["filePath"]
+        }
+      },
+      {
+        "name": "hivemind_getContext",
+        "toolReferenceName": "hivemindContext",
+        "tags": ["hivemind", "context", "bundle", "code-graph", "ai"],
+        "displayName": "Get Curated Context Bundle",
+        "modelDescription": "Returns a comprehensive context bundle for a file: its dependencies, dependents, test files, co-changed files, and exported symbols — all in a single call. Use this FIRST when starting work on any file to understand its role and connections. Optionally include the file's source content. This is the recommended starting tool — it replaces calling getDependencies, getImpact, getTestFiles, coChanged, and findSymbol separately.",
+        "canBeReferencedInPrompt": true,
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "filePath": {
+              "type": "string",
+              "description": "Path to the file — relative to workspace root or absolute"
+            },
+            "task": {
+              "type": "string",
+              "description": "Optional description of what you're trying to do. Helps frame the context."
+            },
+            "includeContent": {
+              "type": "boolean",
+              "description": "If true, includes the file's source code (capped at 200 lines). Default false."
+            }
+          },
+          "required": ["filePath"]
+        }
+      },
+      {
+        "name": "hivemind_planChange",
+        "toolReferenceName": "hivemindPlan",
+        "tags": ["hivemind", "plan", "change", "impact", "code-graph", "ai"],
+        "displayName": "Plan a Code Change",
+        "modelDescription": "Given a file and a description of intended changes, returns a prioritized plan: which files to modify, which to read for context, which tests to run, and which files are peripherally affected. Scores files by structural dependencies, test relationships, and git co-change history. Use this BEFORE making multi-file changes to avoid missing impacted files.",
+        "canBeReferencedInPrompt": true,
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "filePath": {
+              "type": "string",
+              "description": "Path to the primary file being changed"
+            },
+            "description": {
+              "type": "string",
+              "description": "What change is being made — e.g. 'rename the handleRequest method' or 'add a new parameter to the constructor'"
+            }
+          },
+          "required": ["filePath", "description"]
+        }
+      },
+      {
+        "name": "hivemind_search",
+        "toolReferenceName": "hivemindSearch",
+        "tags": ["hivemind", "search", "find", "grep", "text", "code-graph"],
+        "displayName": "Structural-Aware Code Search",
+        "modelDescription": "Searches the entire workspace for text or regex patterns, then ranks results by combining match count with structural signals from the dependency graph. Files whose graph neighbors also match (cluster signal), files near a contextFile, hub files, and files with matching exported symbols are boosted. Use this instead of raw grep when you want the most relevant files first — not just files with the most hits. Supports an optional contextFile to bias results toward a specific area of the codebase.",
+        "canBeReferencedInPrompt": true,
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "The text or regex pattern to search for across all workspace files"
+            },
+            "isRegex": {
+              "type": "boolean",
+              "description": "If true, treat query as a regular expression. Default false."
+            },
+            "caseSensitive": {
+              "type": "boolean",
+              "description": "If true, match case. Default false (case-insensitive)."
+            },
+            "maxResults": {
+              "type": "number",
+              "description": "Maximum number of files to return. Default 30."
+            },
+            "contextFile": {
+              "type": "string",
+              "description": "Optional file path to bias results toward. Files structurally connected to this file get boosted in ranking."
+            },
+            "includeSnippets": {
+              "type": "boolean",
+              "description": "If true, include code snippets from top matches. Default true."
+            }
+          },
+          "required": ["query"]
+        }
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.87.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.3.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "eslint": "^8.57.0"
+  }
+}
