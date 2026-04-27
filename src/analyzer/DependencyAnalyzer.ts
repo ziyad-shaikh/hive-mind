@@ -1,6 +1,18 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
+import { extractActiveCppIncludes } from './CppPreprocessor';
+import {
+    GraphCache,
+    CachedFile,
+    CachedSnapshot,
+    computeContextHash,
+    indexCachedFiles,
+    headerIndexToObject,
+} from './GraphCache';
+
+/** Bumped when parser semantics change. Forces a full reindex on upgrade. */
+const PARSER_VERSION = 'v3-cppPreproc-2026-04';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -564,60 +576,148 @@ function isIgnored(filePath: string, extraIgnored: Set<string>): boolean {
 const COMMON_INCLUDE_DIRS = ['include', 'inc', 'src', 'source', 'lib', 'third_party', '3rdparty', 'external'];
 
 /**
- * Discovers include paths from:
- * 1. compile_commands.json — extracts -I and -isystem flags
- * 2. Common directory conventions (include/, src/, etc.)
+ * Result of scanning compile_commands.json + heuristics for C/C++ build context.
  */
-function discoverIncludePaths(workspaceRoots: string[]): string[] {
-    const paths = new Set<string>();
+interface CppBuildContext {
+    /** Include directories (absolute paths) to search for `#include <...>`. */
+    includePaths: string[];
+    /** Per-file -D defines, keyed by lowercased forward-slash-normalised absolute path. */
+    perFileDefines: Map<string, Set<string>>;
+    /** Defines common to every entry — used as the fallback for files not listed. */
+    commonDefines: Set<string>;
+}
+
+/** Lower-cased forward-slash key for cross-OS path comparison. */
+function normPathKey(p: string): string {
+    return path.resolve(p).toLowerCase().replace(/\\/g, '/');
+}
+
+/** Extract `FOO` (or `FOO=1`) from a token of the form `-DFOO=...` or `/DFOO=...`. */
+function extractDefine(token: string): string | null {
+    let body: string | null = null;
+    if (token.startsWith('-D')) { body = token.slice(2); }
+    else if (token.startsWith('/D')) { body = token.slice(2); }
+    if (!body) { return null; }
+    // We only care about the macro NAME for #ifdef purposes. The value (if any)
+    // matters only for `#if` arithmetic — we ignore that for now.
+    const eq = body.indexOf('=');
+    const name = eq >= 0 ? body.slice(0, eq) : body;
+    return name.trim() || null;
+}
+
+/**
+ * Scan compile_commands.json (if present) for include paths and per-file defines.
+ * Falls back to common-directory heuristics when no compile_commands.json exists.
+ */
+function discoverCppBuildContext(workspaceRoots: string[]): CppBuildContext {
+    const includePaths = new Set<string>();
+    const perFileDefines = new Map<string, Set<string>>();
+    let commonDefines: Set<string> | null = null;
 
     for (const root of workspaceRoots) {
-        // 1. Parse compile_commands.json
+        let parsedAny = false;
         for (const buildDir of ['', 'build', 'out', 'cmake-build-debug', 'cmake-build-release']) {
             const ccPath = path.join(root, buildDir, 'compile_commands.json');
-            if (fs.existsSync(ccPath)) {
-                try {
-                    const raw = fs.readFileSync(ccPath, 'utf-8');
-                    const commands: Array<{ command?: string; arguments?: string[]; directory?: string }> = JSON.parse(raw);
-                    for (const entry of commands) {
-                        const dir = entry.directory || root;
-                        const args = entry.arguments || splitCommand(entry.command || '');
-                        for (let i = 0; i < args.length; i++) {
-                            let incPath: string | null = null;
-                            if (args[i] === '-I' || args[i] === '-isystem') {
-                                incPath = args[i + 1];
+            if (!fs.existsSync(ccPath)) { continue; }
+            try {
+                const raw = fs.readFileSync(ccPath, 'utf-8');
+                const commands: Array<{ command?: string; arguments?: string[]; directory?: string; file?: string }> = JSON.parse(raw);
+                for (const entry of commands) {
+                    const dir = entry.directory || root;
+                    const args = entry.arguments || splitCommand(entry.command || '');
+                    const fileDefines = new Set<string>();
+                    for (let i = 0; i < args.length; i++) {
+                        const a = args[i];
+                        // Include path
+                        let incPath: string | null = null;
+                        if (a === '-I' || a === '-isystem') {
+                            incPath = args[i + 1]; i++;
+                        } else if (a.startsWith('-I')) { incPath = a.slice(2); }
+                        else if (a.startsWith('-isystem')) { incPath = a.slice(8); }
+                        else if (a === '/I') { incPath = args[i + 1]; i++; }
+                        else if (a.startsWith('/I')) { incPath = a.slice(2); }
+                        if (incPath) {
+                            const abs = path.isAbsolute(incPath) ? incPath : path.resolve(dir, incPath);
+                            if (fs.existsSync(abs)) { includePaths.add(abs); }
+                            continue;
+                        }
+                        // Define
+                        if (a === '-D' || a === '/D') {
+                            const next = args[i + 1];
+                            if (next) {
+                                const name = extractDefine('-D' + next);
+                                if (name) { fileDefines.add(name); }
                                 i++;
-                            } else if (args[i].startsWith('-I')) {
-                                incPath = args[i].slice(2);
-                            } else if (args[i].startsWith('-isystem')) {
-                                incPath = args[i].slice(8);
                             }
-                            if (incPath) {
-                                const abs = path.isAbsolute(incPath) ? incPath : path.resolve(dir, incPath);
-                                if (fs.existsSync(abs)) { paths.add(abs); }
-                            }
+                            continue;
+                        }
+                        const def = extractDefine(a);
+                        if (def) { fileDefines.add(def); }
+                    }
+                    // Index by file path
+                    if (entry.file) {
+                        const abs = path.isAbsolute(entry.file) ? entry.file : path.resolve(dir, entry.file);
+                        perFileDefines.set(normPathKey(abs), fileDefines);
+                    }
+                    // Track intersection across all entries — these are project-wide.
+                    if (commonDefines === null) {
+                        commonDefines = new Set(fileDefines);
+                    } else {
+                        for (const d of [...commonDefines]) {
+                            if (!fileDefines.has(d)) { commonDefines.delete(d); }
                         }
                     }
-                } catch {
-                    // Malformed compile_commands.json — skip
                 }
-                break; // Use first found compile_commands.json
+                parsedAny = true;
+            } catch {
+                // Malformed compile_commands.json — skip
             }
+            if (parsedAny) { break; }
         }
 
-        // 2. Common include directories
+        // Common include directories
         for (const dirName of COMMON_INCLUDE_DIRS) {
             const candidate = path.join(root, dirName);
             if (fs.existsSync(candidate) && fs.statSync(candidate).isDirectory()) {
-                paths.add(candidate);
+                includePaths.add(candidate);
             }
         }
-
-        // 3. The workspace root itself (for #include "foo.h" at root)
-        paths.add(root);
+        includePaths.add(root);
     }
 
-    return [...paths];
+    return {
+        includePaths: [...includePaths],
+        perFileDefines,
+        commonDefines: commonDefines ?? new Set(),
+    };
+}
+
+/**
+ * Build a default define set for C/C++ files that don't appear in
+ * compile_commands.json. Combines:
+ *   • Defines common to every entry in compile_commands.json (project-wide).
+ *   • Host-OS macros — only as a last-resort fallback when there's no
+ *     compile_commands.json at all (cross-compilation makes these wrong, but
+ *     it's still better than zero defines for a casual `git clone && open`).
+ */
+function buildDefaultDefines(common: Set<string>, hadCompileCommands: boolean): Set<string> {
+    const out = new Set<string>(common);
+    if (!hadCompileCommands) {
+        if (process.platform === 'win32') {
+            out.add('_WIN32');
+            if (process.arch === 'x64' || process.arch === 'arm64') { out.add('_WIN64'); }
+            out.add('_MSC_VER');
+        } else if (process.platform === 'darwin') {
+            out.add('__APPLE__');
+            out.add('__MACH__');
+            out.add('__unix__');
+        } else if (process.platform === 'linux') {
+            out.add('__linux__');
+            out.add('__unix__');
+        }
+        out.add('__cplusplus');
+    }
+    return out;
 }
 
 /** Split a shell command string into arguments (basic splitting, handles quotes). */
@@ -641,6 +741,21 @@ function splitCommand(cmd: string): string[] {
     return args;
 }
 
+/**
+ * Walk every workspace root looking for the first relative path in `candidates`
+ * that exists on disk. Returns the absolute path or null. Used to pin
+ * compile_commands.json / tsconfig.json into the cache context hash.
+ */
+function findFirstExistingPath(roots: string[], candidates: string[]): string | null {
+    for (const root of roots) {
+        for (const rel of candidates) {
+            const full = path.join(root, rel);
+            if (fs.existsSync(full)) { return full; }
+        }
+    }
+    return null;
+}
+
 // ---------------------------------------------------------------------------
 // Analyzer
 // ---------------------------------------------------------------------------
@@ -654,6 +769,27 @@ export class DependencyAnalyzer {
     private extraIgnored = new Set<string>();
     private _debounceTimers = new Map<string, NodeJS.Timeout>();
 
+    /**
+     * Per-file C/C++ macro defines extracted from compile_commands.json (-D flags).
+     * Key is the lowercased, forward-slash-normalised absolute path of the source file.
+     * Used by the preprocessor-aware include extractor to drop dead `#ifdef` branches.
+     */
+    private perFileDefines = new Map<string, Set<string>>();
+
+    /**
+     * Default define set used when a C/C++ file has no compile_commands.json entry.
+     * Built from the intersection of -D flags across all entries (i.e. defines common
+     * to every TU in the project) plus a small set of host-implied defaults.
+     */
+    private defaultDefines = new Set<string>();
+
+    /** Aggregate stats from the preprocessor-aware C/C++ extractor (for diagnostics). */
+    private cppDroppedIncludes = 0;
+    private cppAmbiguousBranches = 0;
+
+    /** Optional disk-backed cache. Set via `setCache()` before the first `analyze()`. */
+    private cache: GraphCache | null = null;
+
     readonly outputChannel: vscode.OutputChannel;
 
     constructor() {
@@ -663,6 +799,15 @@ export class DependencyAnalyzer {
 
     private get primaryRoot(): string | undefined {
         return this.workspaceRoots[0];
+    }
+
+    /**
+     * Attach a disk-backed cache. Call once during extension activation, before
+     * `analyze()`. Optional — if no cache is attached, the analyzer falls back
+     * to its previous fully-from-scratch behaviour every time.
+     */
+    setCache(cache: GraphCache): void {
+        this.cache = cache;
     }
 
     // -----------------------------------------------------------------------
@@ -737,25 +882,79 @@ export class DependencyAnalyzer {
             }
         }
 
-        // Discover C/C++ include paths from compile_commands.json and common directories
-        this.includePaths = discoverIncludePaths(this.workspaceRoots);
+        // Discover C/C++ include paths and per-file defines from compile_commands.json
+        const cppCtx = discoverCppBuildContext(this.workspaceRoots);
+        this.includePaths = cppCtx.includePaths;
+        this.perFileDefines = cppCtx.perFileDefines;
+        this.defaultDefines = buildDefaultDefines(cppCtx.commonDefines, cppCtx.perFileDefines.size > 0);
         if (this.includePaths.length > 0) {
             this.outputChannel.appendLine(
-                `[Hive Mind] Discovered ${this.includePaths.length} C/C++ include path(s)`
+                `[Hive Mind] Discovered ${this.includePaths.length} C/C++ include path(s)` +
+                (cppCtx.perFileDefines.size > 0
+                    ? `, ${cppCtx.perFileDefines.size} TU(s) with -D flags from compile_commands.json`
+                    : '')
             );
         }
+        this.cppDroppedIncludes = 0;
+        this.cppAmbiguousBranches = 0;
 
-        // Parse all files
+        // ── Try the disk cache ──────────────────────────────────────────
+        // We hash the parser version + key project files (compile_commands,
+        // tsconfig) so that a settings change or build regeneration triggers a
+        // full re-parse. Per-file freshness is then judged by mtime+size.
+        const respectIfdef = vscode.workspace.getConfiguration('hiveMind').get<boolean>('respectIfdefBranches', true);
+        const contextHash = computeContextHash({
+            compileCommandsPath: findFirstExistingPath(this.workspaceRoots, [
+                'compile_commands.json',
+                'build/compile_commands.json',
+                'out/compile_commands.json',
+                'cmake-build-debug/compile_commands.json',
+                'cmake-build-release/compile_commands.json',
+            ]),
+            tsconfigPath: findFirstExistingPath(this.workspaceRoots, ['tsconfig.json', 'jsconfig.json']),
+            parserVersion: PARSER_VERSION,
+            ignoredDirs: ignoredDirs,
+            respectIfdef,
+        });
+
+        const snapshot = this.cache?.load(this.workspaceRoots, contextHash) ?? null;
+        const cachedFiles = snapshot ? indexCachedFiles(snapshot) : null;
+        if (snapshot && cachedFiles) {
+            this.outputChannel.appendLine(`[Hive Mind] Loaded cache snapshot: ${snapshot.files.length} files. Validating freshness…`);
+        }
+
+        // Parse all files (cached files reuse stored deps; changed files reparse).
+        let reused = 0;
+        let reparsed = 0;
         for (const uri of validUris) {
-            this.parseFile(uri.fsPath);
+            const cached = cachedFiles?.get(uri.fsPath);
+            if (cached && this.isCachedFileStillFresh(uri.fsPath, cached)) {
+                this.adoptCachedFile(uri.fsPath, cached);
+                reused++;
+            } else {
+                this.parseFile(uri.fsPath);
+                reparsed++;
+            }
         }
 
         this.buildDependents();
 
         const cycles = this.detectCycles();
         this.outputChannel.appendLine(
-            `[Hive Mind] Analysis complete. ${this.graph.size} files, ${this.getEdgeCount()} edges, ${cycles.length} circular dep(s).`
+            `[Hive Mind] Analysis complete. ${this.graph.size} files (${reused} cached, ${reparsed} parsed), ` +
+            `${this.getEdgeCount()} edges, ${cycles.length} circular dep(s).`
         );
+        if (this.cppDroppedIncludes > 0 || this.cppAmbiguousBranches > 0) {
+            this.outputChannel.appendLine(
+                `[Hive Mind] C/C++ preprocessor: dropped ${this.cppDroppedIncludes} include(s) in dead #ifdef branches, ` +
+                `${this.cppAmbiguousBranches} branch condition(s) treated as active (unresolved expression).`
+            );
+        }
+
+        // Persist the snapshot for next session.
+        if (this.cache) {
+            this.persistSnapshot(contextHash);
+        }
     }
 
     /** Debounced incremental update — avoids thrashing on rapid saves */
@@ -827,6 +1026,12 @@ export class DependencyAnalyzer {
     }
 
     getNodeCount(): number { return this.graph.size; }
+
+    /** Discovered C/C++ include directories (from compile_commands.json + heuristics). */
+    getIncludePaths(): string[] { return [...this.includePaths]; }
+
+    /** Active workspace roots (the first is the "primary" root used for resolution). */
+    getWorkspaceRoots(): string[] { return [...this.workspaceRoots]; }
 
     /** Get all absolute file paths in the graph */
     getAllFilePaths(): string[] {
@@ -1186,9 +1391,16 @@ export class DependencyAnalyzer {
             return;
         }
 
-        const rawImports = parser.extract(content);
-        const deps = new Set<string>();
+        // C/C++ files: use the preprocessor-aware extractor so dead #ifdef
+        // branches don't pollute the dependency graph. All other languages
+        // fall through to the regex-based PARSERS path.
+        const isCpp = ['.c', '.cpp', '.cc', '.cxx', '.h', '.hpp', '.hxx'].includes(ext);
+        const respectIfdef = vscode.workspace.getConfiguration('hiveMind').get<boolean>('respectIfdefBranches', true);
+        const rawImports: string[] = (isCpp && respectIfdef)
+            ? this.extractCppIncludes(filePath, content)
+            : parser.extract(content);
 
+        const deps = new Set<string>();
         for (const raw of rawImports) {
             const resolved = resolveImport(
                 raw, filePath, this.primaryRoot ?? '', this.headerIndex, this.includePaths, this.tsConfigPaths
@@ -1207,6 +1419,105 @@ export class DependencyAnalyzer {
             dependencies: deps,
             dependents: existing?.dependents ?? new Set(),
         });
+    }
+
+    /**
+     * Extract `#include` directives from C/C++ source, honouring `#if`/`#ifdef`
+     * branches based on the macro set known for this translation unit.
+     *
+     * Define resolution order:
+     *   1. compile_commands.json -D flags for THIS file (most accurate).
+     *   2. compile_commands.json -D flags for the file's matching .c/.cpp
+     *      partner — when called on a header, headers themselves don't have
+     *      a TU, but their primary source partner usually does.
+     *   3. The default define set (intersection of all TUs + host fallbacks).
+     */
+    private extractCppIncludes(filePath: string, content: string): string[] {
+        let defines = this.perFileDefines.get(normPathKey(filePath));
+        if (!defines) {
+            // Headers: try to find a sibling .cpp/.cc with the same basename.
+            const ext = path.extname(filePath).toLowerCase();
+            if (['.h', '.hpp', '.hxx'].includes(ext)) {
+                const base = filePath.slice(0, -ext.length);
+                for (const cppExt of ['.cpp', '.cc', '.cxx', '.c']) {
+                    const partner = base + cppExt;
+                    const fromPartner = this.perFileDefines.get(normPathKey(partner));
+                    if (fromPartner) { defines = fromPartner; break; }
+                }
+            }
+        }
+        if (!defines) { defines = this.defaultDefines; }
+
+        const result = extractActiveCppIncludes(content, defines);
+        this.cppDroppedIncludes += result.droppedCount;
+        this.cppAmbiguousBranches += result.ambiguousCount;
+        return result.includes;
+    }
+
+    /**
+     * Decide whether a cached entry is still valid for the on-disk file.
+     * Compares mtime and size; if either changed, the cache entry is stale.
+     */
+    private isCachedFileStillFresh(filePath: string, cached: CachedFile): boolean {
+        try {
+            const stat = fs.statSync(filePath);
+            return stat.mtimeMs === cached.mtimeMs && stat.size === cached.size;
+        } catch {
+            return false;
+        }
+    }
+
+    /**
+     * Materialise a cached file into the live graph without reparsing it.
+     * Dependencies referenced by the cached entry might themselves not exist
+     * any more (deleted files); we keep them in the deps set anyway because
+     * `buildDependents()` will silently drop unknown targets.
+     */
+    private adoptCachedFile(filePath: string, cached: CachedFile): void {
+        const existing = this.graph.get(filePath);
+        const deps = new Set<string>(cached.deps);
+        this.graph.set(filePath, {
+            id: filePath,
+            label: path.basename(filePath),
+            relativePath: this.toRelative(filePath),
+            language: cached.language,
+            dependencies: deps,
+            dependents: existing?.dependents ?? new Set(),
+        });
+    }
+
+    /**
+     * Serialise the current graph state and persist it via the attached cache.
+     * Called at the end of `analyze()`. Errors inside the cache layer are
+     * swallowed (it logs to the output channel) so cache failures never break
+     * the user's session.
+     */
+    private persistSnapshot(contextHash: string): void {
+        if (!this.cache) { return; }
+        const files: CachedFile[] = [];
+        for (const node of this.graph.values()) {
+            try {
+                const stat = fs.statSync(node.id);
+                files.push({
+                    path: node.id,
+                    mtimeMs: stat.mtimeMs,
+                    size: stat.size,
+                    deps: [...node.dependencies],
+                    language: node.language,
+                });
+            } catch {
+                // File disappeared between parse and save — skip.
+            }
+        }
+        const snapshot: CachedSnapshot = {
+            schemaVersion: 3,
+            contextHash,
+            workspaceRoots: this.workspaceRoots,
+            files,
+            headerIndex: headerIndexToObject(this.headerIndex),
+            savedAt: Date.now(),
+        };
+        this.cache.save(snapshot);
     }
 
     private buildDependents(): void {

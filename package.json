@@ -94,6 +94,14 @@
       {
         "command": "hiveMind.scaffoldInstructions",
         "title": "Hive Mind: Scaffold AI Instructions & Skills"
+      },
+      {
+        "command": "hiveMind.checkClangd",
+        "title": "Hive Mind: Check clangd Status"
+      },
+      {
+        "command": "hiveMind.invalidateCache",
+        "title": "Hive Mind: Invalidate Graph Cache & Reindex"
       }
     ],
     "menus": {
@@ -126,6 +134,21 @@
           "items": { "type": "string" },
           "default": [],
           "description": "Additional directory names to exclude from analysis (on top of the built-in list like node_modules, .git, dist, etc.)."
+        },
+        "hivemind.clangdPath": {
+          "type": "string",
+          "default": "",
+          "description": "Absolute path to a clangd executable. If empty, Hive Mind auto-detects clangd from the vscode-clangd extension, PATH, or common LLVM install locations. Used for AST-precise C/C++ analysis (find references, overrides, call hierarchy)."
+        },
+        "hivemind.clangPath": {
+          "type": "string",
+          "default": "",
+          "description": "Absolute path to a clang executable (the compiler driver, separate from clangd). If empty, Hive Mind auto-detects clang from the vscode-clangd install, PATH, or common LLVM install locations. Used by hivemind_macroExpand to run the C/C++ preprocessor."
+        },
+        "hiveMind.respectIfdefBranches": {
+          "type": "boolean",
+          "default": true,
+          "description": "When true, Hive Mind strips #include directives that lie in dead #ifdef/#if branches based on -D flags from compile_commands.json. Set to false to revert to the legacy behaviour of treating every #include as a real edge (more edges, more false-positive cycles, but no risk of dropping a real edge)."
         }
       }
     },
@@ -355,6 +378,281 @@
             }
           },
           "required": ["query"]
+        }
+      },
+      {
+        "name": "hivemind_getCppPair",
+        "toolReferenceName": "hivemindCppPair",
+        "tags": ["hivemind", "cpp", "c++", "header", "source", "refactor", "code-graph"],
+        "displayName": "Get C/C++ Header/Source Pair",
+        "modelDescription": "Given a C/C++ file (.h, .hpp, .cpp, .cc, .inl, .ipp, etc.), returns the matching header/source/inline files by basename match. Use this BEFORE editing any C++ file — modifying a function in foo.cpp almost always requires updating its declaration in foo.h. Skipping this is the #1 cause of broken C++ refactors.",
+        "canBeReferencedInPrompt": true,
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "filePath": {
+              "type": "string",
+              "description": "Path to a C/C++ file — relative to workspace root or absolute"
+            }
+          },
+          "required": ["filePath"]
+        }
+      },
+      {
+        "name": "hivemind_findMacro",
+        "toolReferenceName": "hivemindMacro",
+        "tags": ["hivemind", "cpp", "c++", "macro", "preprocessor", "define", "code-graph"],
+        "displayName": "Find C/C++ Macro Definitions",
+        "modelDescription": "Locates `#define` macro definitions across all C/C++ files in the workspace. Returns ONLY definitions (not usages) — distinguishes object-like vs function-like macros, shows the body, and reports multiple definitions when present (e.g. platform-gated variants). Use this whenever you encounter a SCREAMING_SNAKE_CASE token in C/C++ code and aren't sure if it's a macro, before assuming what it expands to. Critical for codebases like FCIMPL/QCALL/HCIMPL/BEGIN_PINVOKE-style macro-heavy frameworks.",
+        "canBeReferencedInPrompt": true,
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Macro name to find (e.g. 'FCIMPL3', 'STATIC_CONTRACT_NOTHROW'). By default an exact match — set exact:false for substring search."
+            },
+            "exact": {
+              "type": "boolean",
+              "description": "If true (default), exact name match. If false, substring match — useful when you only know part of the macro name."
+            },
+            "maxResults": {
+              "type": "number",
+              "description": "Maximum number of definitions to return. Default 25."
+            }
+          },
+          "required": ["name"]
+        }
+      },
+      {
+        "name": "hivemind_findReferences",
+        "toolReferenceName": "hivemindRefs",
+        "tags": ["hivemind", "cpp", "c++", "references", "refactor", "clangd", "ast", "code-graph"],
+        "displayName": "Find C/C++ References (AST-precise)",
+        "modelDescription": "Returns every place a C/C++ symbol is *actually* referenced — AST-precise via clangd, NOT text grep. Resolves overload sets, namespaces, virtual dispatch, templates, and respects the active #ifdef configuration from compile_commands.json. Use this BEFORE renaming any C/C++ function, class, or variable — it's the only way to guarantee you find every call site without false positives from comments, strings, or unrelated symbols with the same name. Provide either `symbolName` (most common) or an explicit `line` + `character` cursor position. Falls back gracefully with a clear error if clangd is unavailable.",
+        "canBeReferencedInPrompt": true,
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "filePath": {
+              "type": "string",
+              "description": "Path to the C/C++ file containing (or near) the symbol. Used to anchor clangd at a specific translation unit."
+            },
+            "symbolName": {
+              "type": "string",
+              "description": "Name of the symbol to find references for (e.g. 'doFoo', 'MyClass::bar', 'kMaxSize'). Hive Mind locates the symbol's declaration in the file via clangd's documentSymbols, then queries references at that position. Either this OR (line + character) is required."
+            },
+            "line": {
+              "type": "number",
+              "description": "1-indexed line number of the cursor position. Use when the symbol name is ambiguous in the file. Required together with `character`."
+            },
+            "character": {
+              "type": "number",
+              "description": "0-indexed column number of the cursor position (LSP convention). Required together with `line`."
+            },
+            "includeDeclaration": {
+              "type": "boolean",
+              "description": "If true (default), include the declaration site in results. Set false to see only call sites / usages."
+            },
+            "maxResults": {
+              "type": "number",
+              "description": "Maximum number of references to display. Default 100."
+            }
+          },
+          "required": ["filePath"]
+        }
+      },
+      {
+        "name": "hivemind_findOverrides",
+        "toolReferenceName": "hivemindOverrides",
+        "tags": ["hivemind", "cpp", "c++", "virtual", "override", "polymorphism", "clangd", "ast", "code-graph"],
+        "displayName": "Find C/C++ Virtual Overrides (AST-precise)",
+        "modelDescription": "For a C/C++ virtual method, returns every concrete implementation across the codebase via clangd's `textDocument/implementation`. AST-precise — handles multiple inheritance, covariant return types, and override chains correctly. Use BEFORE modifying a virtual method's signature, behavior contract, or visibility — every override returned must be updated in lockstep. Closes the virtual-dispatch blind spot that grep cannot solve. Provide either `symbolName` (the virtual method's name) or an explicit `line` + `character` cursor position.",
+        "canBeReferencedInPrompt": true,
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "filePath": {
+              "type": "string",
+              "description": "Path to the C/C++ file containing the virtual method (typically the base class header)."
+            },
+            "symbolName": {
+              "type": "string",
+              "description": "Name of the virtual method (e.g. 'doWork', 'IFoo::bar'). Either this OR (line + character) is required."
+            },
+            "line": {
+              "type": "number",
+              "description": "1-indexed line number of the cursor position. Required together with `character`."
+            },
+            "character": {
+              "type": "number",
+              "description": "0-indexed column number of the cursor position (LSP convention). Required together with `line`."
+            },
+            "maxResults": {
+              "type": "number",
+              "description": "Maximum number of overrides to display. Default 100."
+            }
+          },
+          "required": ["filePath"]
+        }
+      },
+      {
+        "name": "hivemind_callHierarchy",
+        "toolReferenceName": "hivemindCalls",
+        "tags": ["hivemind", "cpp", "c++", "call-hierarchy", "callers", "callees", "trace", "clangd", "ast", "code-graph"],
+        "displayName": "C/C++ Call Hierarchy (AST-precise)",
+        "modelDescription": "For a C/C++ function, returns who calls it (incoming) and/or what it calls (outgoing) — AST-precise via clangd. Supports `depth: 2` to trace two levels in a single call (e.g. callers-of-callers). Use this when tracing bugs across function boundaries or before changing a function's signature/contract to understand the upstream and downstream blast radius. Provide either `symbolName` (most common) or explicit `line` + `character`.",
+        "canBeReferencedInPrompt": true,
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "filePath": {
+              "type": "string",
+              "description": "Path to the C/C++ file containing the function."
+            },
+            "symbolName": {
+              "type": "string",
+              "description": "Name of the function (e.g. 'processRequest', 'MyClass::handle'). Either this OR (line + character) is required."
+            },
+            "line": {
+              "type": "number",
+              "description": "1-indexed line number of the cursor position. Required together with `character`."
+            },
+            "character": {
+              "type": "number",
+              "description": "0-indexed column number of the cursor position (LSP convention). Required together with `line`."
+            },
+            "direction": {
+              "type": "string",
+              "enum": ["incoming", "outgoing", "both"],
+              "description": "incoming = who calls this | outgoing = what this calls | both (default)."
+            },
+            "depth": {
+              "type": "number",
+              "description": "How many levels deep to trace (1 or 2). Default 1. Use 2 sparingly — output grows quickly."
+            },
+            "maxPerLevel": {
+              "type": "number",
+              "description": "Cap on number of children at each level. Default 25."
+            }
+          },
+          "required": ["filePath"]
+        }
+      },
+      {
+        "name": "hivemind_typeHierarchy",
+        "toolReferenceName": "hivemindTypes",
+        "tags": ["hivemind", "cpp", "c++", "type-hierarchy", "inheritance", "class", "clangd", "ast", "code-graph"],
+        "displayName": "C/C++ Type Hierarchy (AST-precise)",
+        "modelDescription": "For a C/C++ class, struct, or interface, returns its supertypes (base classes) and/or subtypes (derived classes) via clangd. AST-precise — handles multiple inheritance and templates. Use BEFORE modifying any base class — every subtype returned may be affected. Combine with `hivemind_findOverrides` on individual virtual methods to find concrete implementations to update. Provide either `symbolName` (the class name) or an explicit `line` + `character` cursor position.",
+        "canBeReferencedInPrompt": true,
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "filePath": {
+              "type": "string",
+              "description": "Path to the C/C++ file containing the class/struct/interface declaration."
+            },
+            "symbolName": {
+              "type": "string",
+              "description": "Name of the class, struct, or interface (e.g. 'IFoo', 'BaseWidget'). Either this OR (line + character) is required."
+            },
+            "line": {
+              "type": "number",
+              "description": "1-indexed line number of the cursor position. Required together with `character`."
+            },
+            "character": {
+              "type": "number",
+              "description": "0-indexed column number of the cursor position (LSP convention). Required together with `line`."
+            },
+            "direction": {
+              "type": "string",
+              "enum": ["supertypes", "subtypes", "both"],
+              "description": "supertypes = bases | subtypes = derived | both (default)."
+            },
+            "depth": {
+              "type": "number",
+              "description": "How many levels deep to trace (1, 2, or 3). Default 2."
+            },
+            "maxPerLevel": {
+              "type": "number",
+              "description": "Cap on number of children at each level. Default 25."
+            }
+          },
+          "required": ["filePath"]
+        }
+      },
+      {
+        "name": "hivemind_macroExpand",
+        "toolReferenceName": "hivemindMacroExpand",
+        "tags": ["hivemind", "cpp", "c++", "macro", "preprocessor", "clang", "code-graph"],
+        "displayName": "C/C++ Macro Expansion (clang preprocessor)",
+        "modelDescription": "Runs `clang -E` with the file's exact compile_commands.json flags and returns the actual preprocessor expansion of a specific source line. Use this when you need to know what `FCIMPL3(MyMethod, ...)` (or any nested/conditional macro) ACTUALLY becomes in this specific translation unit — `hivemind_findMacro` only shows the #define text and cannot account for #ifdef branches, -D flags, or recursive expansion. Required: `filePath` (must be a .cpp/.cc/.cxx — not a header), `line` (1-indexed). Optional: `contextLines` (default 0; ±N lines around `line`).",
+        "canBeReferencedInPrompt": true,
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "filePath": {
+              "type": "string",
+              "description": "Path to a C/C++ source file (.cpp/.cc/.cxx/.c). Headers are NOT supported — call this on a TU that #includes the header instead."
+            },
+            "line": {
+              "type": "number",
+              "description": "1-indexed line number to expand."
+            },
+            "contextLines": {
+              "type": "number",
+              "description": "Include ±N lines of expansion around the target line. Default 0. Cap 20."
+            },
+            "timeoutMs": {
+              "type": "number",
+              "description": "Timeout in milliseconds for the clang invocation. Default 30000."
+            }
+          },
+          "required": ["filePath", "line"]
+        }
+      },
+      {
+        "name": "hivemind_buildSubset",
+        "toolReferenceName": "hivemindBuildSubset",
+        "tags": ["hivemind", "cpp", "c++", "build", "compile", "syntax-check", "clang", "code-graph"],
+        "displayName": "C/C++ Build Subset (syntax-only)",
+        "modelDescription": "Runs `clang -fsyntax-only` (or clang-cl `/Zs`) on every translation unit in the impact set of a seed file, using each TU's exact compile_commands.json flags. This is the cheapest way to answer 'did I break the build?' after editing a header — no codegen, no linking, no PDB locking. Returns pass/fail per TU plus compiler diagnostics. Required: `filePath` (the changed file). Optional: `maxTUs` (default 50, cap 500), `depth`, `perFileTimeoutMs`, `totalBudgetMs`, `parallelism`, `explicitTUs` (skip impact walk; compile exactly these TUs). Requires `compile_commands.json` and clang/clang-cl on the system.",
+        "canBeReferencedInPrompt": true,
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "filePath": {
+              "type": "string",
+              "description": "Seed file (the one changed). Reverse-dependency walk starts here."
+            },
+            "maxTUs": {
+              "type": "number",
+              "description": "Cap on number of translation units to compile. Default 50. Above 200 is unwise on large repos."
+            },
+            "depth": {
+              "type": "number",
+              "description": "Reverse-dependency walk depth. Default 8."
+            },
+            "perFileTimeoutMs": {
+              "type": "number",
+              "description": "Per-TU compiler timeout in milliseconds. Default 60000."
+            },
+            "totalBudgetMs": {
+              "type": "number",
+              "description": "Total wallclock budget in milliseconds. Default 300000 (5 min)."
+            },
+            "parallelism": {
+              "type": "number",
+              "description": "Max concurrent compiler processes. Default min(8, CPU count)."
+            },
+            "explicitTUs": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Optional explicit list of TUs to compile. Skips the impact-graph walk; only these files are checked."
+            }
+          },
+          "required": ["filePath"]
         }
       }
     ]

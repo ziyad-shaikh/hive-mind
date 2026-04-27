@@ -2,6 +2,10 @@ import * as vscode from 'vscode';
 import { DependencyAnalyzer } from './analyzer/DependencyAnalyzer';
 import { SymbolAnalyzer } from './analyzer/SymbolAnalyzer';
 import { GitAnalyzer } from './analyzer/GitAnalyzer';
+import { ClangdClient } from './analyzer/ClangdClient';
+import { MacroExpander } from './analyzer/MacroExpander';
+import { BuildSubset } from './analyzer/BuildSubset';
+import { GraphCache } from './analyzer/GraphCache';
 import { GraphPanel } from './graph/GraphPanel';
 import { registerTools } from './tools';
 import { registerChatParticipant } from './chat/HiveMindParticipant';
@@ -10,12 +14,21 @@ import { scaffoldInstructions } from './scaffold';
 let analyzer: DependencyAnalyzer;
 let symbolAnalyzer: SymbolAnalyzer;
 let gitAnalyzer: GitAnalyzer;
+let clangdClient: ClangdClient | null = null;
+let macroExpander: MacroExpander | null = null;
+let buildSubset: BuildSubset | null = null;
 let statusBarItem: vscode.StatusBarItem;
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
     analyzer = new DependencyAnalyzer();
     symbolAnalyzer = new SymbolAnalyzer();
     gitAnalyzer = new GitAnalyzer();
+
+    // ── Disk-backed graph cache ─────────────────────────────────
+    // Snapshots are persisted under the extension's globalStorage so that
+    // re-opening a 100k-file workspace doesn't re-parse everything.
+    const graphCache = new GraphCache(context.globalStorageUri, analyzer.outputChannel);
+    analyzer.setCache(graphCache);
 
     // ── Status bar ──────────────────────────────────────────────────────
     statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 0);
@@ -124,6 +137,31 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
         vscode.commands.registerCommand('hiveMind.scaffoldInstructions', scaffoldInstructions),
 
+        vscode.commands.registerCommand('hiveMind.invalidateCache', async () => {
+            const roots = (vscode.workspace.workspaceFolders ?? []).map(f => f.uri.fsPath);
+            graphCache.invalidate(roots);
+            vscode.window.showInformationMessage('Hive Mind: cache invalidated. Re-running analysis...');
+            await vscode.commands.executeCommand('hiveMind.analyzeWorkspace');
+        }),
+
+        vscode.commands.registerCommand('hiveMind.checkClangd', async () => {
+            const client = getClangdClient();
+            analyzer.outputChannel.show();
+            if (!client) {
+                analyzer.outputChannel.appendLine('[Hive Mind] No workspace folder open — clangd cannot start.');
+                return;
+            }
+            analyzer.outputChannel.appendLine('[Hive Mind] Probing clangd...');
+            const info = await client.getInfo();
+            if (info.available) {
+                analyzer.outputChannel.appendLine(`[Hive Mind] clangd ready ✔  exe=${info.executable}  version=${info.version ?? 'unknown'}`);
+                vscode.window.showInformationMessage(`clangd ready (version ${info.version ?? 'unknown'})`);
+            } else {
+                analyzer.outputChannel.appendLine(`[Hive Mind] clangd NOT available: ${info.reason}`);
+                vscode.window.showWarningMessage(`Hive Mind: clangd not available — ${info.reason}`);
+            }
+        }),
+
         vscode.commands.registerCommand('hiveMind.showStats', () => {
             const stats = analyzer.getStats();
             analyzer.outputChannel.clear();
@@ -145,7 +183,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     );
 
     // ── Register Copilot LM tools ───────────────────────────────────────
-    registerTools(context, analyzer, symbolAnalyzer, gitAnalyzer);
+    registerTools(context, analyzer, symbolAnalyzer, gitAnalyzer, getClangdClient, getMacroExpander, getBuildSubset);
 
     // ── Register @hivemind chat participant ──────────────────────────────
     registerChatParticipant(context, analyzer, symbolAnalyzer, gitAnalyzer);
@@ -171,5 +209,48 @@ function updateStatusBar(): void {
 }
 
 export function deactivate(): void {
-    // cleanup handled by context.subscriptions
+    if (clangdClient) {
+        clangdClient.dispose().catch(() => { /* ignore */ });
+        clangdClient = null;
+    }
+    // remaining cleanup handled by context.subscriptions
 }
+
+/**
+ * Lazily construct the ClangdClient against the first workspace folder.
+ * Returns null if no workspace is open.
+ */
+function getClangdClient(): ClangdClient | null {
+    if (clangdClient) { return clangdClient; }
+    const folder = vscode.workspace.workspaceFolders?.[0];
+    if (!folder) { return null; }
+    clangdClient = new ClangdClient(folder.uri.fsPath, analyzer.outputChannel);
+    return clangdClient;
+}
+
+/** Lazily construct the MacroExpander against the first workspace folder. */
+function getMacroExpander(): MacroExpander | null {
+    if (macroExpander) { return macroExpander; }
+    const folder = vscode.workspace.workspaceFolders?.[0];
+    if (!folder) { return null; }
+    macroExpander = new MacroExpander(
+        folder.uri.fsPath,
+        analyzer.outputChannel,
+        () => analyzer.getIncludePaths()
+    );
+    return macroExpander;
+}
+
+/** Lazily construct the BuildSubset compile-checker against the first workspace folder. */
+function getBuildSubset(): BuildSubset | null {
+    if (buildSubset) { return buildSubset; }
+    const folder = vscode.workspace.workspaceFolders?.[0];
+    if (!folder) { return null; }
+    buildSubset = new BuildSubset(folder.uri.fsPath, analyzer.outputChannel, {
+        getImpact: (seed, depth) => analyzer.getImpact(seed, depth),
+        resolveFilePath: (input) => analyzer.resolveFilePath(input),
+    });
+    return buildSubset;
+}
+
+export { getClangdClient, getMacroExpander, getBuildSubset };
