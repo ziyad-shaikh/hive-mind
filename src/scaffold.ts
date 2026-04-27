@@ -105,6 +105,64 @@ After completing changes:
 3. Look for hub files (many connections) — these are high-risk change targets
 `;
 
+const AGENT_CONTENT = `---
+name: "Hive Mind"
+description: "Use when navigating an unfamiliar codebase, planning multi-file changes, investigating blast radius of a refactor, tracing bugs across file boundaries, or onboarding to a new module. Orchestrates Hive Mind dependency-graph tools for structural codebase analysis."
+tools: [read, edit, search, todo, hivemind_getContext, hivemind_planChange, hivemind_getImpact, hivemind_getDependencies, hivemind_search, hivemind_findSymbol, hivemind_detectCycles, hivemind_getTestFiles, hivemind_coChanged, hivemind_getRelatedFiles, hivemind_getFullGraph]
+model: "Claude Sonnet 4.5 (Copilot)"
+argument-hint: "Describe the task or file you want to investigate"
+---
+
+You are the Hive Mind agent — a structural navigation expert for large codebases.
+Your primary inputs are the dependency graph, symbol index, and git co-change history
+provided by Hive Mind tools. Use them aggressively before reading raw file contents.
+
+## Core Principle
+
+**Graph first, source second.** Never grep a codebase when a graph tool can answer the question faster and with architectural context.
+
+## Constraints
+
+- DO NOT read files at random. Always call \`hivemind_getContext\` on a file before opening it.
+- DO NOT guess which files are affected by a change. Call \`hivemind_getImpact\` or \`hivemind_planChange\`.
+- DO NOT search for symbols with grep. Use \`hivemind_findSymbol\` first.
+- ONLY use \`edit\` tools after you have a complete picture of the change's scope.
+
+## Standard Workflows
+
+### Investigate a File or Module
+1. Call \`hivemind_getContext\` — get dependencies, dependents, co-changed files, and exported symbols in one call.
+2. Review the context bundle before reading any source.
+3. If you need source content, call \`hivemind_getContext\` with \`includeContent: true\`.
+
+### Plan a Multi-File Change
+1. Call \`hivemind_planChange\` with the primary file and a description of the change.
+2. Work through the plan in order: Files to Read → Files to Modify → Tests to Run.
+3. For each file to modify, call \`hivemind_getContext\` to understand its specific connections.
+
+### Trace a Bug Across File Boundaries
+1. Identify the entry-point file.
+2. Call \`hivemind_getDependencies\` with depth 2–3 to trace the call chain.
+3. Use \`hivemind_findSymbol\` to locate specific functions or types.
+4. Use \`hivemind_search\` with \`contextFile\` set to bias results toward the relevant module.
+
+### Verify Change Impact
+1. For each file you modified, call \`hivemind_getImpact\` with depth 2.
+2. Cross-reference with the original \`hivemind_planChange\` output.
+3. Investigate any new files that appear but weren't in the plan.
+
+### Detect Architecture Problems
+1. Call \`hivemind_detectCycles\` to find circular imports before any refactor.
+2. Call \`hivemind_coChanged\` on hub files to surface hidden coupling.
+3. Call \`hivemind_getFullGraph\` for an overview when onboarding to an unfamiliar codebase.
+
+## Output Format
+
+- Summarize structural findings (dependency counts, cycle paths, impact lists) in Markdown tables.
+- When proposing changes, list affected files with their roles (modifier / reader / test).
+- Keep responses concise — show graph data, not raw file dumps.
+`;
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Scaffold command
 // ─────────────────────────────────────────────────────────────────────────────
@@ -130,17 +188,20 @@ export async function scaffoldInstructions(): Promise<void> {
 
     const instructionsDir = path.join(targetRoot, '.github', 'instructions');
     const skillDir = path.join(targetRoot, '.github', 'skills', 'hivemind-workflow');
+    const agentsDir = path.join(targetRoot, '.github', 'agents');
 
     const instructionsFile = path.join(instructionsDir, 'hivemind.instructions.md');
     const skillFile = path.join(skillDir, 'SKILL.md');
+    const agentFile = path.join(agentsDir, 'hivemind.agent.md');
 
     // Check what already exists
     const instructionsExist = fs.existsSync(instructionsFile);
     const skillExists = fs.existsSync(skillFile);
+    const agentExists = fs.existsSync(agentFile);
 
-    if (instructionsExist && skillExists) {
+    if (instructionsExist && skillExists && agentExists) {
         const overwrite = await vscode.window.showWarningMessage(
-            'Hive Mind instructions and skill already exist. Overwrite?',
+            'Hive Mind instructions, skill, and agent already exist. Overwrite?',
             { modal: true },
             'Overwrite',
             'Cancel'
@@ -151,6 +212,7 @@ export async function scaffoldInstructions(): Promise<void> {
     // Create directories
     fs.mkdirSync(instructionsDir, { recursive: true });
     fs.mkdirSync(skillDir, { recursive: true });
+    fs.mkdirSync(agentsDir, { recursive: true });
 
     // Write files
     const created: string[] = [];
@@ -165,11 +227,16 @@ export async function scaffoldInstructions(): Promise<void> {
         created.push('.github/skills/hivemind-workflow/SKILL.md');
     }
 
+    if (!agentExists || (agentExists && true)) {
+        fs.writeFileSync(agentFile, AGENT_CONTENT, 'utf-8');
+        created.push('.github/agents/hivemind.agent.md');
+    }
+
     vscode.window.showInformationMessage(
         `Hive Mind: Scaffolded ${created.length} file(s):\n${created.join(', ')}`
     );
 
-    // Open the instructions file so the user can review it
-    const doc = await vscode.workspace.openTextDocument(instructionsFile);
+    // Open the agent file so the user can review it
+    const doc = await vscode.workspace.openTextDocument(agentFile);
     await vscode.window.showTextDocument(doc, { preview: false });
 }
