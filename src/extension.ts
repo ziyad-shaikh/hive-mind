@@ -10,6 +10,10 @@ import { GraphPanel } from './graph/GraphPanel';
 import { registerTools } from './tools';
 import { registerChatParticipant } from './chat/HiveMindParticipant';
 import { scaffoldInstructions } from './scaffold';
+import { DependencyTreeProvider } from './views/DependencyTreeProvider';
+import { HiveMindFileDecorationProvider } from './views/HiveMindFileDecorationProvider';
+import { ImpactPreviewOnSave } from './views/ImpactPreviewOnSave';
+import { CoChangePanel } from './views/CoChangePanel';
 
 let analyzer: DependencyAnalyzer;
 let symbolAnalyzer: SymbolAnalyzer;
@@ -18,6 +22,8 @@ let clangdClient: ClangdClient | null = null;
 let macroExpander: MacroExpander | null = null;
 let buildSubset: BuildSubset | null = null;
 let statusBarItem: vscode.StatusBarItem;
+let treeProvider: DependencyTreeProvider;
+let fileDecorationProvider: HiveMindFileDecorationProvider;
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
     analyzer = new DependencyAnalyzer();
@@ -47,6 +53,22 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
     // ── Git co-change analysis (background) ─────────────────────────────
     try { gitAnalyzer.analyze(); } catch { /* git not available */ }
+
+    // ── Dependency Tree View (sidebar) ───────────────────────────────────
+    treeProvider = new DependencyTreeProvider(analyzer);
+    context.subscriptions.push(
+        vscode.window.registerTreeDataProvider('hiveMindDependencyTree', treeProvider)
+    );
+
+    // ── File Explorer Decorations ────────────────────────────────────────
+    fileDecorationProvider = new HiveMindFileDecorationProvider(analyzer);
+    context.subscriptions.push(
+        vscode.window.registerFileDecorationProvider(fileDecorationProvider)
+    );
+
+    // ── Impact Preview on Save ───────────────────────────────────────────
+    const impactPreview = new ImpactPreviewOnSave(analyzer);
+    context.subscriptions.push(impactPreview);
 
     // ── Background symbol indexing ──────────────────────────────────────
     const allFiles = analyzer.getIndexedFiles();
@@ -107,6 +129,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             symbolAnalyzer.clear();
             try { gitAnalyzer.analyze(); } catch { /* git not available */ }
             updateStatusBar();
+            treeProvider.refresh();
+            fileDecorationProvider.recompute();
             vscode.window.showInformationMessage(
                 `Hive Mind: ${analyzer.getNodeCount()} files, ${analyzer.getEdgeCount()} relationships indexed.`
             );
@@ -188,17 +212,35 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     // ── Register @hivemind chat participant ──────────────────────────────
     registerChatParticipant(context, analyzer, symbolAnalyzer, gitAnalyzer);
 
+    // ── Co-Change Heat Map command ───────────────────────────────────────
+    context.subscriptions.push(
+        vscode.commands.registerCommand('hiveMind.showCoChangeHeatMap', (resourceUri?: vscode.Uri) => {
+            const target = resourceUri?.fsPath ?? vscode.window.activeTextEditor?.document.uri.fsPath;
+            CoChangePanel.createOrShow(analyzer, gitAnalyzer, target);
+        })
+    );
+
+    // ── Tree view refresh command ───────────────────────────────────────
+    context.subscriptions.push(
+        vscode.commands.registerCommand('hiveMind.refreshTree', () => {
+            treeProvider.refresh();
+            fileDecorationProvider.recompute();
+        })
+    );
+
     // ── Index symbols for active editor on open ─────────────────────────
     context.subscriptions.push(
         vscode.window.onDidChangeActiveTextEditor(editor => {
             if (editor && editor.document.uri.scheme === 'file') {
                 symbolAnalyzer.indexFile(editor.document.uri.fsPath).catch(() => {});
+                treeProvider.setActiveFile(editor.document.uri.fsPath);
             }
         })
     );
     // Index currently active editor
     if (vscode.window.activeTextEditor?.document.uri.scheme === 'file') {
         symbolAnalyzer.indexFile(vscode.window.activeTextEditor.document.uri.fsPath).catch(() => {});
+        treeProvider.setActiveFile(vscode.window.activeTextEditor.document.uri.fsPath);
     }
 }
 

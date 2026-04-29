@@ -102,6 +102,15 @@
       {
         "command": "hiveMind.invalidateCache",
         "title": "Hive Mind: Invalidate Graph Cache & Reindex"
+      },
+      {
+        "command": "hiveMind.showCoChangeHeatMap",
+        "title": "Hive Mind: Show Co-Change Heat Map"
+      },
+      {
+        "command": "hiveMind.refreshTree",
+        "title": "Refresh",
+        "icon": "$(refresh)"
       }
     ],
     "menus": {
@@ -110,12 +119,46 @@
           "command": "hiveMind.showFileGraph",
           "group": "navigation",
           "when": "resourceScheme == file"
+        },
+        {
+          "command": "hiveMind.showCoChangeHeatMap",
+          "group": "navigation",
+          "when": "resourceScheme == file"
         }
       ],
       "explorer/context": [
         {
           "command": "hiveMind.showFileGraph",
           "group": "hivemind"
+        },
+        {
+          "command": "hiveMind.showCoChangeHeatMap",
+          "group": "hivemind"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "hiveMind.refreshTree",
+          "when": "view == hiveMindDependencyTree",
+          "group": "navigation"
+        }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "hiveMindExplorer",
+          "title": "Hive Mind",
+          "icon": "$(pulse)"
+        }
+      ]
+    },
+    "views": {
+      "hiveMindExplorer": [
+        {
+          "id": "hiveMindDependencyTree",
+          "name": "Dependencies",
+          "contextualTitle": "Hive Mind Dependencies"
         }
       ]
     },
