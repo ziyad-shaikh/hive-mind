@@ -2,7 +2,7 @@
   "name": "hive-mind",
   "displayName": "Hive Mind - Code Dependency Graph",
   "description": "Visualizes code dependencies as an interactive Obsidian-style graph and provides Copilot tools to analyze change impact across your codebase.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "publisher": "hive-mind",
   "engines": {
     "vscode": "^1.87.0"
