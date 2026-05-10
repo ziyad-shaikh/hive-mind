@@ -7,9 +7,21 @@
   "engines": {
     "vscode": "^1.87.0"
   },
-  "categories": ["Other", "Visualization"],
-  "keywords": ["dependency", "graph", "copilot", "impact", "visualization", "architecture"],
-  "activationEvents": ["onStartupFinished"],
+  "categories": [
+    "Other",
+    "Visualization"
+  ],
+  "keywords": [
+    "dependency",
+    "graph",
+    "copilot",
+    "impact",
+    "visualization",
+    "architecture"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "chatParticipants": [
@@ -96,16 +108,16 @@
         "title": "Hive Mind: Scaffold AI Instructions & Skills"
       },
       {
-        "command": "hiveMind.checkClangd",
-        "title": "Hive Mind: Check clangd Status"
-      },
-      {
         "command": "hiveMind.invalidateCache",
         "title": "Hive Mind: Invalidate Graph Cache & Reindex"
       },
       {
         "command": "hiveMind.showCoChangeHeatMap",
         "title": "Hive Mind: Show Co-Change Heat Map"
+      },
+      {
+        "command": "hiveMind.showModuleGraph",
+        "title": "Hive Mind: Show Module Graph (profile-driven)"
       },
       {
         "command": "hiveMind.refreshTree",
@@ -174,19 +186,16 @@
         },
         "hiveMind.ignoredDirectories": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "default": [],
           "description": "Additional directory names to exclude from analysis (on top of the built-in list like node_modules, .git, dist, etc.)."
-        },
-        "hivemind.clangdPath": {
-          "type": "string",
-          "default": "",
-          "description": "Absolute path to a clangd executable. If empty, Hive Mind auto-detects clangd from the vscode-clangd extension, PATH, or common LLVM install locations. Used for AST-precise C/C++ analysis (find references, overrides, call hierarchy)."
         },
         "hivemind.clangPath": {
           "type": "string",
           "default": "",
-          "description": "Absolute path to a clang executable (the compiler driver, separate from clangd). If empty, Hive Mind auto-detects clang from the vscode-clangd install, PATH, or common LLVM install locations. Used by hivemind_macroExpand to run the C/C++ preprocessor."
+          "description": "Optional override path to a C/C++ compiler executable used by hivemind_macroExpand and hivemind_buildSubset. Accepts cl.exe (MSVC), g++/gcc, or clang/clang-cl. If empty, Hive Mind auto-detects: cl.exe on Windows, g++ on Linux/Mac, then clang as a fallback. Setting name kept for backwards compatibility."
         },
         "hiveMind.respectIfdefBranches": {
           "type": "boolean",
@@ -199,7 +208,12 @@
       {
         "name": "hivemind_getDependencies",
         "toolReferenceName": "hivemindDeps",
-        "tags": ["hivemind", "dependencies", "imports", "code-graph"],
+        "tags": [
+          "hivemind",
+          "dependencies",
+          "imports",
+          "code-graph"
+        ],
         "displayName": "Get File Dependencies",
         "modelDescription": "Returns all files that a given source file imports or depends on (direct and transitive). Use this to understand what a file relies on before modifying it.",
         "canBeReferencedInPrompt": true,
@@ -215,13 +229,20 @@
               "description": "Traversal depth. 1 = direct only, -1 = all transitive. Defaults to 2."
             }
           },
-          "required": ["filePath"]
+          "required": [
+            "filePath"
+          ]
         }
       },
       {
         "name": "hivemind_getImpact",
         "toolReferenceName": "hivemindImpact",
-        "tags": ["hivemind", "impact", "change", "code-graph"],
+        "tags": [
+          "hivemind",
+          "impact",
+          "change",
+          "code-graph"
+        ],
         "displayName": "Get Change Impact",
         "modelDescription": "Given a file being modified, returns all other files that import or depend on it — i.e., files that may need to be updated as a result of the change. Always call this when editing a file to check for downstream impact.",
         "canBeReferencedInPrompt": true,
@@ -233,13 +254,20 @@
               "description": "Path to the file being changed — relative to workspace root or absolute"
             }
           },
-          "required": ["filePath"]
+          "required": [
+            "filePath"
+          ]
         }
       },
       {
         "name": "hivemind_getRelatedFiles",
         "toolReferenceName": "hivemindRelated",
-        "tags": ["hivemind", "related", "connections", "code-graph"],
+        "tags": [
+          "hivemind",
+          "related",
+          "connections",
+          "code-graph"
+        ],
         "displayName": "Get Related Files",
         "modelDescription": "Returns all files directly connected to a given file in the dependency graph — both what it imports and what imports it. Use to get a complete picture of a file's role in the codebase.",
         "canBeReferencedInPrompt": true,
@@ -251,13 +279,20 @@
               "description": "Path to the file"
             }
           },
-          "required": ["filePath"]
+          "required": [
+            "filePath"
+          ]
         }
       },
       {
         "name": "hivemind_getFullGraph",
         "toolReferenceName": "hivemindGraph",
-        "tags": ["hivemind", "graph", "architecture", "code-graph"],
+        "tags": [
+          "hivemind",
+          "graph",
+          "architecture",
+          "code-graph"
+        ],
         "displayName": "Get Full Dependency Graph",
         "modelDescription": "Returns the complete dependency graph of the workspace as structured data including hub files, language breakdown, and circular dependencies. Use this to understand overall architecture.",
         "canBeReferencedInPrompt": true,
@@ -268,25 +303,37 @@
               "type": "number",
               "description": "Maximum number of nodes to return. Defaults to 150."
             }
-          }
+          },
+          "required": []
         }
       },
       {
         "name": "hivemind_detectCycles",
         "toolReferenceName": "hivemindCycles",
-        "tags": ["hivemind", "circular", "cycle", "code-graph"],
+        "tags": [
+          "hivemind",
+          "circular",
+          "cycle",
+          "code-graph"
+        ],
         "displayName": "Detect Circular Dependencies",
         "modelDescription": "Detects and returns all circular dependency chains in the workspace. Use when investigating build issues, module coupling, or architecture health.",
         "canBeReferencedInPrompt": true,
         "inputSchema": {
           "type": "object",
-          "properties": {}
+          "properties": {},
+          "required": []
         }
       },
       {
         "name": "hivemind_getTestFiles",
         "toolReferenceName": "hivemindTests",
-        "tags": ["hivemind", "test", "testing", "code-graph"],
+        "tags": [
+          "hivemind",
+          "test",
+          "testing",
+          "code-graph"
+        ],
         "displayName": "Get Related Test Files",
         "modelDescription": "Given a source file, returns its associated test files (e.g. foo.test.ts for foo.ts). Given a test file, returns the source file it tests. Use this to find tests that should be updated when modifying source code.",
         "canBeReferencedInPrompt": true,
@@ -298,13 +345,21 @@
               "description": "Path to the source or test file"
             }
           },
-          "required": ["filePath"]
+          "required": [
+            "filePath"
+          ]
         }
       },
       {
         "name": "hivemind_findSymbol",
         "toolReferenceName": "hivemindSymbol",
-        "tags": ["hivemind", "symbol", "function", "class", "code-graph"],
+        "tags": [
+          "hivemind",
+          "symbol",
+          "function",
+          "class",
+          "code-graph"
+        ],
         "displayName": "Find Symbol Across Workspace",
         "modelDescription": "Searches for a function, class, interface, type, or variable by name across all indexed workspace files. Returns file locations and symbol kinds. Use this to find where a symbol is defined.",
         "canBeReferencedInPrompt": true,
@@ -316,13 +371,21 @@
               "description": "The name of the symbol to search for (function, class, type, variable, etc.)"
             }
           },
-          "required": ["symbolName"]
+          "required": [
+            "symbolName"
+          ]
         }
       },
       {
         "name": "hivemind_coChanged",
         "toolReferenceName": "hivemindCoChanged",
-        "tags": ["hivemind", "git", "history", "coupling", "code-graph"],
+        "tags": [
+          "hivemind",
+          "git",
+          "history",
+          "coupling",
+          "code-graph"
+        ],
         "displayName": "Get Co-Changed Files",
         "modelDescription": "Returns files that frequently change together with the given file based on git history. These are historically coupled files that may need to be updated together even without direct import relationships.",
         "canBeReferencedInPrompt": true,
@@ -334,13 +397,21 @@
               "description": "Path to the file to find co-changed files for"
             }
           },
-          "required": ["filePath"]
+          "required": [
+            "filePath"
+          ]
         }
       },
       {
         "name": "hivemind_getContext",
         "toolReferenceName": "hivemindContext",
-        "tags": ["hivemind", "context", "bundle", "code-graph", "ai"],
+        "tags": [
+          "hivemind",
+          "context",
+          "bundle",
+          "code-graph",
+          "ai"
+        ],
         "displayName": "Get Curated Context Bundle",
         "modelDescription": "Returns a comprehensive context bundle for a file: its dependencies, dependents, test files, co-changed files, and exported symbols — all in a single call. Use this FIRST when starting work on any file to understand its role and connections. Optionally include the file's source content. This is the recommended starting tool — it replaces calling getDependencies, getImpact, getTestFiles, coChanged, and findSymbol separately.",
         "canBeReferencedInPrompt": true,
@@ -360,13 +431,22 @@
               "description": "If true, includes the file's source code (capped at 200 lines). Default false."
             }
           },
-          "required": ["filePath"]
+          "required": [
+            "filePath"
+          ]
         }
       },
       {
         "name": "hivemind_planChange",
         "toolReferenceName": "hivemindPlan",
-        "tags": ["hivemind", "plan", "change", "impact", "code-graph", "ai"],
+        "tags": [
+          "hivemind",
+          "plan",
+          "change",
+          "impact",
+          "code-graph",
+          "ai"
+        ],
         "displayName": "Plan a Code Change",
         "modelDescription": "Given a file and a description of intended changes, returns a prioritized plan: which files to modify, which to read for context, which tests to run, and which files are peripherally affected. Scores files by structural dependencies, test relationships, and git co-change history. Use this BEFORE making multi-file changes to avoid missing impacted files.",
         "canBeReferencedInPrompt": true,
@@ -382,13 +462,23 @@
               "description": "What change is being made — e.g. 'rename the handleRequest method' or 'add a new parameter to the constructor'"
             }
           },
-          "required": ["filePath", "description"]
+          "required": [
+            "filePath",
+            "description"
+          ]
         }
       },
       {
         "name": "hivemind_search",
         "toolReferenceName": "hivemindSearch",
-        "tags": ["hivemind", "search", "find", "grep", "text", "code-graph"],
+        "tags": [
+          "hivemind",
+          "search",
+          "find",
+          "grep",
+          "text",
+          "code-graph"
+        ],
         "displayName": "Structural-Aware Code Search",
         "modelDescription": "Searches the entire workspace for text or regex patterns, then ranks results by combining match count with structural signals from the dependency graph. Files whose graph neighbors also match (cluster signal), files near a contextFile, hub files, and files with matching exported symbols are boosted. Use this instead of raw grep when you want the most relevant files first — not just files with the most hits. Supports an optional contextFile to bias results toward a specific area of the codebase.",
         "canBeReferencedInPrompt": true,
@@ -420,13 +510,23 @@
               "description": "If true, include code snippets from top matches. Default true."
             }
           },
-          "required": ["query"]
+          "required": [
+            "query"
+          ]
         }
       },
       {
         "name": "hivemind_getCppPair",
         "toolReferenceName": "hivemindCppPair",
-        "tags": ["hivemind", "cpp", "c++", "header", "source", "refactor", "code-graph"],
+        "tags": [
+          "hivemind",
+          "cpp",
+          "c++",
+          "header",
+          "source",
+          "refactor",
+          "code-graph"
+        ],
         "displayName": "Get C/C++ Header/Source Pair",
         "modelDescription": "Given a C/C++ file (.h, .hpp, .cpp, .cc, .inl, .ipp, etc.), returns the matching header/source/inline files by basename match. Use this BEFORE editing any C++ file — modifying a function in foo.cpp almost always requires updating its declaration in foo.h. Skipping this is the #1 cause of broken C++ refactors.",
         "canBeReferencedInPrompt": true,
@@ -438,13 +538,23 @@
               "description": "Path to a C/C++ file — relative to workspace root or absolute"
             }
           },
-          "required": ["filePath"]
+          "required": [
+            "filePath"
+          ]
         }
       },
       {
         "name": "hivemind_findMacro",
         "toolReferenceName": "hivemindMacro",
-        "tags": ["hivemind", "cpp", "c++", "macro", "preprocessor", "define", "code-graph"],
+        "tags": [
+          "hivemind",
+          "cpp",
+          "c++",
+          "macro",
+          "preprocessor",
+          "define",
+          "code-graph"
+        ],
         "displayName": "Find C/C++ Macro Definitions",
         "modelDescription": "Locates `#define` macro definitions across all C/C++ files in the workspace. Returns ONLY definitions (not usages) — distinguishes object-like vs function-like macros, shows the body, and reports multiple definitions when present (e.g. platform-gated variants). Use this whenever you encounter a SCREAMING_SNAKE_CASE token in C/C++ code and aren't sure if it's a macro, before assuming what it expands to. Critical for codebases like FCIMPL/QCALL/HCIMPL/BEGIN_PINVOKE-style macro-heavy frameworks.",
         "canBeReferencedInPrompt": true,
@@ -464,34 +574,44 @@
               "description": "Maximum number of definitions to return. Default 25."
             }
           },
-          "required": ["name"]
+          "required": [
+            "name"
+          ]
         }
       },
       {
         "name": "hivemind_findReferences",
         "toolReferenceName": "hivemindRefs",
-        "tags": ["hivemind", "cpp", "c++", "references", "refactor", "clangd", "ast", "code-graph"],
-        "displayName": "Find C/C++ References (AST-precise)",
-        "modelDescription": "Returns every place a C/C++ symbol is *actually* referenced — AST-precise via clangd, NOT text grep. Resolves overload sets, namespaces, virtual dispatch, templates, and respects the active #ifdef configuration from compile_commands.json. Use this BEFORE renaming any C/C++ function, class, or variable — it's the only way to guarantee you find every call site without false positives from comments, strings, or unrelated symbols with the same name. Provide either `symbolName` (most common) or an explicit `line` + `character` cursor position. Falls back gracefully with a clear error if clangd is unavailable.",
+        "tags": [
+          "hivemind",
+          "cpp",
+          "c++",
+          "references",
+          "refactor",
+          "tree-sitter",
+          "code-graph"
+        ],
+        "displayName": "Find C/C++ References (tree-sitter scope resolver)",
+        "modelDescription": "Returns every place a C/C++ symbol is referenced. Uses Hive Mind's tree-sitter index — comments, string literals, and dead #ifdef branches are stripped before matching. Each hit is tagged with a `confidence` (high/medium/low) reflecting how unique the name is across the workspace. Use this BEFORE renaming any C/C++ function, class, or variable — for `medium`/`low` confidence results verify each manually. Required: `symbolName`. `filePath` is accepted for compatibility but is not required. Position-only queries (`line`/`character`) are not supported in this build.",
         "canBeReferencedInPrompt": true,
         "inputSchema": {
           "type": "object",
           "properties": {
             "filePath": {
               "type": "string",
-              "description": "Path to the C/C++ file containing (or near) the symbol. Used to anchor clangd at a specific translation unit."
+              "description": "Path to a C/C++ file. Accepted for backwards-compatibility but not required — the tree-sitter resolver searches the entire workspace index."
             },
             "symbolName": {
               "type": "string",
-              "description": "Name of the symbol to find references for (e.g. 'doFoo', 'MyClass::bar', 'kMaxSize'). Hive Mind locates the symbol's declaration in the file via clangd's documentSymbols, then queries references at that position. Either this OR (line + character) is required."
+              "description": "Name of the symbol to find references for (e.g. 'doFoo', 'MyClass::bar', 'kMaxSize'). Required — position-only lookup is not supported in this build."
             },
             "line": {
               "type": "number",
-              "description": "1-indexed line number of the cursor position. Use when the symbol name is ambiguous in the file. Required together with `character`."
+              "description": "Accepted for backwards-compatibility; ignored by the tree-sitter resolver."
             },
             "character": {
               "type": "number",
-              "description": "0-indexed column number of the cursor position (LSP convention). Required together with `line`."
+              "description": "Accepted for backwards-compatibility; ignored by the tree-sitter resolver."
             },
             "includeDeclaration": {
               "type": "boolean",
@@ -502,72 +622,99 @@
               "description": "Maximum number of references to display. Default 100."
             }
           },
-          "required": ["filePath"]
+          "required": [
+            "symbolName"
+          ]
         }
       },
       {
         "name": "hivemind_findOverrides",
         "toolReferenceName": "hivemindOverrides",
-        "tags": ["hivemind", "cpp", "c++", "virtual", "override", "polymorphism", "clangd", "ast", "code-graph"],
-        "displayName": "Find C/C++ Virtual Overrides (AST-precise)",
-        "modelDescription": "For a C/C++ virtual method, returns every concrete implementation across the codebase via clangd's `textDocument/implementation`. AST-precise — handles multiple inheritance, covariant return types, and override chains correctly. Use BEFORE modifying a virtual method's signature, behavior contract, or visibility — every override returned must be updated in lockstep. Closes the virtual-dispatch blind spot that grep cannot solve. Provide either `symbolName` (the virtual method's name) or an explicit `line` + `character` cursor position.",
+        "tags": [
+          "hivemind",
+          "cpp",
+          "c++",
+          "virtual",
+          "override",
+          "polymorphism",
+          "tree-sitter",
+          "code-graph"
+        ],
+        "displayName": "Find C/C++ Virtual Overrides (tree-sitter)",
+        "modelDescription": "For a C/C++ virtual method, returns every concrete implementation across the codebase using the tree-sitter inheritance closure built during workspace indexing. Use BEFORE modifying a virtual method's signature, behavior contract, or visibility — every `high`-confidence override returned must be updated in lockstep; `medium`/`low` results should be sanity-checked. Closes the virtual-dispatch blind spot that text grep cannot solve. Required: `symbolName` (the method name).",
         "canBeReferencedInPrompt": true,
         "inputSchema": {
           "type": "object",
           "properties": {
             "filePath": {
               "type": "string",
-              "description": "Path to the C/C++ file containing the virtual method (typically the base class header)."
+              "description": "Optional path to a C/C++ file. Accepted for backwards-compatibility; the resolver searches the workspace inheritance closure."
             },
             "symbolName": {
               "type": "string",
-              "description": "Name of the virtual method (e.g. 'doWork', 'IFoo::bar'). Either this OR (line + character) is required."
+              "description": "Name of the virtual method (e.g. 'doWork', 'bar'). Required."
             },
             "line": {
               "type": "number",
-              "description": "1-indexed line number of the cursor position. Required together with `character`."
+              "description": "Accepted for backwards-compatibility; ignored."
             },
             "character": {
               "type": "number",
-              "description": "0-indexed column number of the cursor position (LSP convention). Required together with `line`."
+              "description": "Accepted for backwards-compatibility; ignored."
             },
             "maxResults": {
               "type": "number",
               "description": "Maximum number of overrides to display. Default 100."
             }
           },
-          "required": ["filePath"]
+          "required": [
+            "symbolName"
+          ]
         }
       },
       {
         "name": "hivemind_callHierarchy",
         "toolReferenceName": "hivemindCalls",
-        "tags": ["hivemind", "cpp", "c++", "call-hierarchy", "callers", "callees", "trace", "clangd", "ast", "code-graph"],
-        "displayName": "C/C++ Call Hierarchy (AST-precise)",
-        "modelDescription": "For a C/C++ function, returns who calls it (incoming) and/or what it calls (outgoing) — AST-precise via clangd. Supports `depth: 2` to trace two levels in a single call (e.g. callers-of-callers). Use this when tracing bugs across function boundaries or before changing a function's signature/contract to understand the upstream and downstream blast radius. Provide either `symbolName` (most common) or explicit `line` + `character`.",
+        "tags": [
+          "hivemind",
+          "cpp",
+          "c++",
+          "call-hierarchy",
+          "callers",
+          "callees",
+          "trace",
+          "tree-sitter",
+          "code-graph"
+        ],
+        "displayName": "C/C++ Call Hierarchy (tree-sitter)",
+        "modelDescription": "For a C/C++ function, returns who calls it (incoming) and/or what it calls (outgoing) using Hive Mind's tree-sitter call-edge index. Supports `depth: 2` to trace two levels in a single call (e.g. callers-of-callers). Use this when tracing bugs across function boundaries or before changing a function's signature/contract to understand the upstream and downstream blast radius. Required: `symbolName` (or qualified name like `MyClass::handle`).",
         "canBeReferencedInPrompt": true,
         "inputSchema": {
           "type": "object",
           "properties": {
             "filePath": {
               "type": "string",
-              "description": "Path to the C/C++ file containing the function."
+              "description": "Optional path to a C/C++ file. Accepted for backwards-compatibility; the resolver searches the workspace function index."
             },
             "symbolName": {
               "type": "string",
-              "description": "Name of the function (e.g. 'processRequest', 'MyClass::handle'). Either this OR (line + character) is required."
+              "description": "Name of the function (e.g. 'processRequest', 'MyClass::handle'). Required."
             },
             "line": {
               "type": "number",
-              "description": "1-indexed line number of the cursor position. Required together with `character`."
+              "description": "Accepted for backwards-compatibility; ignored."
             },
             "character": {
               "type": "number",
-              "description": "0-indexed column number of the cursor position (LSP convention). Required together with `line`."
+              "description": "Accepted for backwards-compatibility; ignored."
             },
             "direction": {
               "type": "string",
-              "enum": ["incoming", "outgoing", "both"],
+              "enum": [
+                "incoming",
+                "outgoing",
+                "both"
+              ],
               "description": "incoming = who calls this | outgoing = what this calls | both (default)."
             },
             "depth": {
@@ -579,38 +726,53 @@
               "description": "Cap on number of children at each level. Default 25."
             }
           },
-          "required": ["filePath"]
+          "required": [
+            "symbolName"
+          ]
         }
       },
       {
         "name": "hivemind_typeHierarchy",
         "toolReferenceName": "hivemindTypes",
-        "tags": ["hivemind", "cpp", "c++", "type-hierarchy", "inheritance", "class", "clangd", "ast", "code-graph"],
-        "displayName": "C/C++ Type Hierarchy (AST-precise)",
-        "modelDescription": "For a C/C++ class, struct, or interface, returns its supertypes (base classes) and/or subtypes (derived classes) via clangd. AST-precise — handles multiple inheritance and templates. Use BEFORE modifying any base class — every subtype returned may be affected. Combine with `hivemind_findOverrides` on individual virtual methods to find concrete implementations to update. Provide either `symbolName` (the class name) or an explicit `line` + `character` cursor position.",
+        "tags": [
+          "hivemind",
+          "cpp",
+          "c++",
+          "type-hierarchy",
+          "inheritance",
+          "class",
+          "tree-sitter",
+          "code-graph"
+        ],
+        "displayName": "C/C++ Type Hierarchy (tree-sitter)",
+        "modelDescription": "For a C/C++ class, struct, or interface, returns its supertypes (base classes) and/or subtypes (derived classes) using Hive Mind's tree-sitter inheritance index. Handles multiple inheritance. Use BEFORE modifying any base class — every subtype returned may be affected. Combine with `hivemind_findOverrides` on individual virtual methods to find concrete implementations to update. Required: `symbolName` (the class/struct/interface name).",
         "canBeReferencedInPrompt": true,
         "inputSchema": {
           "type": "object",
           "properties": {
             "filePath": {
               "type": "string",
-              "description": "Path to the C/C++ file containing the class/struct/interface declaration."
+              "description": "Optional path to a C/C++ file. Accepted for backwards-compatibility; the resolver searches the workspace inheritance closure."
             },
             "symbolName": {
               "type": "string",
-              "description": "Name of the class, struct, or interface (e.g. 'IFoo', 'BaseWidget'). Either this OR (line + character) is required."
+              "description": "Name of the class, struct, or interface (e.g. 'IFoo', 'BaseWidget'). Required."
             },
             "line": {
               "type": "number",
-              "description": "1-indexed line number of the cursor position. Required together with `character`."
+              "description": "Accepted for backwards-compatibility; ignored."
             },
             "character": {
               "type": "number",
-              "description": "0-indexed column number of the cursor position (LSP convention). Required together with `line`."
+              "description": "Accepted for backwards-compatibility; ignored."
             },
             "direction": {
               "type": "string",
-              "enum": ["supertypes", "subtypes", "both"],
+              "enum": [
+                "supertypes",
+                "subtypes",
+                "both"
+              ],
               "description": "supertypes = bases | subtypes = derived | both (default)."
             },
             "depth": {
@@ -622,15 +784,24 @@
               "description": "Cap on number of children at each level. Default 25."
             }
           },
-          "required": ["filePath"]
+          "required": [
+            "symbolName"
+          ]
         }
       },
       {
         "name": "hivemind_macroExpand",
         "toolReferenceName": "hivemindMacroExpand",
-        "tags": ["hivemind", "cpp", "c++", "macro", "preprocessor", "clang", "code-graph"],
-        "displayName": "C/C++ Macro Expansion (clang preprocessor)",
-        "modelDescription": "Runs `clang -E` with the file's exact compile_commands.json flags and returns the actual preprocessor expansion of a specific source line. Use this when you need to know what `FCIMPL3(MyMethod, ...)` (or any nested/conditional macro) ACTUALLY becomes in this specific translation unit — `hivemind_findMacro` only shows the #define text and cannot account for #ifdef branches, -D flags, or recursive expansion. Required: `filePath` (must be a .cpp/.cc/.cxx — not a header), `line` (1-indexed). Optional: `contextLines` (default 0; ±N lines around `line`).",
+        "tags": [
+          "hivemind",
+          "cpp",
+          "c++",
+          "macro",
+          "preprocessor",
+          "code-graph"
+        ],
+        "displayName": "C/C++ Macro Expansion (preprocessor)",
+        "modelDescription": "Runs the C/C++ preprocessor (`cl.exe /E` on Windows, `g++ -E` on Linux/Mac, with clang as a fallback) and returns the actual preprocessor expansion of a specific source line. Flag source priority: compile_commands.json entry → active project profile (e.g. the built-in Sage X3 profile) → workspace heuristics. Use this when you need to know what `FCIMPL3(MyMethod, ...)` (or any nested/conditional macro) ACTUALLY becomes in this specific translation unit — `hivemind_findMacro` only shows the #define text and cannot account for #ifdef branches, -D flags, or recursive expansion. Required: `filePath` (must be a .cpp/.cc/.cxx — not a header), `line` (1-indexed). Optional: `contextLines` (default 0; ±N lines around `line`).",
         "canBeReferencedInPrompt": true,
         "inputSchema": {
           "type": "object",
@@ -652,15 +823,26 @@
               "description": "Timeout in milliseconds for the clang invocation. Default 30000."
             }
           },
-          "required": ["filePath", "line"]
+          "required": [
+            "filePath",
+            "line"
+          ]
         }
       },
       {
         "name": "hivemind_buildSubset",
         "toolReferenceName": "hivemindBuildSubset",
-        "tags": ["hivemind", "cpp", "c++", "build", "compile", "syntax-check", "clang", "code-graph"],
+        "tags": [
+          "hivemind",
+          "cpp",
+          "c++",
+          "build",
+          "compile",
+          "syntax-check",
+          "code-graph"
+        ],
         "displayName": "C/C++ Build Subset (syntax-only)",
-        "modelDescription": "Runs `clang -fsyntax-only` (or clang-cl `/Zs`) on every translation unit in the impact set of a seed file, using each TU's exact compile_commands.json flags. This is the cheapest way to answer 'did I break the build?' after editing a header — no codegen, no linking, no PDB locking. Returns pass/fail per TU plus compiler diagnostics. Required: `filePath` (the changed file). Optional: `maxTUs` (default 50, cap 500), `depth`, `perFileTimeoutMs`, `totalBudgetMs`, `parallelism`, `explicitTUs` (skip impact walk; compile exactly these TUs). Requires `compile_commands.json` and clang/clang-cl on the system.",
+        "modelDescription": "Runs syntax-only compilation (`cl.exe /Zs` on Windows, `g++ -fsyntax-only` on Linux/Mac, with clang as a fallback) on every translation unit in the impact set of a seed file. Flag source priority: each TU's compile_commands.json entry → active project profile (e.g. the built-in Sage X3 profile). This is the cheapest way to answer 'did I break the build?' after editing a header — no codegen, no linking, no PDB locking. Returns pass/fail per TU plus compiler diagnostics. Required: `filePath` (the changed file). Optional: `maxTUs` (default 50, cap 500), `depth`, `perFileTimeoutMs`, `totalBudgetMs`, `parallelism`, `explicitTUs` (skip impact walk; compile exactly these TUs).",
         "canBeReferencedInPrompt": true,
         "inputSchema": {
           "type": "object",
@@ -691,11 +873,15 @@
             },
             "explicitTUs": {
               "type": "array",
-              "items": { "type": "string" },
+              "items": {
+                "type": "string"
+              },
               "description": "Optional explicit list of TUs to compile. Skips the impact-graph walk; only these files are checked."
             }
           },
-          "required": ["filePath"]
+          "required": [
+            "filePath"
+          ]
         }
       }
     ]
@@ -704,14 +890,20 @@
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "lint": "eslint src --ext ts"
+    "lint": "eslint src --ext ts",
+    "test": "node tests/run.mjs",
+    "package": "vsce package --allow-missing-repository"
   },
   "devDependencies": {
-    "@types/vscode": "^1.87.0",
     "@types/node": "^20.0.0",
-    "typescript": "^5.3.0",
+    "@types/vscode": "^1.87.0",
     "@typescript-eslint/eslint-plugin": "^7.0.0",
     "@typescript-eslint/parser": "^7.0.0",
-    "eslint": "^8.57.0"
+    "eslint": "^8.57.0",
+    "typescript": "^5.3.0"
+  },
+  "dependencies": {
+    "tree-sitter-cpp": "^0.23.4",
+    "web-tree-sitter": "^0.26.8"
   }
 }

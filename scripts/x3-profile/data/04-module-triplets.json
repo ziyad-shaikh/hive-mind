@@ -1,0 +1,354 @@
+{
+  "generatedAt": "2026-05-09T17:26:06.902Z",
+  "runtimeRoot": "C:\\Users\\ziyad.shaikh\\source\\repos\\runtime",
+  "moduleCount": 25,
+  "completeTriplets": [
+    "apl",
+    "cal",
+    "div",
+    "fil",
+    "fsr",
+    "gra",
+    "inp",
+    "ioc",
+    "men",
+    "sap",
+    "trt",
+    "tsr",
+    "var"
+  ],
+  "validated": [
+    {
+      "name": "afd",
+      "external": "afdext.h",
+      "internal": null,
+      "impls": [],
+      "implsBroad": [],
+      "complete": false
+    },
+    {
+      "name": "apl",
+      "external": "aplext.h",
+      "internal": "aplin.h",
+      "impls": [
+        "apl1.cpp"
+      ],
+      "implsBroad": [
+        "apl1.cpp",
+        "aplcom.cpp",
+        "apltbl.cpp",
+        "apltrt.cpp"
+      ],
+      "complete": true
+    },
+    {
+      "name": "arch",
+      "external": "archext.h",
+      "internal": "archin.h",
+      "impls": [],
+      "implsBroad": [],
+      "complete": false
+    },
+    {
+      "name": "avl",
+      "external": null,
+      "internal": "avlin.h",
+      "impls": [
+        "avl.cpp"
+      ],
+      "implsBroad": [
+        "avl.cpp"
+      ],
+      "complete": false
+    },
+    {
+      "name": "cal",
+      "external": "calext.h",
+      "internal": "calin.h",
+      "impls": [],
+      "implsBroad": [
+        "calcbase.cpp",
+        "calcdiv.cpp",
+        "calsav.cpp",
+        "calvar.cpp"
+      ],
+      "complete": true
+    },
+    {
+      "name": "dep",
+      "external": "depext.h",
+      "internal": null,
+      "impls": [],
+      "implsBroad": [],
+      "complete": false
+    },
+    {
+      "name": "div",
+      "external": "divext.h",
+      "internal": "divin.h",
+      "impls": [
+        "div.cpp",
+        "div2.cpp"
+      ],
+      "implsBroad": [
+        "div.cpp",
+        "div2.cpp",
+        "divcom.cpp",
+        "divjc.cpp",
+        "divsap.cpp"
+      ],
+      "complete": true
+    },
+    {
+      "name": "fil",
+      "external": "filext.h",
+      "internal": "filin.h",
+      "impls": [],
+      "implsBroad": [
+        "filcal.cpp",
+        "filcom.cpp",
+        "fildat.cpp",
+        "fildesc.cpp",
+        "fildt2.cpp",
+        "files.cpp",
+        "filgen.cpp",
+        "filkey.cpp",
+        "fillnk.cpp",
+        "filouv.cpp",
+        "filsel.cpp",
+        "filsrv.cpp"
+      ],
+      "complete": true
+    },
+    {
+      "name": "fsr",
+      "external": "fsrext.h",
+      "internal": "fsrin.h",
+      "impls": [],
+      "implsBroad": [
+        "fsrarq.cpp",
+        "fsrelf.cpp"
+      ],
+      "complete": true
+    },
+    {
+      "name": "gra",
+      "external": "graext.h",
+      "internal": "grain.h",
+      "impls": [],
+      "implsBroad": [
+        "gralex.cpp",
+        "gram.cpp",
+        "gratrt.cpp"
+      ],
+      "complete": true
+    },
+    {
+      "name": "inp",
+      "external": "inpext.h",
+      "internal": "inpin.h",
+      "impls": [],
+      "implsBroad": [
+        "inpfmt.cpp"
+      ],
+      "complete": true
+    },
+    {
+      "name": "ioc",
+      "external": "iocext.h",
+      "internal": "iocin.h",
+      "impls": [],
+      "implsBroad": [
+        "iocex.cpp",
+        "iocinp.cpp",
+        "iocom.cpp"
+      ],
+      "complete": true
+    },
+    {
+      "name": "men",
+      "external": "menext.h",
+      "internal": "menin.h",
+      "impls": [],
+      "implsBroad": [
+        "mendiv.cpp",
+        "menu.cpp"
+      ],
+      "complete": true
+    },
+    {
+      "name": "prd",
+      "external": "prdext.h",
+      "internal": null,
+      "impls": [],
+      "implsBroad": [],
+      "complete": false
+    },
+    {
+      "name": "sap",
+      "external": "sapext.h",
+      "internal": "sapin.h",
+      "impls": [],
+      "implsBroad": [
+        "sapbox.cpp",
+        "sapcal.cpp",
+        "sapex.cpp",
+        "sapintrex.cpp",
+        "sapioc.cpp",
+        "sapsel.cpp"
+      ],
+      "complete": true
+    },
+    {
+      "name": "sys",
+      "external": null,
+      "internal": "sysin.h",
+      "impls": [],
+      "implsBroad": [
+        "sysop.cpp"
+      ],
+      "complete": false
+    },
+    {
+      "name": "ter",
+      "external": "terext.h",
+      "internal": null,
+      "impls": [],
+      "implsBroad": [
+        "tercom.cpp"
+      ],
+      "complete": false
+    },
+    {
+      "name": "tif",
+      "external": null,
+      "internal": "tifin.h",
+      "impls": [],
+      "implsBroad": [],
+      "complete": false
+    },
+    {
+      "name": "tiv",
+      "external": null,
+      "internal": "tivin.h",
+      "impls": [],
+      "implsBroad": [],
+      "complete": false
+    },
+    {
+      "name": "trt",
+      "external": "trtext.h",
+      "internal": "trtin.h",
+      "impls": [],
+      "implsBroad": [
+        "trtdbg.cpp",
+        "trtdom.cpp",
+        "trtsav.cpp",
+        "trtsax.cpp"
+      ],
+      "complete": true
+    },
+    {
+      "name": "tsr",
+      "external": "tsrext.h",
+      "internal": "tsrin.h",
+      "impls": [],
+      "implsBroad": [
+        "tsrdum.cpp"
+      ],
+      "complete": true
+    },
+    {
+      "name": "val",
+      "external": "valext.h",
+      "internal": null,
+      "impls": [],
+      "implsBroad": [],
+      "complete": false
+    },
+    {
+      "name": "var",
+      "external": "varext.h",
+      "internal": "varin.h",
+      "impls": [],
+      "implsBroad": [
+        "varcla.cpp",
+        "variable.cpp",
+        "varstr.cpp",
+        "varsys.cpp"
+      ],
+      "complete": true
+    },
+    {
+      "name": "vtb",
+      "external": null,
+      "internal": "vtbin.h",
+      "impls": [],
+      "implsBroad": [
+        "vtbkey.cpp",
+        "vtbop.cpp"
+      ],
+      "complete": false
+    },
+    {
+      "name": "w32",
+      "external": "w32ext.h",
+      "internal": null,
+      "impls": [],
+      "implsBroad": [],
+      "complete": false
+    }
+  ],
+  "otherHeaders": [
+    "adxctr.h",
+    "adxdata.h",
+    "adxdef.h",
+    "adxenum.h",
+    "adxfile.h",
+    "adxfmt.h",
+    "adxheader.h",
+    "adxmess.h",
+    "adxsocket.h",
+    "adxstring.h",
+    "adx_exceptions.h",
+    "adx_include.h",
+    "application.h",
+    "CacheManagement.h",
+    "cmon.h",
+    "CodeCoverage.h",
+    "convert.h",
+    "environment.h",
+    "errfic.h",
+    "evtmess.h",
+    "fstat.h",
+    "gram.h",
+    "GroupManagement.h",
+    "HttpMessage.h",
+    "HttpRequest.h",
+    "HttpResponse.h",
+    "ins.h",
+    "ldap.h",
+    "log.h",
+    "machine.h",
+    "maperror.h",
+    "md5.h",
+    "meladx.h",
+    "melgra.h",
+    "minmax.h",
+    "mnt32.h",
+    "obj.h",
+    "protection.h",
+    "sdata.h",
+    "SemaphoreMap.h",
+    "Stackwalker.h",
+    "stack_manager.h",
+    "SyracuseProlog.h",
+    "SyracuseResponse.h",
+    "SyracuseSession.h",
+    "SyracuseVariable.h",
+    "token.h",
+    "trace.h",
+    "trex.h",
+    "xconst.h"
+  ]
+}

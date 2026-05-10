@@ -1,0 +1,83 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to release (e.g. v0.2.0). Must already exist.'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref }}
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Compile
+        run: npm run compile
+
+      - name: Run tests
+        run: npm test
+
+      - name: Verify package.json version matches tag
+        run: |
+          TAG="${{ github.event.inputs.tag || github.ref_name }}"
+          TAG_VERSION="${TAG#v}"
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          if [ "$TAG_VERSION" != "$PKG_VERSION" ]; then
+            echo "::error::Tag version ($TAG_VERSION) does not match package.json version ($PKG_VERSION). Bump package.json before tagging."
+            exit 1
+          fi
+          echo "Version matches: $PKG_VERSION"
+
+      - name: Package extension (.vsix)
+        run: npx --yes @vscode/vsce package --allow-missing-repository
+
+      - name: Resolve .vsix path
+        id: vsix
+        run: |
+          VSIX_PATH=$(ls *.vsix | head -1)
+          echo "path=$VSIX_PATH" >> "$GITHUB_OUTPUT"
+          echo "Found: $VSIX_PATH"
+
+      - name: Create / update GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.tag || github.ref_name }}
+          name: Hive Mind ${{ github.event.inputs.tag || github.ref_name }}
+          generate_release_notes: true
+          files: ${{ steps.vsix.outputs.path }}
+          body: |
+            ## Hive Mind ${{ github.event.inputs.tag || github.ref_name }}
+
+            Download the `.vsix` from the assets below, then install via:
+
+            ```bash
+            code --install-extension hive-mind-*.vsix
+            ```
+
+            Or in VS Code: **Extensions → ... → Install from VSIX...**
+
+            See `HOW-TO.md` in the repository for usage.

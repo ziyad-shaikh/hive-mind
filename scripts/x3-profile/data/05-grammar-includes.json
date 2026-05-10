@@ -1,0 +1,447 @@
+{
+  "generatedAt": "2026-05-09T17:26:07.297Z",
+  "runtimeRoot": "C:\\Users\\ziyad.shaikh\\source\\repos\\runtime",
+  "fileCount": 20,
+  "totalIncludeEdges": 132,
+  "topHeaders": [
+    {
+      "header": "adxdef.h",
+      "count": 11
+    },
+    {
+      "header": "divext.h",
+      "count": 11
+    },
+    {
+      "header": "stdio.h",
+      "count": 10
+    },
+    {
+      "header": "machine.h",
+      "count": 9
+    },
+    {
+      "header": "token.h",
+      "count": 9
+    },
+    {
+      "header": "sys/types.h",
+      "count": 8
+    },
+    {
+      "header": "string.h",
+      "count": 8
+    },
+    {
+      "header": "errfic.h",
+      "count": 8
+    },
+    {
+      "header": "varext.h",
+      "count": 8
+    },
+    {
+      "header": "graext.h",
+      "count": 8
+    },
+    {
+      "header": "calext.h",
+      "count": 8
+    },
+    {
+      "header": "valext.h",
+      "count": 6
+    },
+    {
+      "header": "setjmp.h",
+      "count": 4
+    },
+    {
+      "header": "windows.h",
+      "count": 3
+    },
+    {
+      "header": "meladx.h",
+      "count": 3
+    },
+    {
+      "header": "melgra.h",
+      "count": 3
+    },
+    {
+      "header": "stdlib.h",
+      "count": 2
+    },
+    {
+      "header": "search.h",
+      "count": 2
+    },
+    {
+      "header": "ctype.h",
+      "count": 2
+    },
+    {
+      "header": "minmax.h",
+      "count": 2
+    },
+    {
+      "header": "values.h",
+      "count": 2
+    },
+    {
+      "header": "io.h",
+      "count": 2
+    },
+    {
+      "header": "gram.h",
+      "count": 1
+    },
+    {
+      "header": "w32ext.h",
+      "count": 1
+    },
+    {
+      "header": "sdata.h",
+      "count": 1
+    }
+  ],
+  "files": [
+    {
+      "path": "src/grammar/ent.x",
+      "prologueCount": 1,
+      "includes": [
+        "sys/types.h",
+        "stdio.h",
+        "string.h",
+        "machine.h",
+        "adxdef.h",
+        "errfic.h",
+        "token.h",
+        "divext.h",
+        "varext.h",
+        "graext.h",
+        "valext.h",
+        "calext.h"
+      ],
+      "tokenCount": 175,
+      "sampleTokens": [
+        "ADDITM",
+        "AFFOND",
+        "ANASQL",
+        "APPEND",
+        "APPENDCL",
+        "AS",
+        "ASSIGN",
+        "AT"
+      ]
+    },
+    {
+      "path": "src/grammar/exp.x",
+      "prologueCount": 0,
+      "includes": [],
+      "tokenCount": 0,
+      "sampleTokens": []
+    },
+    {
+      "path": "src/grammar/filins.x",
+      "prologueCount": 0,
+      "includes": [],
+      "tokenCount": 0,
+      "sampleTokens": []
+    },
+    {
+      "path": "src/grammar/gralex.l",
+      "prologueCount": 1,
+      "includes": [
+        "sys/types.h",
+        "stdio.h",
+        "stdlib.h",
+        "search.h",
+        "ctype.h",
+        "string.h",
+        "minmax.h",
+        "windows.h",
+        "values.h",
+        "machine.h",
+        "adxdef.h",
+        "token.h",
+        "divext.h",
+        "graext.h",
+        "gram.h",
+        "errfic.h",
+        "varext.h",
+        "calext.h"
+      ],
+      "tokenCount": 0,
+      "sampleTokens": []
+    },
+    {
+      "path": "src/grammar/gram.y",
+      "prologueCount": 2,
+      "includes": [
+        "sys/types.h",
+        "setjmp.h",
+        "stdio.h",
+        "string.h",
+        "machine.h",
+        "adxdef.h",
+        "errfic.h",
+        "token.h",
+        "divext.h",
+        "varext.h",
+        "graext.h",
+        "valext.h",
+        "calext.h"
+      ],
+      "tokenCount": 175,
+      "sampleTokens": [
+        "ADDITM",
+        "AFFOND",
+        "ANASQL",
+        "APPEND",
+        "APPENDCL",
+        "AS",
+        "ASSIGN",
+        "AT"
+      ]
+    },
+    {
+      "path": "src/grammar/gram.ym4",
+      "prologueCount": 1,
+      "includes": [],
+      "tokenCount": 0,
+      "sampleTokens": []
+    },
+    {
+      "path": "src/grammar/ins.x",
+      "prologueCount": 0,
+      "includes": [],
+      "tokenCount": 0,
+      "sampleTokens": []
+    },
+    {
+      "path": "src/grammar/ins.y",
+      "prologueCount": 2,
+      "includes": [
+        "sys/types.h",
+        "setjmp.h",
+        "stdio.h",
+        "string.h",
+        "machine.h",
+        "adxdef.h",
+        "errfic.h",
+        "token.h",
+        "divext.h",
+        "varext.h",
+        "graext.h",
+        "valext.h",
+        "calext.h"
+      ],
+      "tokenCount": 175,
+      "sampleTokens": [
+        "ADDITM",
+        "AFFOND",
+        "ANASQL",
+        "APPEND",
+        "APPENDCL",
+        "AS",
+        "ASSIGN",
+        "AT"
+      ]
+    },
+    {
+      "path": "src/grammar/ins.ym4",
+      "prologueCount": 1,
+      "includes": [],
+      "tokenCount": 0,
+      "sampleTokens": []
+    },
+    {
+      "path": "src/grammar/melgra.y",
+      "prologueCount": 1,
+      "includes": [
+        "stdio.h",
+        "adxdef.h",
+        "divext.h",
+        "meladx.h",
+        "melgra.h"
+      ],
+      "tokenCount": 15,
+      "sampleTokens": [
+        "CRLF",
+        "ADRSEP",
+        "CTYTOK",
+        "DESCRIPT",
+        "ENDFLD",
+        "ENTTOK",
+        "ENTTOK2",
+        "PRTDEB"
+      ]
+    },
+    {
+      "path": "src/grammar/melgra.ym4",
+      "prologueCount": 1,
+      "includes": [
+        "stdio.h",
+        "adxdef.h",
+        "divext.h",
+        "meladx.h",
+        "melgra.h"
+      ],
+      "tokenCount": 15,
+      "sampleTokens": [
+        "CRLF",
+        "ADRSEP",
+        "CTYTOK",
+        "DESCRIPT",
+        "ENDFLD",
+        "ENTTOK",
+        "ENTTOK2",
+        "PRTDEB"
+      ]
+    },
+    {
+      "path": "src/grammar/mellex.l",
+      "prologueCount": 1,
+      "includes": [
+        "adxdef.h",
+        "divext.h",
+        "meladx.h",
+        "melgra.h",
+        "io.h",
+        "windows.h",
+        "w32ext.h",
+        "machine.h"
+      ],
+      "tokenCount": 0,
+      "sampleTokens": []
+    },
+    {
+      "path": "src/grammar/obj.y",
+      "prologueCount": 2,
+      "includes": [
+        "sys/types.h",
+        "setjmp.h",
+        "stdio.h",
+        "string.h",
+        "machine.h",
+        "adxdef.h",
+        "errfic.h",
+        "token.h",
+        "divext.h",
+        "varext.h",
+        "graext.h",
+        "valext.h",
+        "calext.h"
+      ],
+      "tokenCount": 175,
+      "sampleTokens": [
+        "ADDITM",
+        "AFFOND",
+        "ANASQL",
+        "APPEND",
+        "APPENDCL",
+        "AS",
+        "ASSIGN",
+        "AT"
+      ]
+    },
+    {
+      "path": "src/grammar/obj.ym4",
+      "prologueCount": 1,
+      "includes": [],
+      "tokenCount": 0,
+      "sampleTokens": []
+    },
+    {
+      "path": "src/grammar/sapins.x",
+      "prologueCount": 0,
+      "includes": [],
+      "tokenCount": 0,
+      "sampleTokens": []
+    },
+    {
+      "path": "src/grammar/sdata.y",
+      "prologueCount": 2,
+      "includes": [
+        "sys/types.h",
+        "setjmp.h",
+        "stdio.h",
+        "string.h",
+        "machine.h",
+        "adxdef.h",
+        "errfic.h",
+        "token.h",
+        "token.h",
+        "divext.h",
+        "varext.h",
+        "graext.h",
+        "valext.h",
+        "calext.h"
+      ],
+      "tokenCount": 0,
+      "sampleTokens": []
+    },
+    {
+      "path": "src/grammar/sdata.ym4",
+      "prologueCount": 1,
+      "includes": [],
+      "tokenCount": 0,
+      "sampleTokens": []
+    },
+    {
+      "path": "src/grammar/sdataent.x",
+      "prologueCount": 1,
+      "includes": [
+        "sys/types.h",
+        "stdio.h",
+        "string.h",
+        "machine.h",
+        "adxdef.h",
+        "errfic.h",
+        "token.h",
+        "divext.h",
+        "varext.h",
+        "graext.h",
+        "valext.h",
+        "calext.h"
+      ],
+      "tokenCount": 0,
+      "sampleTokens": []
+    },
+    {
+      "path": "src/grammar/sdataexp.x",
+      "prologueCount": 0,
+      "includes": [],
+      "tokenCount": 0,
+      "sampleTokens": []
+    },
+    {
+      "path": "src/grammar/sdatalex.l",
+      "prologueCount": 1,
+      "includes": [
+        "sys/types.h",
+        "stdio.h",
+        "stdlib.h",
+        "search.h",
+        "ctype.h",
+        "string.h",
+        "minmax.h",
+        "values.h",
+        "windows.h",
+        "io.h",
+        "machine.h",
+        "adxdef.h",
+        "token.h",
+        "divext.h",
+        "graext.h",
+        "sdata.h",
+        "errfic.h",
+        "varext.h",
+        "calext.h"
+      ],
+      "tokenCount": 0,
+      "sampleTokens": []
+    }
+  ]
+}

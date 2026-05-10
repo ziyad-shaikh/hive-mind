@@ -4,12 +4,9 @@ import * as path from 'path';
 import { DependencyAnalyzer } from '../analyzer/DependencyAnalyzer';
 import { SymbolAnalyzer } from '../analyzer/SymbolAnalyzer';
 import { GitAnalyzer } from '../analyzer/GitAnalyzer';
-import { ClangdClient, DocumentSymbol as LspDocumentSymbol, Location as LspLocation, Position as LspPosition, CallHierarchyItem, TypeHierarchyItem } from '../analyzer/ClangdClient';
 import { MacroExpander } from '../analyzer/MacroExpander';
 import { BuildSubset } from '../analyzer/BuildSubset';
 
-/** Lazy accessor for the shared ClangdClient singleton (or null if no workspace open). */
-type ClangdProvider = () => ClangdClient | null;
 /** Lazy accessor for the shared MacroExpander singleton (or null if no workspace open). */
 type MacroExpanderProvider = () => MacroExpander | null;
 /** Lazy accessor for the shared BuildSubset singleton (or null if no workspace open). */
@@ -686,6 +683,18 @@ class PlanChangeTool implements vscode.LanguageModelTool<PlanChangeInput> {
             addScore(entry.file, points, `co-changed ${entry.coChangeCount}x (${Math.round(entry.ratio * 100)}%)`);
         }
 
+        // Build-variant filtering. If the seed file belongs to a profile build
+        // variant (e.g. src/db/ora/oracli.cpp ∈ sadora), files from OTHER
+        // variants are configurationally exclusive — they're never linked
+        // together in any single binary. Demote them out of the modify/read
+        // sets so the agent doesn't try to "consistently update both."
+        const seedVariant = this.analyzer.getVariantOf(resolved);
+        const conflictsWithSeedVariant = (file: string): boolean => {
+            if (!seedVariant) { return false; }
+            const v = this.analyzer.getVariantOf(file);
+            return v !== null && v !== seedVariant;
+        };
+
         // Sort by score descending
         const ranked = [...fileScores.entries()]
             .sort((a, b) => b[1].score - a[1].score);
@@ -695,9 +704,14 @@ class PlanChangeTool implements vscode.LanguageModelTool<PlanChangeInput> {
         const mustModify: string[] = [];
         const shouldVerify: string[] = [];
         const maybeAffected: string[] = [];
+        const excludedVariantFiles: string[] = [];
 
         for (const [file, { score, reasons }] of ranked) {
             const r = rel(this.analyzer, file);
+            if (file !== resolved && conflictsWithSeedVariant(file)) {
+                excludedVariantFiles.push(r);
+                continue;
+            }
             if (file === resolved) {
                 mustModify.push(r);
             } else if (reasons.includes('directly imports this file')) {
@@ -749,8 +763,21 @@ class PlanChangeTool implements vscode.LanguageModelTool<PlanChangeInput> {
             }
         }
 
+        if (excludedVariantFiles.length > 0 && seedVariant) {
+            parts.push(`\n## ⚠ Excluded — wrong build variant (${excludedVariantFiles.length})\n`);
+            parts.push(`These files share names/imports with the change set but belong to other build variants ` +
+                       `(seed file is in **${seedVariant}**). They are *never* linked into the same binary as the seed and should NOT be edited as part of this change.\n`);
+            for (const f of excludedVariantFiles.slice(0, 10)) {
+                parts.push(`- \`${f}\``);
+            }
+            if (excludedVariantFiles.length > 10) {
+                parts.push(`- ... and ${excludedVariantFiles.length - 10} more`);
+            }
+        }
+
         parts.push(`\n---`);
-        parts.push(`**Summary:** ${mustModify.length} to modify, ${mustRead.length} to read, ${shouldVerify.length} tests, ${maybeAffected.length} peripherally affected.`);
+        const variantNote = seedVariant ? ` (variant: \`${seedVariant}\`)` : '';
+        parts.push(`**Summary:** ${mustModify.length} to modify, ${mustRead.length} to read, ${shouldVerify.length} tests, ${maybeAffected.length} peripherally affected${variantNote}.`);
 
         return new vscode.LanguageModelToolResult([
             new vscode.LanguageModelTextPart(parts.join('\n')),
@@ -992,6 +1019,29 @@ function isCppHeader(p: string): boolean { return CPP_HEADER_EXTS.has(path.extna
 function isCppSource(p: string): boolean { return CPP_SOURCE_EXTS.has(path.extname(p).toLowerCase()); }
 function isCppInline(p: string): boolean { return CPP_INLINE_EXTS.has(path.extname(p).toLowerCase()); }
 
+/**
+ * If `stem` matches a known module's pattern — i.e. `<m>ext`, `<m>in`, or
+ * `<m>WORD` where m is one of the listed modules — return m. Used by
+ * getCppPair to expand a file to its full module triplet.
+ */
+function identifyModule(knownModules: string[], stem: string): string | null {
+    const lower = stem.toLowerCase();
+    // Prefer the longest match so 'apl' doesn't shadow 'aplext'.
+    const sorted = [...knownModules].sort((a, b) => b.length - a.length);
+    for (const m of sorted) {
+        if (lower === m + 'ext' || lower === m + 'in') {
+            return m;
+        }
+        if (lower.startsWith(m)) {
+            const after = lower.slice(m.length);
+            if (after === '' || /^[0-9_]/.test(after) || /^[a-z]/.test(after)) {
+                return m;
+            }
+        }
+    }
+    return null;
+}
+
 class GetCppPairTool implements vscode.LanguageModelTool<GetCppPairInput> {
     constructor(private readonly analyzer: DependencyAnalyzer) {}
 
@@ -1024,10 +1074,14 @@ class GetCppPairTool implements vscode.LanguageModelTool<GetCppPairInput> {
         // Strategy:
         //   1. Same-stem siblings in the same directory (highest confidence)
         //   2. Same-stem files anywhere in the workspace (basename match)
-        //   3. Filter out the file itself
+        //   3. Profile-driven module triplet: if this file maps to a known
+        //      module (e.g. divext.h → module 'div'), include divin.h + every
+        //      src/div*.cpp as well. This is the X3 convention.
+        //   4. Filter out the file itself
         const headers: string[] = [];
         const sources: string[] = [];
         const inlines: string[] = [];
+        let moduleHint: string | null = null;
 
         const sameDirSiblings: string[] = [];
         const otherDirMatches: string[] = [];
@@ -1043,16 +1097,53 @@ class GetCppPairTool implements vscode.LanguageModelTool<GetCppPairInput> {
             }
         }
 
+        // Profile-driven module-triplet expansion.
+        const profile = this.analyzer.getProfile();
+        const moduleSiblings = new Set<string>();
+        if (profile) {
+            const m = identifyModule(profile.modulePattern.knownModules, stem);
+            if (m) {
+                moduleHint = m;
+                for (const f of allFiles) {
+                    if (f === resolved) { continue; }
+                    const fName = path.basename(f);
+                    const fExt = path.extname(f).toLowerCase();
+                    // <m>ext.h, <m>in.h, src/<m>WORD.cpp/.cc/.cxx/.c
+                    if (fName.toLowerCase() === `${m}ext.h` || fName.toLowerCase() === `${m}in.h`) {
+                        moduleSiblings.add(f);
+                    } else if ((isCppSource(f) || isCppInline(f)) && fName.toLowerCase().startsWith(m)) {
+                        // Distinguish e.g. 'div' from 'divx': require the next char
+                        // to be a digit, an underscore, lower-case word boundary,
+                        // or be exactly the dot separator.
+                        const after = fName.slice(m.length, fName.length - fExt.length);
+                        if (after === '' || /^[0-9_]/.test(after) || /^[a-z]/.test(after)) {
+                            moduleSiblings.add(f);
+                        }
+                    }
+                }
+            }
+        }
+
         const bucket = (f: string) => {
             if (isCppHeader(f)) { headers.push(f); }
             else if (isCppSource(f)) { sources.push(f); }
             else if (isCppInline(f)) { inlines.push(f); }
         };
-        for (const f of sameDirSiblings) { bucket(f); }
-        for (const f of otherDirMatches) { bucket(f); }
+        const seen = new Set<string>([resolved]);
+        const dedup = (f: string) => {
+            if (seen.has(f)) { return; }
+            seen.add(f);
+            bucket(f);
+        };
+        for (const f of sameDirSiblings) { dedup(f); }
+        for (const f of otherDirMatches) { dedup(f); }
+        for (const f of moduleSiblings)  { dedup(f); }
 
         const parts: string[] = [];
         parts.push(`# C/C++ Pair for \`${rel(this.analyzer, resolved)}\`\n`);
+        if (moduleHint) {
+            parts.push(`_Module: \`${moduleHint}\` — expanded via project profile (\`${moduleHint}ext.h\` / \`${moduleHint}in.h\` / \`src/${moduleHint}*.cpp\`)._\n`);
+        }
 
         const renderList = (label: string, files: string[]) => {
             if (files.length === 0) {
@@ -1227,173 +1318,108 @@ class FindMacroTool implements vscode.LanguageModelTool<FindMacroInput> {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Tool: hivemind_findReferences  (clangd-backed, AST-precise)
+// Tool: hivemind_findReferences  (tree-sitter scope resolver)
 // ─────────────────────────────────────────────────────────────────────────────
 //
-// Returns every place a C/C++ symbol is *actually* referenced — not text-grep
-// hits. Resolves through clang's AST so it understands:
-//   • Overload resolution  (foo(int) vs foo(double))
-//   • Namespaces           (ns::foo vs ::foo)
-//   • Method dispatch      (Bar::foo() vs Baz::foo())
-//   • #ifdef configurations (only the active variant)
-//   • Templates            (instantiations of T::foo)
+// Returns every place a C/C++ symbol is referenced. Uses Hive Mind's own
+// tree-sitter index built from the workspace, so we have no LSP dependency:
+//   • The resolver tags each hit with a `confidence` (high/medium/low) based
+//     on how unique the name is across the workspace.
+//   • Comments, string literals, and preprocessor branches are stripped before
+//     matching, so we don't get noise from `// foo()` or `"foo()"`.
+//   • Declaration sites are flagged with `isDeclaration` so callers can show
+//     them in a separate group.
 //
-// This is the single largest C++ refactor-safety improvement in Hive Mind.
-//
-// Two invocation styles:
-//   1. Symbol-by-name:    { filePath, symbolName } — uses clangd documentSymbols
-//                         to locate the definition's selection range, then queries
-//                         references at that position.
-//   2. Position-explicit: { filePath, line, character } — caller already knows
-//                         the cursor position (e.g. from getContext output).
-//
-// If clangd is unavailable, returns a clear, actionable error that tells the
-// AI agent how to fix it (and to fall back to hivemind_findSymbol).
+// Caller passes `symbolName`. Position-only queries are not supported by the
+// scope resolver (we don't keep token positions of every reference site).
 
 interface FindReferencesInput {
     filePath: string;
     symbolName?: string;
-    line?: number;        // 1-indexed (human convention) — converted to 0-indexed for LSP
-    character?: number;   // 0-indexed (LSP convention)
+    line?: number;        // accepted for backwards-compat; ignored by the resolver
+    character?: number;   // accepted for backwards-compat; ignored
     includeDeclaration?: boolean;
     maxResults?: number;
 }
 
 class FindReferencesTool implements vscode.LanguageModelTool<FindReferencesInput> {
-    constructor(
-        private readonly analyzer: DependencyAnalyzer,
-        private readonly clangd: ClangdProvider
-    ) {}
+    constructor(private readonly analyzer: DependencyAnalyzer) {}
 
     async invoke(
         options: vscode.LanguageModelToolInvocationOptions<FindReferencesInput>,
         _token: vscode.CancellationToken
     ): Promise<vscode.LanguageModelToolResult> {
-        const { includeDeclaration = true, maxResults = 100 } = options.input;
-
-        const clientOrErr = await ensureClangdReady(this.clangd, 'hivemind_findReferences');
-        if (isToolResult(clientOrErr)) { return clientOrErr; }
-        const client = clientOrErr;
-
-        const sym = await resolveSymbolPosition(this.analyzer, client, options.input);
-        if (isToolResult(sym)) { return sym; }
-
-        let locations: LspLocation[] = [];
-        try {
-            locations = await client.references(sym.file, sym.position, includeDeclaration);
-        } catch (e) {
+        const { symbolName, includeDeclaration = true, maxResults = 100 } = options.input;
+        if (!symbolName || !symbolName.trim()) {
             return text(
-                `⚠️ clangd \`textDocument/references\` failed: ${e instanceof Error ? e.message : String(e)}`,
+                `⚠️ \`hivemind_findReferences\` (tree-sitter mode) requires \`symbolName\`.`,
+                `Position-only queries (\`line\`/\`character\`) are not supported in this build.`
+            );
+        }
+        const resolver = this.analyzer.getScopeResolver();
+        const refs = await resolver.findReferences({
+            symbolName: symbolName.trim(),
+            includeDeclaration,
+            maxResults,
+        });
+
+        if (refs.length === 0) {
+            return text(
+                `# References to \`${symbolName}\``,
                 ``,
-                `This usually means the file is not in clangd's compilation database (\`compile_commands.json\`). ` +
-                `clangd can still answer some queries via heuristics, but precision suffers.`
+                `_No references found in the workspace._`,
+                ``,
+                `Possible reasons:`,
+                `- The symbol is unused, or only declared (not called) anywhere indexed.`,
+                `- The file containing it is not in the Hive Mind index (check \`hiveMind.maxFiles\`).`,
+                `- The name in your query has a typo or different casing.`
             );
         }
 
-        return text(
-            ...this.formatResults(sym.name, sym.file, sym.position, locations, maxResults, includeDeclaration)
-        );
-    }
-
-    /** Format reference results as Markdown grouped by file. */
-    private formatResults(
-        symbolName: string | null,
-        queriedFile: string,
-        position: LspPosition,
-        locations: LspLocation[],
-        maxResults: number,
-        includeDeclaration: boolean
-    ): string[] {
-        const queriedRel = rel(this.analyzer, queriedFile);
-        const symLabel = symbolName ? `\`${symbolName}\`` : `cursor at ${queriedRel}:${position.line + 1}:${position.character}`;
-
-        if (locations.length === 0) {
-            return [
-                `# References to ${symLabel}`,
-                ``,
-                `_clangd returned **0** references._`,
-                ``,
-                `Possible reasons:`,
-                `- The symbol is unused.`,
-                `- The cursor was on whitespace or punctuation, not an identifier (try a different position).`,
-                `- The file is not in \`compile_commands.json\` and clangd's heuristic mode could not resolve it.`,
-            ];
+        // Group by file, preserving the resolver's confidence.
+        const byFile = new Map<string, typeof refs>();
+        for (const r of refs) {
+            const list = byFile.get(r.file) ?? [];
+            list.push(r);
+            byFile.set(r.file, list);
         }
 
-        // Group by file
-        const byFile = new Map<string, LspLocation[]>();
-        for (const loc of locations) {
-            const localPath = uriToPath(loc.uri);
-            if (!byFile.has(localPath)) { byFile.set(localPath, []); }
-            byFile.get(localPath)!.push(loc);
-        }
+        const conf = refs[0]?.confidence ?? 'medium';
+        const confNote =
+            conf === 'high'   ? 'unique name across the workspace — high confidence' :
+            conf === 'medium' ? 'name appears in 2-4 distinct declarations — verify scope' :
+                                'name is overloaded/common — verify each result manually';
 
-        // Sort: file with declaration first (matches queried file), then by reference count desc
-        const fileEntries = [...byFile.entries()].sort((a, b) => {
-            const aIsQueried = path.normalize(a[0]).toLowerCase() === path.normalize(queriedFile).toLowerCase();
-            const bIsQueried = path.normalize(b[0]).toLowerCase() === path.normalize(queriedFile).toLowerCase();
-            if (aIsQueried && !bIsQueried) { return -1; }
-            if (bIsQueried && !aIsQueried) { return 1; }
-            return b[1].length - a[1].length;
-        });
-
-        const totalFiles = fileEntries.length;
-        const totalRefs = locations.length;
         const out: string[] = [];
-        out.push(`# References to ${symLabel}`);
+        out.push(`# References to \`${symbolName}\``);
         out.push('');
-        out.push(`Found **${totalRefs}** reference(s) across **${totalFiles}** file(s) (clangd, AST-precise${includeDeclaration ? ', incl. declaration' : ''}).`);
+        out.push(`Found **${refs.length}** reference(s) across **${byFile.size}** file(s) (tree-sitter + scope filter; ${confNote}).`);
         out.push('');
 
+        const sortedFiles = [...byFile.entries()].sort((a, b) => b[1].length - a[1].length);
         let shown = 0;
         let truncated = false;
-        for (const [file, locs] of fileEntries) {
+        for (const [file, list] of sortedFiles) {
             if (shown >= maxResults) { truncated = true; break; }
-            const relPath = rel(this.analyzer, file);
-            out.push(`## \`${relPath}\` _(${locs.length} ref${locs.length === 1 ? '' : 's'})_`);
+            out.push(`## \`${rel(this.analyzer, file)}\` _(${list.length} ref${list.length === 1 ? '' : 's'})_`);
             out.push('');
-            const lines = readFileLinesSafe(file);
-            // Sort references within a file by line
-            locs.sort((a, b) => a.range.start.line - b.range.start.line || a.range.start.character - b.range.start.character);
-            for (const loc of locs) {
+            list.sort((a, b) => a.line - b.line || a.column - b.column);
+            for (const r of list) {
                 if (shown >= maxResults) { truncated = true; break; }
-                const lineNum = loc.range.start.line + 1;   // back to 1-indexed for display
-                const lineText = lines[loc.range.start.line]?.trim() ?? '(line not readable)';
-                const truncLine = lineText.length > 200 ? lineText.slice(0, 200) + '…' : lineText;
-                out.push(`- **L${lineNum}:** \`${truncLine.replace(/`/g, '\\`')}\``);
+                const declMark = r.isDeclaration ? ' _(decl)_' : '';
+                out.push(`- **L${r.line}:** \`${r.snippet.replace(/`/g, '\\`')}\`${declMark}`);
                 shown++;
             }
             out.push('');
         }
-
         if (truncated) {
-            out.push(`_${totalRefs - shown} more reference(s) omitted (raise \`maxResults\` to see them)._`);
+            out.push(`_${refs.length - shown} more reference(s) omitted (raise \`maxResults\`)._`);
         }
-        return out;
-    }
-}
-
-/** Convert an `lsp:LocationUri` (file:// URI) back to an absolute filesystem path. */
-function uriToPath(uri: string): string {
-    if (!uri.startsWith('file://')) { return uri; }
-    let p = decodeURIComponent(uri.slice('file://'.length));
-    // On Windows, file:///C:/foo → /C:/foo → strip leading slash
-    if (process.platform === 'win32' && /^\/[a-zA-Z]:/.test(p)) {
-        p = p.slice(1);
-    }
-    return path.normalize(p);
-}
-
-/** Read a file into lines for snippet display; returns [] on failure. */
-function readFileLinesSafe(file: string): string[] {
-    try {
-        if (!fs.existsSync(file)) { return []; }
-        const stat = fs.statSync(file);
-        // Skip giant files (>5MB) — generated/amalgamated; snippets aren't worth the cost
-        if (stat.size > 5 * 1024 * 1024) { return []; }
-        return fs.readFileSync(file, 'utf-8').split(/\r?\n/);
-    } catch {
-        return [];
+        if (conf !== 'high') {
+            out.push(``);
+            out.push(`> **Confidence: \`${conf}\`** — for AST-exact verification on a critical refactor, run \`hivemind_buildSubset\` after applying changes to confirm no override or call site was missed.`);
+        }
+        return text(...out);
     }
 }
 
@@ -1405,121 +1431,16 @@ function text(...parts: string[]): vscode.LanguageModelToolResult {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Shared helpers for clangd-backed tools
-// ─────────────────────────────────────────────────────────────────────────────
-
-interface SymbolPositionInput {
-    filePath: string;
-    symbolName?: string;
-    line?: number;
-    character?: number;
-}
-
-/** Result of resolving a symbol name / cursor to a clangd-ready position. */
-interface ResolvedSymbol {
-    file: string;                 // absolute path
-    position: LspPosition;        // 0-indexed line + character
-    name: string | null;          // resolved symbol name (matched in documentSymbols), or null if position-only
-}
-
-/**
- * Resolve { filePath, symbolName? | line+character? } into an absolute file path
- * and an LSP cursor position. Returns either a resolved symbol or an error
- * tool-result that should be returned directly to the caller.
- */
-async function resolveSymbolPosition(
-    analyzer: DependencyAnalyzer,
-    client: ClangdClient,
-    input: SymbolPositionInput
-): Promise<ResolvedSymbol | vscode.LanguageModelToolResult> {
-    const resolved = analyzer.resolveFilePath(input.filePath);
-    if (!resolved) {
-        return text(
-            `⚠️ File "${input.filePath}" not found in the Hive Mind index.`,
-            `The index contains ${analyzer.getNodeCount()} files. Use a workspace-relative path.`
-        );
-    }
-
-    if (typeof input.line === 'number' && typeof input.character === 'number') {
-        return {
-            file: resolved,
-            position: { line: Math.max(0, input.line - 1), character: Math.max(0, input.character) },
-            name: input.symbolName?.trim() || null,
-        };
-    }
-
-    if (input.symbolName && input.symbolName.trim()) {
-        const located = await locateSymbolInFile(client, resolved, input.symbolName.trim());
-        if (!located) {
-            return text(
-                `⚠️ Could not locate symbol \`${input.symbolName}\` in \`${analyzer.toRelative(resolved)}\`.`,
-                ``,
-                `clangd's document symbols for this file did not contain a top-level (or nested) symbol named "${input.symbolName}".`,
-                `Try one of:`,
-                `- Pass an explicit \`line\` (1-indexed) and \`character\` (0-indexed) of the symbol's cursor position.`,
-                `- Use \`hivemind_findSymbol\` to locate the file that *defines* the symbol, then call this tool against that file.`,
-            );
-        }
-        return { file: resolved, position: located.selectionRange.start, name: located.name };
-    }
-
-    return text(`⚠️ Provide either \`symbolName\` (most common) or both \`line\` and \`character\`.`);
-}
-
-/** Recursively walk documentSymbols looking for an exact-name match (handles `Foo::bar` by tail). */
-async function locateSymbolInFile(
-    client: ClangdClient,
-    file: string,
-    name: string
-): Promise<LspDocumentSymbol | null> {
-    let symbols: LspDocumentSymbol[] = [];
-    try { symbols = await client.documentSymbols(file); } catch { return null; }
-    const target = name.trim();
-    const tail = target.includes('::') ? target.split('::').pop()!.trim() : target;
-    const stack = [...symbols];
-    while (stack.length > 0) {
-        const sym = stack.pop()!;
-        if (sym.name === target || sym.name === tail) { return sym; }
-        if (sym.children) { stack.push(...sym.children); }
-    }
-    return null;
-}
-
-/** Ensure clangd is available; returns a tool-result error if not. */
-async function ensureClangdReady(
-    clangdProvider: ClangdProvider,
-    toolName: string
-): Promise<ClangdClient | vscode.LanguageModelToolResult> {
-    const client = clangdProvider();
-    if (!client) {
-        return text(`⚠️ \`${toolName}\` requires a workspace folder. None is open.`);
-    }
-    const info = await client.getInfo();
-    if (!info.available) {
-        return text(
-            `⚠️ clangd is not available, so \`${toolName}\` cannot run.`,
-            `**Reason:** ${info.reason ?? 'unknown'}`,
-            ``,
-            `**Fix:** install LLVM/clangd or the "llvm-vs-code-extensions.vscode-clangd" extension, then run \`Hive Mind: Check clangd Status\`.`
-        );
-    }
-    return client;
-}
-
-function isToolResult(x: unknown): x is vscode.LanguageModelToolResult {
-    return x instanceof vscode.LanguageModelToolResult;
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Tool: hivemind_findOverrides  (clangd-backed)
+// Tool: hivemind_findOverrides  (tree-sitter scope resolver)
 // ─────────────────────────────────────────────────────────────────────────────
 //
 // For a virtual method, returns every concrete override across the codebase.
 // Closes the virtual-dispatch blind spot — without this, AI refactors of class
 // hierarchies routinely miss override sites and silently break runtime behavior.
 //
-// Implemented via LSP `textDocument/implementation`. clangd handles the AST
-// resolution; we just navigate to the declaration and ask.
+// Implemented against the tree-sitter scope resolver: we walk the inheritance
+// closure built during indexing and look for matching method declarations on
+// each derived class.
 
 interface FindOverridesInput {
     filePath: string;
@@ -1530,94 +1451,69 @@ interface FindOverridesInput {
 }
 
 class FindOverridesTool implements vscode.LanguageModelTool<FindOverridesInput> {
-    constructor(
-        private readonly analyzer: DependencyAnalyzer,
-        private readonly clangd: ClangdProvider
-    ) {}
+    constructor(private readonly analyzer: DependencyAnalyzer) {}
 
     async invoke(
         options: vscode.LanguageModelToolInvocationOptions<FindOverridesInput>,
         _token: vscode.CancellationToken
     ): Promise<vscode.LanguageModelToolResult> {
-        const { maxResults = 100 } = options.input;
-        const clientOrErr = await ensureClangdReady(this.clangd, 'hivemind_findOverrides');
-        if (isToolResult(clientOrErr)) { return clientOrErr; }
-        const client = clientOrErr;
+        const { symbolName, maxResults = 100 } = options.input;
+        if (!symbolName || !symbolName.trim()) {
+            return text(`⚠️ \`hivemind_findOverrides\` requires \`symbolName\` (the virtual method name).`);
+        }
+        const resolver = this.analyzer.getScopeResolver();
+        const overrides = await resolver.findOverrides({ symbolName: symbolName.trim() });
 
-        const sym = await resolveSymbolPosition(this.analyzer, client, options.input);
-        if (isToolResult(sym)) { return sym; }
-
-        let impls: LspLocation[] = [];
-        try {
-            impls = await client.implementations(sym.file, sym.position);
-        } catch (e) {
+        if (overrides.length === 0) {
             return text(
-                `⚠️ clangd \`textDocument/implementation\` failed: ${e instanceof Error ? e.message : String(e)}`,
+                `# Overrides of \`${symbolName}\``,
                 ``,
-                `If the file is not in \`compile_commands.json\`, clangd cannot resolve overrides reliably.`
+                `_No overrides found._`,
+                ``,
+                `Possible reasons:`,
+                `- The method is non-virtual (tree-sitter saw no \`virtual\` keyword in any base declaration).`,
+                `- The base class has no derived classes in the indexed code.`,
+                `- The method is declared in a header that isn't indexed.`
             );
         }
 
-        const symLabel = sym.name ? `\`${sym.name}\`` : `cursor at ${this.analyzer.toRelative(sym.file)}:${sym.position.line + 1}:${sym.position.character}`;
-        if (impls.length === 0) {
-            return text(
-                `# Overrides of ${symLabel}`,
-                ``,
-                `_clangd returned **0** implementations._`,
-                ``,
-                `Possible reasons:`,
-                `- The method is non-virtual.`,
-                `- It has no overrides yet.`,
-                `- The cursor is on a non-method symbol — try positioning on the method name itself.`,
-                `- The TU is not in \`compile_commands.json\`.`
-            );
+        const sliced = overrides.slice(0, maxResults);
+        const byClass = new Map<string, typeof sliced>();
+        for (const o of sliced) {
+            const list = byClass.get(o.className) ?? [];
+            list.push(o);
+            byClass.set(o.className, list);
         }
 
         const out: string[] = [];
-        out.push(`# Overrides of ${symLabel}`);
+        out.push(`# Overrides of \`${symbolName}\``);
         out.push('');
-        out.push(`Found **${impls.length}** implementation(s) (clangd, AST-precise):`);
+        out.push(`Found **${overrides.length}** implementation(s) across **${byClass.size}** derived class(es) (tree-sitter + inheritance closure).`);
         out.push('');
 
-        // Group by file
-        const byFile = new Map<string, LspLocation[]>();
-        for (const loc of impls) {
-            const local = uriToPath(loc.uri);
-            if (!byFile.has(local)) { byFile.set(local, []); }
-            byFile.get(local)!.push(loc);
-        }
-        const sortedFiles = [...byFile.entries()].sort((a, b) => b[1].length - a[1].length);
+        const confidenceCounts = { high: 0, medium: 0, low: 0 } as Record<string, number>;
+        for (const o of sliced) { confidenceCounts[o.confidence]++; }
+        out.push(`Confidence breakdown: **${confidenceCounts.high}** high · **${confidenceCounts.medium}** medium · **${confidenceCounts.low}** low.`);
+        out.push('');
 
-        let shown = 0;
-        for (const [file, locs] of sortedFiles) {
-            if (shown >= maxResults) { break; }
-            const lines = readFileLinesSafe(file);
-            const relPath = rel(this.analyzer, file);
-            out.push(`## \`${relPath}\``);
-            locs.sort((a, b) => a.range.start.line - b.range.start.line);
-            for (const loc of locs) {
-                if (shown >= maxResults) { break; }
-                const ln = loc.range.start.line + 1;
-                const lineText = lines[loc.range.start.line]?.trim() ?? '(line not readable)';
-                const trunc = lineText.length > 200 ? lineText.slice(0, 200) + '…' : lineText;
-                out.push(`- **L${ln}:** \`${trunc.replace(/`/g, '\\`')}\``);
-                shown++;
+        for (const [cls, list] of byClass) {
+            out.push(`## \`${cls}\``);
+            for (const o of list) {
+                out.push(`- **L${o.line}** in \`${rel(this.analyzer, o.file)}\` — confidence \`${o.confidence}\` (${o.confidenceReason})${o.paramCount !== null ? `, ${o.paramCount} param(s)` : ''}`);
             }
             out.push('');
         }
 
-        if (impls.length > shown) {
-            out.push(`_${impls.length - shown} more override(s) omitted (raise \`maxResults\` to see them)._`);
+        if (overrides.length > maxResults) {
+            out.push(`_${overrides.length - maxResults} more override(s) omitted (raise \`maxResults\` to see them)._`);
         }
-        out.push(`\n**Refactor rule:** When changing the signature or contract of a virtual method, ` +
-                 `every override above must be updated in lockstep. Skipping any one breaks Liskov substitution.`);
-
+        out.push(`**Refactor rule:** every \`high\`-confidence override above must be updated in lockstep when you change the base method's signature or contract. \`medium\`/\`low\` results should be sanity-checked manually before relying on the list.`);
         return text(...out);
     }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Tool: hivemind_callHierarchy  (clangd-backed)
+// Tool: hivemind_callHierarchy  (tree-sitter scope resolver)
 // ─────────────────────────────────────────────────────────────────────────────
 //
 // Returns the call graph around a function — who calls it (incoming), what it
@@ -1640,124 +1536,71 @@ interface CallHierarchyInput {
 }
 
 class CallHierarchyTool implements vscode.LanguageModelTool<CallHierarchyInput> {
-    constructor(
-        private readonly analyzer: DependencyAnalyzer,
-        private readonly clangd: ClangdProvider
-    ) {}
+    constructor(private readonly analyzer: DependencyAnalyzer) {}
 
     async invoke(
         options: vscode.LanguageModelToolInvocationOptions<CallHierarchyInput>,
         _token: vscode.CancellationToken
     ): Promise<vscode.LanguageModelToolResult> {
+        const { symbolName } = options.input;
         const direction = options.input.direction ?? 'both';
         const depth = Math.min(2, Math.max(1, options.input.depth ?? 1));
         const maxPerLevel = options.input.maxPerLevel ?? 25;
-
-        const clientOrErr = await ensureClangdReady(this.clangd, 'hivemind_callHierarchy');
-        if (isToolResult(clientOrErr)) { return clientOrErr; }
-        const client = clientOrErr;
-
-        const sym = await resolveSymbolPosition(this.analyzer, client, options.input);
-        if (isToolResult(sym)) { return sym; }
-
-        // Step 1: prepare hierarchy at the cursor
-        let prepared: CallHierarchyItem[] = [];
-        try {
-            prepared = await client.prepareCallHierarchy(sym.file, sym.position);
-        } catch (e) {
-            return text(`⚠️ clangd \`prepareCallHierarchy\` failed: ${e instanceof Error ? e.message : String(e)}`);
+        if (!symbolName || !symbolName.trim()) {
+            return text(`⚠️ \`hivemind_callHierarchy\` requires \`symbolName\` (the function name).`);
         }
-        if (prepared.length === 0) {
-            return text(
-                `# Call Hierarchy: ${sym.name ?? this.analyzer.toRelative(sym.file)}`,
-                ``,
-                `_clangd could not anchor a call hierarchy at this position._`,
-                ``,
-                `Position the cursor on a function name (declaration or call site). Free functions, methods, and lambdas with names all work; lambda *call sites* without a name don't.`
-            );
-        }
-
-        const root = prepared[0];
-        const rootLabel = `\`${root.detail ? root.detail + ' ' : ''}${root.name}\``;
+        const resolver = this.analyzer.getScopeResolver();
+        const result = await resolver.callHierarchy({
+            symbolName: symbolName.trim(),
+            direction,
+            depth,
+            maxPerLevel,
+        });
 
         const out: string[] = [];
-        out.push(`# Call Hierarchy: ${rootLabel}`);
+        out.push(`# Call Hierarchy: \`${symbolName}\``);
         out.push('');
-        out.push(`Defined at \`${rel(this.analyzer, uriToPath(root.uri))}:${root.range.start.line + 1}\``);
+        out.push(`Source: tree-sitter scope resolver (depth=${depth}, max-per-level=${maxPerLevel})`);
         out.push('');
+
+        const renderNode = (node: any, indent: string): void => {
+            const loc = node.file
+                ? `\`${rel(this.analyzer, node.file)}:${node.line ?? '?'}\``
+                : '_(unresolved — likely external/stdlib)_';
+            out.push(`${indent}- \`${node.qualifiedName}\` — ${loc} — confidence \`${node.confidence}\``);
+            if (node.children && node.children.length > 0) {
+                for (const child of node.children) {
+                    renderNode(child, indent + '    ');
+                }
+            }
+        };
 
         if (direction === 'incoming' || direction === 'both') {
             out.push(`## Incoming (callers)`);
-            await this.renderIncoming(client, root, depth, maxPerLevel, out, '');
+            if (result.incoming.length === 0) {
+                out.push(`- _(no callers found in indexed code)_`);
+            } else {
+                for (const node of result.incoming) { renderNode(node, ''); }
+            }
             out.push('');
         }
-
         if (direction === 'outgoing' || direction === 'both') {
             out.push(`## Outgoing (callees)`);
-            await this.renderOutgoing(client, root, depth, maxPerLevel, out, '');
+            if (result.outgoing.length === 0) {
+                out.push(`- _(no outgoing calls extracted — function may be empty or not parsed)_`);
+            } else {
+                for (const node of result.outgoing) { renderNode(node, ''); }
+            }
             out.push('');
         }
 
+        out.push(`**Note:** \`low\` confidence callees are typically calls into stdlib / system headers / unindexed templates — they didn't match any decl in the workspace.`);
         return text(...out);
-    }
-
-    private async renderIncoming(
-        client: ClangdClient,
-        item: CallHierarchyItem,
-        depth: number,
-        cap: number,
-        out: string[],
-        indent: string
-    ): Promise<void> {
-        const calls = await client.incomingCalls(item).catch(() => []);
-        if (calls.length === 0) {
-            out.push(`${indent}- _(no callers found)_`);
-            return;
-        }
-        const capped = calls.slice(0, cap);
-        for (const c of capped) {
-            const f = uriToPath(c.from.uri);
-            const ln = c.from.selectionRange.start.line + 1;
-            out.push(`${indent}- \`${c.from.name}\` — \`${rel(this.analyzer, f)}:${ln}\` _(${c.fromRanges.length} call site${c.fromRanges.length === 1 ? '' : 's'})_`);
-            if (depth > 1) {
-                await this.renderIncoming(client, c.from, depth - 1, cap, out, indent + '    ');
-            }
-        }
-        if (calls.length > cap) {
-            out.push(`${indent}- _… ${calls.length - cap} more caller(s) not shown_`);
-        }
-    }
-
-    private async renderOutgoing(
-        client: ClangdClient,
-        item: CallHierarchyItem,
-        depth: number,
-        cap: number,
-        out: string[],
-        indent: string
-    ): Promise<void> {
-        const calls = await client.outgoingCalls(item).catch(() => []);
-        if (calls.length === 0) {
-            out.push(`${indent}- _(no outgoing calls found)_`);
-            return;
-        }
-        const capped = calls.slice(0, cap);
-        for (const c of capped) {
-            const f = uriToPath(c.to.uri);
-            const ln = c.to.selectionRange.start.line + 1;
-            out.push(`${indent}- \`${c.to.name}\` — \`${rel(this.analyzer, f)}:${ln}\``);
-            if (depth > 1) {
-                await this.renderOutgoing(client, c.to, depth - 1, cap, out, indent + '    ');
-            }
-        }
-        if (calls.length > cap) {
-            out.push(`${indent}- _… ${calls.length - cap} more callee(s) not shown_`);
-        }
     }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Tool: hivemind_typeHierarchy  (clangd-backed)
+// Tool: hivemind_typeHierarchy  (tree-sitter scope resolver)
 // ─────────────────────────────────────────────────────────────────────────────
 //
 // Returns supertypes and/or subtypes of a class. Critical for refactoring
@@ -1775,123 +1618,65 @@ interface TypeHierarchyInput {
 }
 
 class TypeHierarchyTool implements vscode.LanguageModelTool<TypeHierarchyInput> {
-    constructor(
-        private readonly analyzer: DependencyAnalyzer,
-        private readonly clangd: ClangdProvider
-    ) {}
+    constructor(private readonly analyzer: DependencyAnalyzer) {}
 
     async invoke(
         options: vscode.LanguageModelToolInvocationOptions<TypeHierarchyInput>,
         _token: vscode.CancellationToken
     ): Promise<vscode.LanguageModelToolResult> {
+        const { symbolName } = options.input;
         const direction = options.input.direction ?? 'both';
         const depth = Math.min(3, Math.max(1, options.input.depth ?? 2));
         const maxPerLevel = options.input.maxPerLevel ?? 25;
-
-        const clientOrErr = await ensureClangdReady(this.clangd, 'hivemind_typeHierarchy');
-        if (isToolResult(clientOrErr)) { return clientOrErr; }
-        const client = clientOrErr;
-
-        const sym = await resolveSymbolPosition(this.analyzer, client, options.input);
-        if (isToolResult(sym)) { return sym; }
-
-        let prepared: TypeHierarchyItem[] = [];
-        try {
-            prepared = await client.prepareTypeHierarchy(sym.file, sym.position);
-        } catch (e) {
-            return text(`⚠️ clangd \`prepareTypeHierarchy\` failed: ${e instanceof Error ? e.message : String(e)}`);
+        if (!symbolName || !symbolName.trim()) {
+            return text(`⚠️ \`hivemind_typeHierarchy\` requires \`symbolName\` (the class / struct name).`);
         }
-        if (prepared.length === 0) {
-            return text(
-                `# Type Hierarchy: ${sym.name ?? this.analyzer.toRelative(sym.file)}`,
-                ``,
-                `_clangd could not anchor a type hierarchy at this position._`,
-                ``,
-                `Position the cursor on a class, struct, or interface name.`
-            );
-        }
-
-        const root = prepared[0];
-        const rootLabel = `\`${root.name}\``;
+        const resolver = this.analyzer.getScopeResolver();
+        const result = await resolver.typeHierarchy({
+            className: symbolName.trim(),
+            direction,
+            depth,
+            maxPerLevel,
+        });
 
         const out: string[] = [];
-        out.push(`# Type Hierarchy: ${rootLabel}`);
+        out.push(`# Type Hierarchy: \`${symbolName}\``);
         out.push('');
-        out.push(`Defined at \`${rel(this.analyzer, uriToPath(root.uri))}:${root.range.start.line + 1}\``);
+        out.push(`Source: tree-sitter scope resolver (depth=${depth}, max-per-level=${maxPerLevel})`);
         out.push('');
+
+        const renderNode = (node: any, indent: string): void => {
+            const loc = node.file
+                ? `\`${rel(this.analyzer, node.file)}:${node.line ?? '?'}\``
+                : '_(unresolved)_';
+            out.push(`${indent}- \`${node.className}\` — ${loc} — confidence \`${node.confidence}\``);
+            if (node.children && node.children.length > 0) {
+                for (const child of node.children) {
+                    renderNode(child, indent + '    ');
+                }
+            }
+        };
 
         if (direction === 'supertypes' || direction === 'both') {
-            out.push(`## Supertypes (parents — bases this type derives from)`);
-            await this.renderSupertypes(client, root, depth, maxPerLevel, out, '');
+            out.push(`## Supertypes (bases)`);
+            if (result.supertypes.length === 0) {
+                out.push(`- _(no supertypes — class either has no \`: public X\` clause or its bases aren't indexed)_`);
+            } else {
+                for (const node of result.supertypes) { renderNode(node, ''); }
+            }
             out.push('');
         }
-
         if (direction === 'subtypes' || direction === 'both') {
-            out.push(`## Subtypes (children — types that derive from this)`);
-            await this.renderSubtypes(client, root, depth, maxPerLevel, out, '');
+            out.push(`## Subtypes (derived classes)`);
+            if (result.subtypes.length === 0) {
+                out.push(`- _(no subtypes found in indexed code)_`);
+            } else {
+                for (const node of result.subtypes) { renderNode(node, ''); }
+            }
             out.push('');
         }
-
-        out.push(
-            `**Refactor rule:** Changing a base class affects every subtype above. ` +
-            `When adding/removing/altering virtual methods, also call \`hivemind_findOverrides\` on each affected method to find the concrete implementations.`
-        );
-
+        out.push(`**Refactor rule:** Changing a base class affects every subtype above. When adding/removing/altering virtual methods, call \`hivemind_findOverrides\` on each affected method to find the concrete implementations.`);
         return text(...out);
-    }
-
-    private async renderSupertypes(
-        client: ClangdClient,
-        item: TypeHierarchyItem,
-        depth: number,
-        cap: number,
-        out: string[],
-        indent: string
-    ): Promise<void> {
-        const supers = await client.supertypes(item).catch(() => []);
-        if (supers.length === 0) {
-            out.push(`${indent}- _(no supertypes)_`);
-            return;
-        }
-        const capped = supers.slice(0, cap);
-        for (const s of capped) {
-            const f = uriToPath(s.uri);
-            const ln = s.range.start.line + 1;
-            out.push(`${indent}- \`${s.name}\` — \`${rel(this.analyzer, f)}:${ln}\``);
-            if (depth > 1) {
-                await this.renderSupertypes(client, s, depth - 1, cap, out, indent + '    ');
-            }
-        }
-        if (supers.length > cap) {
-            out.push(`${indent}- _… ${supers.length - cap} more supertype(s) not shown_`);
-        }
-    }
-
-    private async renderSubtypes(
-        client: ClangdClient,
-        item: TypeHierarchyItem,
-        depth: number,
-        cap: number,
-        out: string[],
-        indent: string
-    ): Promise<void> {
-        const subs = await client.subtypes(item).catch(() => []);
-        if (subs.length === 0) {
-            out.push(`${indent}- _(no subtypes)_`);
-            return;
-        }
-        const capped = subs.slice(0, cap);
-        for (const s of capped) {
-            const f = uriToPath(s.uri);
-            const ln = s.range.start.line + 1;
-            out.push(`${indent}- \`${s.name}\` — \`${rel(this.analyzer, f)}:${ln}\``);
-            if (depth > 1) {
-                await this.renderSubtypes(client, s, depth - 1, cap, out, indent + '    ');
-            }
-        }
-        if (subs.length > cap) {
-            out.push(`${indent}- _… ${subs.length - cap} more subtype(s) not shown_`);
-        }
     }
 }
 
@@ -2179,7 +1964,6 @@ export function registerTools(
     analyzer: DependencyAnalyzer,
     symbolAnalyzer: SymbolAnalyzer,
     gitAnalyzer: GitAnalyzer,
-    clangdProvider: ClangdProvider,
     macroExpanderProvider: MacroExpanderProvider,
     buildSubsetProvider: BuildSubsetProvider
 ): void {
@@ -2197,10 +1981,10 @@ export function registerTools(
         vscode.lm.registerTool('hivemind_search',          new SearchTool(analyzer, symbolAnalyzer)),
         vscode.lm.registerTool('hivemind_getCppPair',      new GetCppPairTool(analyzer)),
         vscode.lm.registerTool('hivemind_findMacro',       new FindMacroTool(analyzer)),
-        vscode.lm.registerTool('hivemind_findReferences',  new FindReferencesTool(analyzer, clangdProvider)),
-        vscode.lm.registerTool('hivemind_findOverrides',   new FindOverridesTool(analyzer, clangdProvider)),
-        vscode.lm.registerTool('hivemind_callHierarchy',   new CallHierarchyTool(analyzer, clangdProvider)),
-        vscode.lm.registerTool('hivemind_typeHierarchy',   new TypeHierarchyTool(analyzer, clangdProvider)),
+        vscode.lm.registerTool('hivemind_findReferences',  new FindReferencesTool(analyzer)),
+        vscode.lm.registerTool('hivemind_findOverrides',   new FindOverridesTool(analyzer)),
+        vscode.lm.registerTool('hivemind_callHierarchy',   new CallHierarchyTool(analyzer)),
+        vscode.lm.registerTool('hivemind_typeHierarchy',   new TypeHierarchyTool(analyzer)),
         vscode.lm.registerTool('hivemind_macroExpand',     new MacroExpandTool(analyzer, macroExpanderProvider)),
         vscode.lm.registerTool('hivemind_buildSubset',     new BuildSubsetTool(analyzer, buildSubsetProvider)),
     );

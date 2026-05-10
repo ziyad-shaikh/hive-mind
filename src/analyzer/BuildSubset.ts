@@ -2,7 +2,13 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as cp from 'child_process';
-import * as crypto from 'crypto';
+import {
+    detectCompiler,
+    buildSyntaxOnlyArgs,
+    profileFlagsFor,
+    type CompilerInfo,
+} from './CompilerDriver';
+import type { ProjectProfile } from '../profiles';
 
 // =============================================================================
 // BuildSubset — "does it actually compile?" for the impacted slice of a change.
@@ -15,31 +21,19 @@ import * as crypto from 'crypto';
 //   1. Take a seed file (the one being changed).
 //   2. Walk the reverse-dependency graph to collect all .cpp/.cc/.cxx/.c TUs
 //      that transitively include it.
-//   3. For each TU, look up its build flags from compile_commands.json.
-//   4. Spawn the compiler with `-fsyntax-only` (clang/gcc) or `/Zs` (MSVC /
-//      clang-cl) so we get parse + semantic errors without codegen or linking.
+//   3. For each TU, look up its build flags from compile_commands.json *or*
+//      derive them from the active project profile (X3 has no compile DB).
+//   4. Spawn the compiler with `/Zs` (cl.exe / clang-cl) or `-fsyntax-only`
+//      (g++ / clang) so we get parse + semantic errors without codegen or
+//      linking.
 //   5. Aggregate diagnostics, return a concise pass/fail report.
-//
-// Why syntax-only:
-//   • 5–20× faster than a real compile (no codegen, no LTO, no linking).
-//   • Doesn't need build artefacts (no .obj path collisions, no PDB locking).
-//   • Catches the failures that matter most for refactors: missing decls,
-//     wrong types, broken includes, ambiguous overloads.
-//   • Doesn't catch link errors or template instantiations that aren't used
-//     locally — but `hivemind_callHierarchy` already covers most of that.
 //
 // Why this beats invoking `ninja` directly:
 //   • Doesn't require a configured build directory.
 //   • Doesn't pollute build artefacts.
 //   • Parallelism is trivially controllable (we drive the process pool).
-//   • Works on any project that has a compile_commands.json — even if
-//     the user normally builds via msbuild/CMake/etc.
-//
-// Caveats:
-//   • Files NOT in compile_commands.json get skipped (we report them).
-//   • PCH-dependent headers may produce spurious errors (we strip /Yu).
-//   • For very wide impact fans (one core header → 5000 TUs) the tool caps
-//     the TU count and tells the agent so.
+//   • Works on any project that has compile_commands.json OR an active Hive
+//     Mind profile (X3 falls in the latter bucket).
 // =============================================================================
 
 export interface BuildSubsetRequest {
@@ -67,8 +61,10 @@ export interface TUResult {
     diagnostics: string;
     /** Compiler exit code (-1 if it never ran, e.g. timeout). */
     exitCode: number;
-    /** True if we used compile_commands.json flags; false = skipped/no-flags. */
+    /** True if we used compile_commands.json flags; false = profile/skipped. */
     usedCompileCommands: boolean;
+    /** True if we used active project profile flags (compile_commands.json absent). */
+    usedProfile?: boolean;
     skipReason?: string;
 }
 
@@ -83,13 +79,12 @@ export interface BuildSubsetResult {
     truncated: boolean;
     durationMs: number;
     results: TUResult[];
-    /** Files in the impact set that we couldn't compile-check (no compile_commands entry, etc.). */
+    /** Files in the impact set that we couldn't compile-check. */
     skipped: Array<{ file: string; reason: string }>;
 }
 
 // -----------------------------------------------------------------------------
-// Compile commands index (shared shape with MacroExpander; we keep our own copy
-// to avoid coupling the two modules).
+// Compile commands index (still used as the high-fidelity path when present)
 // -----------------------------------------------------------------------------
 
 interface CompileCommandEntry {
@@ -141,10 +136,10 @@ export interface ReverseDepProvider {
 }
 
 export class BuildSubset {
-    private clangPath: string | null = null;
-    private clangClPath: string | null = null;
-    private clangSearched = false;
+    private compilerInfo: CompilerInfo | null = null;
+    private compilerSearched = false;
     private cccIndex: CompileCommandsIndex | null = null;
+    private profile: ProjectProfile | null = null;
 
     constructor(
         private readonly workspaceRoot: string,
@@ -152,120 +147,25 @@ export class BuildSubset {
         private readonly deps: ReverseDepProvider
     ) {}
 
+    /** Provide an active project profile so we can syntax-check files that have
+     *  no compile_commands.json entry. */
+    setProfile(profile: ProjectProfile | null): void {
+        this.profile = profile;
+    }
+
     /**
-     * Locate clang and clang-cl. We want both because compile_commands.json
-     * entries are usually of one flavour or the other, and mixing the wrong
-     * driver with the wrong flags fails immediately.
+     * Locate a usable C/C++ compiler. Tries cl.exe on Windows, g++ on
+     * Linux/Mac, then falls back to clang. Cached after first lookup.
      */
-    private locateCompilers(): { clang: string | null; clangCl: string | null } {
-        if (this.clangSearched) {
-            return { clang: this.clangPath, clangCl: this.clangClPath };
+    private locateCompiler(): CompilerInfo | null {
+        if (this.compilerSearched) { return this.compilerInfo; }
+        this.compilerSearched = true;
+        const info = detectCompiler(this.logger);
+        if (info) {
+            this.logger.appendLine(`[buildSubset] Using ${info.kind} (${info.exe}) — ${info.note}`);
         }
-        this.clangSearched = true;
-
-        const cfg = vscode.workspace.getConfiguration('hivemind');
-        const cfgUpper = vscode.workspace.getConfiguration('hiveMind');
-        const configuredClang = cfg.get<string>('clangPath') || cfgUpper.get<string>('clangPath');
-
-        const isFile = (p: string) => {
-            try { return fs.existsSync(p) && fs.statSync(p).isFile(); } catch { return false; }
-        };
-
-        // For clang: same logic as MacroExpander. We look at the configured path,
-        // vscode-clangd's install tree, PATH, and known fixed install dirs.
-        if (configuredClang && isFile(configuredClang)) {
-            this.clangPath = configuredClang;
-        } else {
-            this.clangPath = this.findCompilerInTree('clang');
-        }
-
-        // For clang-cl: try the same install tree (it's usually next to clang).
-        this.clangClPath = this.findCompilerInTree('clang-cl');
-
-        if (this.clangPath) { this.logger.appendLine(`[buildSubset] Found clang: ${this.clangPath}`); }
-        if (this.clangClPath) { this.logger.appendLine(`[buildSubset] Found clang-cl: ${this.clangClPath}`); }
-
-        return { clang: this.clangPath, clangCl: this.clangClPath };
-    }
-
-    private findCompilerInTree(toolName: string): string | null {
-        const exe = process.platform === 'win32' ? `${toolName}.exe` : toolName;
-        const isFile = (p: string) => {
-            try { return fs.existsSync(p) && fs.statSync(p).isFile(); } catch { return false; }
-        };
-
-        const candidates: string[] = [];
-
-        // 1. vscode-clangd globalStorage install tree
-        const globalStorage = this.guessGlobalStorage('llvm-vs-code-extensions.vscode-clangd');
-        if (globalStorage) {
-            try {
-                const installDir = path.join(globalStorage, 'install');
-                if (fs.existsSync(installDir)) {
-                    for (const v of fs.readdirSync(installDir, { withFileTypes: true })) {
-                        if (!v.isDirectory()) { continue; }
-                        const direct = path.join(installDir, v.name, 'bin', exe);
-                        candidates.push(direct);
-                        // Also nested (clangd_<version>/bin/exe layout)
-                        try {
-                            for (const n of fs.readdirSync(path.join(installDir, v.name), { withFileTypes: true })) {
-                                if (n.isDirectory()) {
-                                    candidates.push(path.join(installDir, v.name, n.name, 'bin', exe));
-                                }
-                            }
-                        } catch { /* ignore */ }
-                    }
-                }
-            } catch { /* ignore */ }
-        }
-
-        // 2. PATH
-        const pathSep = process.platform === 'win32' ? ';' : ':';
-        for (const dir of (process.env.PATH ?? '').split(pathSep)) {
-            if (!dir) { continue; }
-            candidates.push(path.join(dir.replace(/^"|"$/g, ''), exe));
-        }
-
-        // 3. Common LLVM install paths
-        if (process.platform === 'win32') {
-            candidates.push(`C:\\Program Files\\LLVM\\bin\\${exe}`);
-            candidates.push(`C:\\Program Files (x86)\\LLVM\\bin\\${exe}`);
-            if (process.env.LOCALAPPDATA) {
-                candidates.push(path.join(process.env.LOCALAPPDATA, 'Programs', 'LLVM', 'bin', exe));
-            }
-        } else if (process.platform === 'darwin') {
-            candidates.push('/usr/local/opt/llvm/bin/' + exe);
-            candidates.push('/opt/homebrew/opt/llvm/bin/' + exe);
-        } else {
-            candidates.push('/usr/bin/' + exe);
-            candidates.push('/usr/local/bin/' + exe);
-        }
-
-        for (const c of candidates) {
-            if (isFile(c)) { return c; }
-        }
-        return null;
-    }
-
-    private guessGlobalStorage(extensionId: string): string | null {
-        const candidates: string[] = [];
-        if (process.platform === 'win32') {
-            const appData = process.env.APPDATA;
-            if (appData) {
-                candidates.push(path.join(appData, 'Code', 'User', 'globalStorage', extensionId));
-                candidates.push(path.join(appData, 'Code - Insiders', 'User', 'globalStorage', extensionId));
-            }
-        } else if (process.platform === 'darwin') {
-            const home = process.env.HOME;
-            if (home) {
-                candidates.push(path.join(home, 'Library', 'Application Support', 'Code', 'User', 'globalStorage', extensionId));
-            }
-        } else {
-            const home = process.env.HOME;
-            if (home) { candidates.push(path.join(home, '.config', 'Code', 'User', 'globalStorage', extensionId)); }
-        }
-        for (const c of candidates) { if (fs.existsSync(c)) { return c; } }
-        return null;
+        this.compilerInfo = info;
+        return info;
     }
 
     private loadCompileCommands(): CompileCommandsIndex | null {
@@ -298,13 +198,11 @@ export class BuildSubset {
     }
 
     /**
-     * Strip the original args down to something safe for `-fsyntax-only` /
-     * `/Zs`. We keep:  -I/-isystem, -D, -U, -std=, -W*, -f*, -m*, --target,
-     * --sysroot, -include, -include-pch (best-effort).
-     * We drop:  the compiler path, output paths, the source file (we re-add
-     * it), `-c`, codegen flags, /MD /MT /Z* /Fo /Fd /Fp etc.
+     * Convert a compile_commands.json entry into a syntax-only argument list
+     * appropriate for the active compiler. Strips output paths, codegen flags,
+     * PCH usage, etc.
      */
-    private buildSyntaxOnlyArgs(entry: CompileCommandEntry, sourceFile: string, isClangCl: boolean): string[] {
+    private syntaxOnlyFromEntry(entry: CompileCommandEntry, sourceFile: string, info: CompilerInfo): string[] {
         const original = entry.arguments && entry.arguments.length > 0
             ? entry.arguments
             : (entry.command ? splitCommand(entry.command) : []);
@@ -317,7 +215,6 @@ export class BuildSubset {
             const a = original[i];
             if (!started) {
                 started = true;
-                // Drop the leading compiler binary
                 if (/clang(\+\+|-cl)?(\.exe)?$/i.test(a) || /cl\.exe$/i.test(a) ||
                     /gcc(\.exe)?$/i.test(a) || /g\+\+(\.exe)?$/i.test(a) || /cc(\.exe)?$/i.test(a)) {
                     continue;
@@ -325,7 +222,6 @@ export class BuildSubset {
             }
             if (normalizeKey(a) === sourceNorm) { continue; }
             if (skipPair.has(a)) { i++; continue; }
-            // MSVC-style /Fo, /Fd, /Fp with attached value
             if (/^\/F[opd]/i.test(a) || /^-Fo/i.test(a) || /^-Fd/i.test(a)) {
                 if (a.length === 3) { i++; }
                 continue;
@@ -333,44 +229,27 @@ export class BuildSubset {
             if (a === '-c' || a === '/c') { continue; }
             if (/^-O[0-3sz]?$/.test(a)) { continue; }
             if (/^\/O/i.test(a)) { continue; }
-            if (/^\/Z/i.test(a)) { continue; }              // /Zi /Z7 /ZI etc.
-            if (/^\/Y[cu]/i.test(a)) { continue; }          // /Yc /Yu — PCH
-            if (/^\/M[DTLP]/i.test(a)) { continue; }        // /MD /MT /MP
+            if (/^\/Z/i.test(a)) { continue; }
+            if (/^\/Y[cu]/i.test(a)) { continue; }
+            if (/^\/M[DTLP]/i.test(a)) { continue; }
             if (/^\/EH/i.test(a) || /^\/GR/i.test(a) || /^\/GS/i.test(a)) { continue; }
-            if (/^\/[Ww]\d?$/i.test(a)) { continue; }       // /W3 /Wall — keep diagnostics manageable
-            // Drop /showIncludes, /diagnostics:column etc. (noise)
+            if (/^\/[Ww]\d?$/i.test(a)) { continue; }
             if (/^\/showIncludes/i.test(a)) { continue; }
             out.push(a);
         }
 
-        // Append our syntax-only switch + source file.
-        if (isClangCl) {
-            out.push('/Zs');         // syntax-only for clang-cl / MSVC
-            out.push(sourceFile);
+        if (info.kind === 'cl') {
+            out.unshift('/Zs', '/nologo', '/EHsc');
         } else {
-            out.push('-fsyntax-only');
-            out.push('-w');          // suppress warnings, only show errors
-            out.push(sourceFile);
+            out.unshift('-fsyntax-only', '-w');
         }
+        out.push(sourceFile);
         return out;
-    }
-
-    /** Detect whether the entry was originally driven by clang-cl/MSVC. */
-    private isClangClStyle(entry: CompileCommandEntry): boolean {
-        const args = entry.arguments && entry.arguments.length > 0
-            ? entry.arguments
-            : (entry.command ? splitCommand(entry.command) : []);
-        if (args.length === 0) { return false; }
-        const head = args[0].toLowerCase();
-        if (head.endsWith('clang-cl.exe') || head.endsWith('clang-cl') || head.endsWith('cl.exe')) { return true; }
-        // Heuristic: any /Fo /MD /Yc etc.
-        return args.some(a => /^\/(Fo|Fd|Fp|MD|MT|Z[i7I]|Y[cu]|EH|W\d|GS|GR|O[12dxs])/i.test(a));
     }
 
     /** Decide which TUs (.cpp/.cc/.cxx/.c) are impacted by a change to `seed`. */
     private collectImpactedTUs(seed: string, depth: number): string[] {
         const impacted = new Set<string>(this.deps.getImpact(seed, depth));
-        // The seed itself is impacted if it's a TU.
         impacted.add(seed);
         const tuExts = new Set(['.cpp', '.cc', '.cxx', '.c', '.c++']);
         const tus: string[] = [];
@@ -384,25 +263,40 @@ export class BuildSubset {
 
     /** Run a single TU compile and return its result. */
     private async compileOne(
-        file: string, entry: CompileCommandEntry,
-        clang: string | null, clangCl: string | null,
+        file: string,
+        info: CompilerInfo,
+        entry: CompileCommandEntry | null,
         timeoutMs: number
     ): Promise<TUResult> {
         const start = Date.now();
-        const isClangCl = this.isClangClStyle(entry);
-        const compiler = isClangCl ? (clangCl ?? clang) : (clang ?? clangCl);
-        if (!compiler) {
+        let args: string[];
+        let cwd: string;
+        let usedCompileCommands: boolean;
+        let usedProfile: boolean;
+
+        if (entry) {
+            args = this.syntaxOnlyFromEntry(entry, file, info);
+            cwd = entry.directory;
+            usedCompileCommands = true;
+            usedProfile = false;
+        } else if (this.profile) {
+            const extras = profileFlagsFor(this.profile, this.workspaceRoot);
+            args = buildSyntaxOnlyArgs(info, file, extras);
+            cwd = this.workspaceRoot;
+            usedCompileCommands = false;
+            usedProfile = true;
+        } else {
             return {
                 file, ok: false, durationMs: 0, diagnostics: '',
-                exitCode: -1, usedCompileCommands: true,
-                skipReason: 'No suitable compiler found (need clang or clang-cl).',
+                exitCode: -1, usedCompileCommands: false,
+                skipReason: 'No compile_commands.json entry and no active project profile.',
             };
         }
-        const args = this.buildSyntaxOnlyArgs(entry, file, isClangCl && compiler === clangCl);
+
         return await new Promise<TUResult>((resolve) => {
             let settled = false;
-            const proc = cp.spawn(compiler, args, {
-                cwd: entry.directory,
+            const proc = cp.spawn(info.exe, args, {
+                cwd,
                 windowsHide: true,
             });
             let stderr = '';
@@ -414,7 +308,7 @@ export class BuildSubset {
                 resolve({
                     file, ok: false, durationMs: Date.now() - start,
                     diagnostics: '(timed out after ' + timeoutMs + 'ms)',
-                    exitCode: -1, usedCompileCommands: true,
+                    exitCode: -1, usedCompileCommands, usedProfile,
                 });
             }, timeoutMs);
             proc.stderr.on('data', d => { stderr += d.toString(); if (stderr.length > 8192) { stderr = stderr.slice(-8192); } });
@@ -423,16 +317,18 @@ export class BuildSubset {
                 if (settled) { return; } settled = true; clearTimeout(timer);
                 resolve({
                     file, ok: false, durationMs: Date.now() - start,
-                    diagnostics: 'spawn error: ' + err.message, exitCode: -1, usedCompileCommands: true,
+                    diagnostics: 'spawn error: ' + err.message, exitCode: -1,
+                    usedCompileCommands, usedProfile,
                 });
             });
             proc.on('close', code => {
                 if (settled) { return; } settled = true; clearTimeout(timer);
-                // clang-cl writes errors to stdout with /Zs; normal clang to stderr. Combine.
+                // cl.exe writes errors to stdout; gcc/clang to stderr. Combine.
                 const diag = trimDiagnostics(stderr || stdout);
                 resolve({
                     file, ok: code === 0, durationMs: Date.now() - start,
-                    diagnostics: diag, exitCode: code ?? -1, usedCompileCommands: true,
+                    diagnostics: diag, exitCode: code ?? -1,
+                    usedCompileCommands, usedProfile,
                 });
             });
         });
@@ -450,21 +346,22 @@ export class BuildSubset {
         const totalBudgetMs = Math.max(perFileTimeoutMs, req.totalBudgetMs ?? 5 * 60_000);
         const parallelism = Math.max(1, Math.min(16, req.parallelism ?? Math.min(8, require('os').cpus()?.length ?? 4)));
 
-        const ccc = this.loadCompileCommands();
-        if (!ccc) {
+        const compiler = this.locateCompiler();
+        if (!compiler) {
             return {
                 seedFile, totalTUsConsidered: 0, tusCompiled: 0, tusPassed: 0, tusFailed: 0, tusSkipped: 0,
                 truncated: false, durationMs: Date.now() - start, results: [],
-                skipped: [{ file: seedFile, reason: 'No compile_commands.json found in workspace.' }],
+                skipped: [{ file: seedFile, reason: 'No C/C++ compiler found. Install MSVC (cl.exe), g++, or clang, or set hivemind.clangPath.' }],
             };
         }
 
-        const { clang, clangCl } = this.locateCompilers();
-        if (!clang && !clangCl) {
+        const ccc = this.loadCompileCommands();
+        const hasProfile = !!this.profile;
+        if (!ccc && !hasProfile) {
             return {
                 seedFile, totalTUsConsidered: 0, tusCompiled: 0, tusPassed: 0, tusFailed: 0, tusSkipped: 0,
                 truncated: false, durationMs: Date.now() - start, results: [],
-                skipped: [{ file: seedFile, reason: 'No clang/clang-cl found. Install LLVM or set hivemind.clangPath.' }],
+                skipped: [{ file: seedFile, reason: 'No compile_commands.json found and no active Hive Mind project profile.' }],
             };
         }
 
@@ -475,11 +372,11 @@ export class BuildSubset {
 
         const allTUs = [...new Set(candidates)];
         const skipped: BuildSubsetResult['skipped'] = [];
-        const compileTargets: Array<{ file: string; entry: CompileCommandEntry }> = [];
+        const compileTargets: Array<{ file: string; entry: CompileCommandEntry | null }> = [];
         for (const tu of allTUs) {
-            const entry = ccc.byFile.get(normalizeKey(tu));
-            if (!entry) {
-                skipped.push({ file: tu, reason: 'No compile_commands.json entry.' });
+            const entry = ccc?.byFile.get(normalizeKey(tu)) ?? null;
+            if (!entry && !hasProfile) {
+                skipped.push({ file: tu, reason: 'No compile_commands.json entry and no profile fallback.' });
                 continue;
             }
             compileTargets.push({ file: tu, entry });
@@ -487,7 +384,6 @@ export class BuildSubset {
 
         const truncated = compileTargets.length > maxTUs;
         if (truncated) {
-            // Prefer keeping the seed file at the front
             compileTargets.sort((a, b) => {
                 if (a.file === seedFile) { return -1; }
                 if (b.file === seedFile) { return 1; }
@@ -511,14 +407,13 @@ export class BuildSubset {
                     const idx = cursor++;
                     if (idx >= compileTargets.length) { return; }
                     const { file, entry } = compileTargets[idx];
-                    const r = await this.compileOne(file, entry, clang, clangCl, perFileTimeoutMs);
+                    const r = await this.compileOne(file, compiler, entry, perFileTimeoutMs);
                     results.push(r);
                 }
             })());
         }
         await Promise.all(workers);
 
-        // Anything we didn't get to (budget exceeded) → skipped
         for (let i = cursor; i < compileTargets.length; i++) {
             skipped.push({ file: compileTargets[i].file, reason: 'Total time budget exhausted.' });
         }

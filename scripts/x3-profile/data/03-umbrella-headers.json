@@ -1,0 +1,371 @@
+{
+  "generatedAt": "2026-05-09T17:26:06.751Z",
+  "runtimeRoot": "C:\\Users\\ziyad.shaikh\\source\\repos\\runtime",
+  "sourceFileCount": 431,
+  "umbrellaCandidates": [
+    {
+      "header": "adx_include.h",
+      "includedBy": 205,
+      "percent": 47.6
+    },
+    {
+      "header": "cstring",
+      "includedBy": 138,
+      "percent": 32
+    }
+  ],
+  "topByBasename": [
+    {
+      "header": "adx_include.h",
+      "includedBy": 205,
+      "percent": 47.6
+    },
+    {
+      "header": "cstring",
+      "includedBy": 138,
+      "percent": 32
+    },
+    {
+      "header": "convert.h",
+      "includedBy": 74,
+      "percent": 17.2
+    },
+    {
+      "header": "adx_test.h",
+      "includedBy": 61,
+      "percent": 14.2
+    },
+    {
+      "header": "string",
+      "includedBy": 44,
+      "percent": 10.2
+    },
+    {
+      "header": "filext.h",
+      "includedBy": 39,
+      "percent": 9
+    },
+    {
+      "header": "filin.h",
+      "includedBy": 39,
+      "percent": 9
+    },
+    {
+      "header": "adxstring.h",
+      "includedBy": 36,
+      "percent": 8.4
+    },
+    {
+      "header": "vector",
+      "includedBy": 35,
+      "percent": 8.1
+    },
+    {
+      "header": "tsrext.h",
+      "includedBy": 34,
+      "percent": 7.9
+    },
+    {
+      "header": "fstat.h",
+      "includedBy": 27,
+      "percent": 6.3
+    },
+    {
+      "header": "sapext.h",
+      "includedBy": 27,
+      "percent": 6.3
+    },
+    {
+      "header": "sapin.h",
+      "includedBy": 25,
+      "percent": 5.8
+    },
+    {
+      "header": "management.h",
+      "includedBy": 24,
+      "percent": 5.6
+    },
+    {
+      "header": "adxdef.h",
+      "includedBy": 23,
+      "percent": 5.3
+    },
+    {
+      "header": "errfic.h",
+      "includedBy": 23,
+      "percent": 5.3
+    },
+    {
+      "header": "specific.h",
+      "includedBy": 23,
+      "percent": 5.3
+    },
+    {
+      "header": "divext.h",
+      "includedBy": 22,
+      "percent": 5.1
+    },
+    {
+      "header": "unordered_map",
+      "includedBy": 22,
+      "percent": 5.1
+    },
+    {
+      "header": "stdio.h",
+      "includedBy": 20,
+      "percent": 4.6
+    },
+    {
+      "header": "algorithm",
+      "includedBy": 20,
+      "percent": 4.6
+    },
+    {
+      "header": "iostream",
+      "includedBy": 19,
+      "percent": 4.4
+    },
+    {
+      "header": "iocext.h",
+      "includedBy": 18,
+      "percent": 4.2
+    },
+    {
+      "header": "stdlib.h",
+      "includedBy": 17,
+      "percent": 3.9
+    },
+    {
+      "header": "adxenum.h",
+      "includedBy": 17,
+      "percent": 3.9
+    },
+    {
+      "header": "graext.h",
+      "includedBy": 16,
+      "percent": 3.7
+    },
+    {
+      "header": "string_view",
+      "includedBy": 15,
+      "percent": 3.5
+    },
+    {
+      "header": "windows.h",
+      "includedBy": 14,
+      "percent": 3.2
+    },
+    {
+      "header": "varext.h",
+      "includedBy": 14,
+      "percent": 3.2
+    },
+    {
+      "header": "token.h",
+      "includedBy": 14,
+      "percent": 3.2
+    }
+  ],
+  "topByExactPath": [
+    {
+      "include": "adx_include.h",
+      "count": 205
+    },
+    {
+      "include": "cstring",
+      "count": 138
+    },
+    {
+      "include": "convert.h",
+      "count": 74
+    },
+    {
+      "include": "adx_test.h",
+      "count": 61
+    },
+    {
+      "include": "string",
+      "count": 44
+    },
+    {
+      "include": "filext.h",
+      "count": 39
+    },
+    {
+      "include": "filin.h",
+      "count": 39
+    },
+    {
+      "include": "adxstring.h",
+      "count": 36
+    },
+    {
+      "include": "vector",
+      "count": 35
+    },
+    {
+      "include": "tsrext.h",
+      "count": 35
+    },
+    {
+      "include": "stdio.h",
+      "count": 27
+    },
+    {
+      "include": "fstat.h",
+      "count": 27
+    },
+    {
+      "include": "sapext.h",
+      "count": 27
+    },
+    {
+      "include": "stdlib.h",
+      "count": 25
+    },
+    {
+      "include": "sapin.h",
+      "count": 25
+    },
+    {
+      "include": "adxdef.h",
+      "count": 23
+    },
+    {
+      "include": "errfic.h",
+      "count": 23
+    },
+    {
+      "include": "divext.h",
+      "count": 22
+    },
+    {
+      "include": "unordered_map",
+      "count": 22
+    },
+    {
+      "include": "db/management.h",
+      "count": 21
+    },
+    {
+      "include": "algorithm",
+      "count": 20
+    },
+    {
+      "include": "db/specific.h",
+      "count": 20
+    },
+    {
+      "include": "iostream",
+      "count": 19
+    },
+    {
+      "include": "iocext.h",
+      "count": 18
+    },
+    {
+      "include": "adxenum.h",
+      "count": 17
+    },
+    {
+      "include": "graext.h",
+      "count": 16
+    },
+    {
+      "include": "sys/types.h",
+      "count": 15
+    },
+    {
+      "include": "string_view",
+      "count": 15
+    },
+    {
+      "include": "token.h",
+      "count": 15
+    },
+    {
+      "include": "windows.h",
+      "count": 14
+    },
+    {
+      "include": "varext.h",
+      "count": 14
+    },
+    {
+      "include": "map",
+      "count": 14
+    },
+    {
+      "include": "GroupManagement.h",
+      "count": 14
+    },
+    {
+      "include": "divin.h",
+      "count": 13
+    },
+    {
+      "include": "memory",
+      "count": 13
+    },
+    {
+      "include": "Node.h",
+      "count": 13
+    },
+    {
+      "include": "machine.h",
+      "count": 11
+    },
+    {
+      "include": "log.h",
+      "count": 10
+    },
+    {
+      "include": "malloc.h",
+      "count": 10
+    },
+    {
+      "include": "unistd.h",
+      "count": 9
+    },
+    {
+      "include": "adxfile.h",
+      "count": 9
+    },
+    {
+      "include": "sstream",
+      "count": 9
+    },
+    {
+      "include": "functional",
+      "count": 9
+    },
+    {
+      "include": "inpext.h",
+      "count": 9
+    },
+    {
+      "include": "jsoncons/json.hpp",
+      "count": 9
+    },
+    {
+      "include": "ctype.h",
+      "count": 8
+    },
+    {
+      "include": "io.h",
+      "count": 8
+    },
+    {
+      "include": "string.h",
+      "count": 8
+    },
+    {
+      "include": "filesystem",
+      "count": 8
+    },
+    {
+      "include": "setjmp.h",
+      "count": 8
+    }
+  ]
+}

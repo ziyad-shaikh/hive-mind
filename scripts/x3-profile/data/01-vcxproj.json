@@ -1,0 +1,7701 @@
+{
+  "generatedAt": "2026-05-09T17:26:05.158Z",
+  "runtimeRoot": "C:\\Users\\ziyad.shaikh\\source\\repos\\runtime",
+  "projectCount": 89,
+  "aggregate": {
+    "Debug|Win32": {
+      "projectCount": 89,
+      "commonDefines": [
+        "WIN32",
+        "_CONSOLE",
+        "_DEBUG"
+      ],
+      "allDefinesByFreq": [
+        {
+          "define": "WIN32",
+          "count": 89
+        },
+        {
+          "define": "_DEBUG",
+          "count": 89
+        },
+        {
+          "define": "_CONSOLE",
+          "count": 85
+        },
+        {
+          "define": "_WINDOWS",
+          "count": 2
+        },
+        {
+          "define": "_USRDLL",
+          "count": 2
+        },
+        {
+          "define": "_LIB",
+          "count": 2
+        },
+        {
+          "define": "ADXMESS_EXPORTS",
+          "count": 1
+        },
+        {
+          "define": "ADXMNT_EXPORTS",
+          "count": 1
+        }
+      ],
+      "includeDirsByFreq": []
+    },
+    "Release|Win32": {
+      "projectCount": 89,
+      "commonDefines": [
+        "NDEBUG",
+        "WIN32",
+        "_CONSOLE"
+      ],
+      "allDefinesByFreq": [
+        {
+          "define": "WIN32",
+          "count": 89
+        },
+        {
+          "define": "NDEBUG",
+          "count": 89
+        },
+        {
+          "define": "_CONSOLE",
+          "count": 85
+        },
+        {
+          "define": "_WINDOWS",
+          "count": 2
+        },
+        {
+          "define": "_USRDLL",
+          "count": 2
+        },
+        {
+          "define": "_LIB",
+          "count": 2
+        },
+        {
+          "define": "ADXMESS_EXPORTS",
+          "count": 1
+        },
+        {
+          "define": "ADXMNT_EXPORTS",
+          "count": 1
+        }
+      ],
+      "includeDirsByFreq": []
+    },
+    "Debug|x64": {
+      "projectCount": 89,
+      "commonDefines": [
+        "NOMINMAX",
+        "WIN32",
+        "_CONSOLE",
+        "_CRT_SECURE_NO_DEPRECATE",
+        "_DEBUG"
+      ],
+      "allDefinesByFreq": [
+        {
+          "define": "_DEBUG",
+          "count": 89
+        },
+        {
+          "define": "_CRT_SECURE_NO_DEPRECATE",
+          "count": 88
+        },
+        {
+          "define": "WIN32",
+          "count": 88
+        },
+        {
+          "define": "NOMINMAX",
+          "count": 87
+        },
+        {
+          "define": "_CONSOLE",
+          "count": 85
+        },
+        {
+          "define": "_WINDOWS",
+          "count": 2
+        },
+        {
+          "define": "_USRDLL",
+          "count": 2
+        },
+        {
+          "define": "_LIB",
+          "count": 2
+        },
+        {
+          "define": "ADXMESS_EXPORTS",
+          "count": 1
+        },
+        {
+          "define": "ADXMNT_EXPORTS",
+          "count": 1
+        }
+      ],
+      "includeDirsByFreq": [
+        {
+          "dir": "$(SolutionDir)include",
+          "count": 88
+        },
+        {
+          "dir": "$(SolutionDir)extlib\\cmocka-2.0.2\\include",
+          "count": 60
+        },
+        {
+          "dir": "$(SolutionDir)extlib",
+          "count": 7
+        },
+        {
+          "dir": "$(SolutionDir)extlib\\win\\include",
+          "count": 7
+        },
+        {
+          "dir": "$(SolutionDir)extlib\\win\\include\\libpq",
+          "count": 2
+        },
+        {
+          "dir": "$(SolutionDir)extlib\\win\\x64\\instantclient\\sdk\\include",
+          "count": 2
+        },
+        {
+          "dir": "$(SolutionDir)extlib\\win\\include\\expat",
+          "count": 1
+        },
+        {
+          "dir": "$(SolutionDir)src\\grammar",
+          "count": 1
+        },
+        {
+          "dir": "$(SolutionDir)adxbin\\include",
+          "count": 1
+        },
+        {
+          "dir": "$(SolutionDir)extlib\\cmocka-1.1.7\\include",
+          "count": 1
+        }
+      ]
+    },
+    "Release|x64": {
+      "projectCount": 89,
+      "commonDefines": [
+        "NDEBUG",
+        "NOMINMAX",
+        "WIN32",
+        "_CONSOLE",
+        "_CRT_SECURE_NO_DEPRECATE"
+      ],
+      "allDefinesByFreq": [
+        {
+          "define": "NDEBUG",
+          "count": 89
+        },
+        {
+          "define": "_CRT_SECURE_NO_DEPRECATE",
+          "count": 88
+        },
+        {
+          "define": "WIN32",
+          "count": 88
+        },
+        {
+          "define": "NOMINMAX",
+          "count": 87
+        },
+        {
+          "define": "_CONSOLE",
+          "count": 85
+        },
+        {
+          "define": "_WINDOWS",
+          "count": 2
+        },
+        {
+          "define": "_USRDLL",
+          "count": 2
+        },
+        {
+          "define": "_LIB",
+          "count": 2
+        },
+        {
+          "define": "ADXMESS_EXPORTS",
+          "count": 1
+        },
+        {
+          "define": "ADXMNT_EXPORTS",
+          "count": 1
+        }
+      ],
+      "includeDirsByFreq": [
+        {
+          "dir": "$(SolutionDir)include",
+          "count": 88
+        },
+        {
+          "dir": "$(SolutionDir)extlib\\cmocka-2.0.2\\include",
+          "count": 60
+        },
+        {
+          "dir": "$(SolutionDir)extlib",
+          "count": 7
+        },
+        {
+          "dir": "$(SolutionDir)extlib\\win\\include",
+          "count": 7
+        },
+        {
+          "dir": "$(SolutionDir)extlib\\win\\include\\libpq",
+          "count": 2
+        },
+        {
+          "dir": "$(SolutionDir)extlib\\win\\x64\\instantclient\\sdk\\include",
+          "count": 2
+        },
+        {
+          "dir": "$(SolutionDir)extlib\\win\\include\\expat",
+          "count": 1
+        },
+        {
+          "dir": "$(SolutionDir)src\\grammar",
+          "count": 1
+        },
+        {
+          "dir": "$(SolutionDir)adxbin\\include",
+          "count": 1
+        },
+        {
+          "dir": "$(SolutionDir)extlib\\cmocka-1.1.7\\include",
+          "count": 1
+        }
+      ]
+    }
+  },
+  "projects": [
+    {
+      "path": "windows/projects/adonix/adonix.vcxproj",
+      "rootNamespace": "adonix",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "wsock32.lib",
+            "mpr.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "ws2_32.lib",
+            "crypt32.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "wsock32.lib",
+            "mpr.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "ws2_32.lib",
+            "crypt32.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../src/adonix.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/adxd/adxd.vcxproj",
+      "rootNamespace": "adxd",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "wsock32.lib",
+            "mpr.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "ws2_32.lib",
+            "crypt32.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "wsock32.lib",
+            "mpr.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "ws2_32.lib",
+            "crypt32.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../adxbin/src/adxd.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/adxdsrv/adxdsrv.vcxproj",
+      "rootNamespace": "adxdsrv",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "wsock32.lib",
+            "mpr.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "ws2_32.lib",
+            "crypt32.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "wsock32.lib",
+            "mpr.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "ws2_32.lib",
+            "crypt32.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../adxbin/src/adxd.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/adxdwhat/adxdwhat.vcxproj",
+      "rootNamespace": "adxdwhat",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "wsock32.lib",
+            "mpr.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "ws2_32.lib",
+            "crypt32.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "wsock32.lib",
+            "mpr.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "ws2_32.lib",
+            "crypt32.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../adxbin/src/adxdwhat.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/adxmess/adxmess.vcxproj",
+      "rootNamespace": "adxmess",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "ADXMESS_EXPORTS",
+            "_WINDOWS",
+            "_USRDLL"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "ADXMESS_EXPORTS",
+            "_WINDOWS",
+            "_USRDLL"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "ADXMESS_EXPORTS",
+            "_WINDOWS",
+            "_USRDLL",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "wsock32.lib",
+            "mpr.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "ADXMESS_EXPORTS",
+            "_WINDOWS",
+            "_USRDLL",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "wsock32.lib",
+            "mpr.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../src/win/adxmess.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/adxmnt/adxmnt.vcxproj",
+      "rootNamespace": "adxmnt",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "ADXMNT_EXPORTS",
+            "_WINDOWS",
+            "_USRDLL"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "ADXMNT_EXPORTS",
+            "_WINDOWS",
+            "_USRDLL"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "ADXMNT_EXPORTS",
+            "_WINDOWS",
+            "_USRDLL",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "wsock32.lib",
+            "mpr.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "ws2_32.lib",
+            "crypt32.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "ADXMNT_EXPORTS",
+            "_WINDOWS",
+            "_USRDLL",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "wsock32.lib",
+            "mpr.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "ws2_32.lib",
+            "crypt32.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../src/protection.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/adxodbc/adxodbc.vcxproj",
+      "rootNamespace": "adxodbc",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "wsock32.lib",
+            "mpr.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "ws2_32.lib",
+            "crypt32.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "wsock32.lib",
+            "mpr.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "ws2_32.lib",
+            "crypt32.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../adxbin/src/adxodbc.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/adxora/adxora.vcxproj",
+      "rootNamespace": "adxora",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "wsock32.lib",
+            "mpr.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "ws2_32.lib",
+            "crypt32.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "wsock32.lib",
+            "mpr.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "ws2_32.lib",
+            "crypt32.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../adxbin/src/adxora.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/adxpgs/adxpgs.vcxproj",
+      "rootNamespace": "adxpgs",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "wsock32.lib",
+            "mpr.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "ws2_32.lib",
+            "crypt32.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "wsock32.lib",
+            "mpr.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "ws2_32.lib",
+            "crypt32.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../adxbin/src/adxpgs.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/adxsrv/adxsrv.vcxproj",
+      "rootNamespace": "adxsrv",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "wsock32.lib",
+            "mpr.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "ws2_32.lib",
+            "crypt32.lib",
+            "libcrypto.lib",
+            "userenv.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "wsock32.lib",
+            "mpr.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "ws2_32.lib",
+            "crypt32.lib",
+            "libcrypto.lib",
+            "userenv.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../adxbin/src/adxsrv.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/archive/archive.vcxproj",
+      "rootNamespace": "archive",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "wsock32.lib",
+            "mpr.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "ws2_32.lib",
+            "crypt32.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "wsock32.lib",
+            "mpr.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "ws2_32.lib",
+            "crypt32.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../adxbin/src/archive.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/gessrv/gessrv.vcxproj",
+      "rootNamespace": "gessrv",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "wsock32.lib",
+            "mpr.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "ws2_32.lib",
+            "crypt32.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "wsock32.lib",
+            "mpr.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "ws2_32.lib",
+            "crypt32.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../src/protection.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/grammar/grammar.vcxproj",
+      "rootNamespace": "grammar",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        }
+      },
+      "sources": [],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/killadx/killadx.vcxproj",
+      "rootNamespace": "killadx",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "wsock32.lib",
+            "mpr.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "ws2_32.lib",
+            "crypt32.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "wsock32.lib",
+            "mpr.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "ws2_32.lib",
+            "crypt32.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../adxbin/src/killadx.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/libdiv/libdiv.vcxproj",
+      "rootNamespace": "libdiv",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_LIB"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_LIB"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_LIB",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib",
+            "$(SolutionDir)extlib\\win\\include",
+            "$(SolutionDir)extlib\\win\\include\\libpq",
+            "$(SolutionDir)extlib\\win\\include\\expat",
+            "$(SolutionDir)extlib\\win\\x64\\instantclient\\sdk\\include",
+            "$(SolutionDir)src\\grammar"
+          ],
+          "linkDeps": []
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_LIB",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib",
+            "$(SolutionDir)extlib\\win\\include",
+            "$(SolutionDir)extlib\\win\\include\\libpq",
+            "$(SolutionDir)extlib\\win\\include\\expat",
+            "$(SolutionDir)extlib\\win\\x64\\instantclient\\sdk\\include",
+            "$(SolutionDir)src\\grammar"
+          ],
+          "linkDeps": []
+        }
+      },
+      "sources": [
+        "../../../src/acalc.cpp",
+        "../../../src/gram.cpp",
+        "../../../src/sdatarcptok.cpp",
+        "../../../src/tsrdum.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/libw32/libw32.vcxproj",
+      "rootNamespace": "libw32",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_LIB"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_LIB"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_LIB",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include"
+          ],
+          "linkDeps": []
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_LIB",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include"
+          ],
+          "linkDeps": []
+        }
+      },
+      "sources": [
+        "../../../src/win/adxw32.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/lsadx/lsadx.vcxproj",
+      "rootNamespace": "lsadx",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "wsock32.lib",
+            "mpr.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "ws2_32.lib",
+            "crypt32.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "wsock32.lib",
+            "mpr.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "ws2_32.lib",
+            "crypt32.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../adxbin/src/lsadx.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/meladx/meladx.vcxproj",
+      "rootNamespace": "meladx",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "wsock32.lib",
+            "mpr.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "ws2_32.lib",
+            "crypt32.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "wsock32.lib",
+            "mpr.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "ws2_32.lib",
+            "crypt32.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../adxbin/src/meladx.cpp",
+        "../../../src/melmtp.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/psadx/psadx.vcxproj",
+      "rootNamespace": "psadx",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "wsock32.lib",
+            "mpr.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "ws2_32.lib",
+            "crypt32.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "wsock32.lib",
+            "mpr.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "ws2_32.lib",
+            "crypt32.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../adxbin/src/psadx.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/sadfsq/sadfsq.vcxproj",
+      "rootNamespace": "sadfsq",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib",
+            "$(SolutionDir)extlib\\win\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "wsock32.lib",
+            "mpr.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "ws2_32.lib",
+            "crypt32.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib",
+            "$(SolutionDir)extlib\\win\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "wsock32.lib",
+            "mpr.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "ws2_32.lib",
+            "crypt32.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../adxbin/src/sadcor.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/sadldap/sadldap.vcxproj",
+      "rootNamespace": "sadldap",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib",
+            "$(SolutionDir)adxbin\\include",
+            "$(SolutionDir)extlib\\win\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "wsock32.lib",
+            "mpr.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "ws2_32.lib",
+            "crypt32.lib",
+            "libcrypto.lib",
+            "wldap32.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib",
+            "$(SolutionDir)adxbin\\include",
+            "$(SolutionDir)extlib\\win\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "wsock32.lib",
+            "mpr.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "ws2_32.lib",
+            "crypt32.lib",
+            "libcrypto.lib",
+            "wldap32.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../adxbin/src/ldapadx.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/sadora/sadora.vcxproj",
+      "rootNamespace": "sadora",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib",
+            "$(SolutionDir)extlib\\win\\include",
+            "$(SolutionDir)extlib\\win\\x64\\instantclient\\sdk\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "wsock32.lib",
+            "mpr.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "ws2_32.lib",
+            "crypt32.lib",
+            "libcrypto.lib",
+            "oci.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib",
+            "$(SolutionDir)extlib\\win\\include",
+            "$(SolutionDir)extlib\\win\\x64\\instantclient\\sdk\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "wsock32.lib",
+            "mpr.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "ws2_32.lib",
+            "crypt32.lib",
+            "libcrypto.lib",
+            "oci.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../adxbin/src/sadcor.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/sadoss/sadoss.vcxproj",
+      "rootNamespace": "sadoss",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib",
+            "$(SolutionDir)extlib\\win\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "wsock32.lib",
+            "mpr.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "ws2_32.lib",
+            "crypt32.lib",
+            "libcrypto.lib",
+            "msodbcsql17.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib",
+            "$(SolutionDir)extlib\\win\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "wsock32.lib",
+            "mpr.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "ws2_32.lib",
+            "crypt32.lib",
+            "libcrypto.lib",
+            "msodbcsql17.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../adxbin/src/sadcor.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/sadpgs/sadpgs.vcxproj",
+      "rootNamespace": "sadpgs",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib",
+            "$(SolutionDir)extlib\\win\\include",
+            "$(SolutionDir)extlib\\win\\include\\libpq"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "wsock32.lib",
+            "mpr.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "ws2_32.lib",
+            "crypt32.lib",
+            "libcrypto.lib",
+            "libpq.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib",
+            "$(SolutionDir)extlib\\win\\include",
+            "$(SolutionDir)extlib\\win\\include\\libpq"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "wsock32.lib",
+            "mpr.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "ws2_32.lib",
+            "crypt32.lib",
+            "libcrypto.lib",
+            "libpq.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../adxbin/src/sadcor.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/sadsys/sadsys.vcxproj",
+      "rootNamespace": "sadsys",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib",
+            "$(SolutionDir)extlib\\win\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "wsock32.lib",
+            "mpr.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "ws2_32.lib",
+            "crypt32.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib",
+            "$(SolutionDir)extlib\\win\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "wsock32.lib",
+            "mpr.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "ws2_32.lib",
+            "crypt32.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../adxbin/src/sadcor.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/acalc_test/acalc_test.vcxproj",
+      "rootNamespace": "acalctest",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/acalc_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/adg_test/adg_test.vcxproj",
+      "rootNamespace": "adgtest",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/adg_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/adxerr_test/adxerr_test.vcxproj",
+      "rootNamespace": "adxerrtest",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/adxerr_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/adxoalls_test/adxoalls_test.vcxproj",
+      "rootNamespace": "adxoallstest",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/adxoalls_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/adxresult_test/adxresult_test.vcxproj",
+      "rootNamespace": "adxresult_test",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/adxresult_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/adxstu_test/adxstu_test.vcxproj",
+      "rootNamespace": "adxstutest",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/adxstu_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/afnc1_test/afnc1_test.vcxproj",
+      "rootNamespace": "afnc1test",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/afnc1_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/afnc2_test/afnc2_test.vcxproj",
+      "rootNamespace": "afnc2test",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/afnc2_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/afnc3_test/afnc3_test.vcxproj",
+      "rootNamespace": "afnc3test",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/afnc3_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/afncext_test/afncext_test.vcxproj",
+      "rootNamespace": "afncexttest",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/afncext_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/arithbas2_test/arithbas2_test.vcxproj",
+      "rootNamespace": "arithbas2test",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/arithbas2_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/arithbase_test/arithbase_test.vcxproj",
+      "rootNamespace": "arithbasetest",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/arithbase_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/arrays_test/arrays_test.vcxproj",
+      "rootNamespace": "arraystest",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/arrays_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/avltree_test/avltree_test.vcxproj",
+      "rootNamespace": "avltreetest",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/avltree_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/boolean_test/boolean_test.vcxproj",
+      "rootNamespace": "booleantest",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/boolean_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/calcdiv_test/calcdiv_test.vcxproj",
+      "rootNamespace": "calcdivtest",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/calcdiv_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/calvar_test/calvar_test.vcxproj",
+      "rootNamespace": "calvartest",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/calvar_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/cbu_test/cbu_test.vcxproj",
+      "rootNamespace": "cbu_test",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/cbu_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/compile_test/compile_test.vcxproj",
+      "rootNamespace": "compiletest",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/compile_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/controldate_test/controldate_test.vcxproj",
+      "rootNamespace": "controldatetest",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/controldate_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/convert_test/convert_test.vcxproj",
+      "rootNamespace": "converttest",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/convert_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/cstring_test/cstring_test.vcxproj",
+      "rootNamespace": "cstringtest",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-1.1.7\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "yajl_s.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-1.1.7\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "yajl_s.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/cstring_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/ctrlbasic2_test/ctrlbasic2_test.vcxproj",
+      "rootNamespace": "ctrlbasic2test",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/ctrlbasic2_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/ctrlfbasic_test/ctrlfbasic_test.vcxproj",
+      "rootNamespace": "ctrlfbasictest",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/ctrlfbasic_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/ctrltypes_test/ctrltypes_test.vcxproj",
+      "rootNamespace": "ctrltypestest",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/ctrltypes_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/eval_test/eval_test.vcxproj",
+      "rootNamespace": "evaltest",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/eval_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/exec2_test/exec2_test.vcxproj",
+      "rootNamespace": "exec2test",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/exec2_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/exec3_test/exec3_test.vcxproj",
+      "rootNamespace": "exec3test",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/exec3_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/exec4_test/exec4_test.vcxproj",
+      "rootNamespace": "exec4test",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/exec4_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/exec_test/exec_test.vcxproj",
+      "rootNamespace": "exectest",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/exec_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/fileio_test/fileio_test.vcxproj",
+      "rootNamespace": "fileiotest",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/fileio_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/filelock_test/filelock_test.vcxproj",
+      "rootNamespace": "filelocktest",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/filelock_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/fileouv_test/fileouv_test.vcxproj",
+      "rootNamespace": "fileouvtest",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/fileouv_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/files_test/files_test.vcxproj",
+      "rootNamespace": "filestest",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/files_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/filsel_test/filsel_test.vcxproj",
+      "rootNamespace": "filseltest",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/filsel_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/formatsclb_test/formatsclb_test.vcxproj",
+      "rootNamespace": "formatsclbtest",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/formatsclb_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/forsql_test/forsql_test.vcxproj",
+      "rootNamespace": "forsqltest",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/forsql_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/funcerrn_test/funcerrn_test.vcxproj",
+      "rootNamespace": "funcerrntest",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/funcerrn_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/json_test/json_test.vcxproj",
+      "rootNamespace": "jsontest",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/json_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/logsap_test/logsap_test.vcxproj",
+      "rootNamespace": "logsaptest",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/logsap_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/parser_test/parser_test.vcxproj",
+      "rootNamespace": "jsontest",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/parser_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/patchAcvtx_test/patchAcvtx_test.vcxproj",
+      "rootNamespace": "patchAcvtxtest",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/patchAcvtx_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/patchMeth2_test/patchMeth2_test.vcxproj",
+      "rootNamespace": "patchMeth2test",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/patchMeth2_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/patchMeth3_test/patchMeth3_test.vcxproj",
+      "rootNamespace": "patchMeth3test",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/patchMeth3_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/patchMeth4Nx_test/patchMeth4Nx_test.vcxproj",
+      "rootNamespace": "patchMeth4Nxtest",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/patchMeth4Nx_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/patchMeth4_test/patchMeth4_test.vcxproj",
+      "rootNamespace": "patchMeth4test",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/patchMeth4_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/patchMeth_test/patchMeth_test.vcxproj",
+      "rootNamespace": "patchMethtest",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/patchMeth_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/patchReadLine1_test/patchReadLine1_test.vcxproj",
+      "rootNamespace": "patchReadLine1test",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/patchReadLine1_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/patchReadLine2_test/patchReadLine2_test.vcxproj",
+      "rootNamespace": "patchReadLine2test",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/patchReadLine2_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/postgres_test/postgres_test.vcxproj",
+      "rootNamespace": "postgres_test",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/postgres_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/sapex_test/sapex_test.vcxproj",
+      "rootNamespace": "sapextest",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/sapex_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/socket_test/socket_test.vcxproj",
+      "rootNamespace": "sockettest",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/socket_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/spawn_sandbox_test/spawn_sandbox_test.vcxproj",
+      "rootNamespace": "spawnsandboxtest",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/spawn_sandbox_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/tablesAndSql_test/tablesAndSql_test.vcxproj",
+      "rootNamespace": "tablesAndSqltest",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/tablesAndSql_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/template_test/template_test.vcxproj",
+      "rootNamespace": "templatetest",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/template_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/test_perf/test_perf.vcxproj",
+      "rootNamespace": "test_perf",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/test_perf.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/tosdatabit_test/tosdatabit_test.vcxproj",
+      "rootNamespace": "tosdatabittest",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/tosdatabit_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/uthash_test/uthash_test.vcxproj",
+      "rootNamespace": "uthashtest",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/uthash_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/varstr_test/varstr_test.vcxproj",
+      "rootNamespace": "varstrtest",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/varstr_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/varsys_test/varsys_test.vcxproj",
+      "rootNamespace": "varsystest",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/varsys_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/tests/version_test/version_test.vcxproj",
+      "rootNamespace": "versiontest",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include",
+            "$(SolutionDir)extlib\\cmocka-2.0.2\\include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../../test/version_test.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/valfil/valfil.vcxproj",
+      "rootNamespace": "valfil",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "wsock32.lib",
+            "mpr.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "ws2_32.lib",
+            "crypt32.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "wsock32.lib",
+            "mpr.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "ws2_32.lib",
+            "crypt32.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../adxbin/src/valcor.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/valstc/valstc.vcxproj",
+      "rootNamespace": "valstc",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "wsock32.lib",
+            "mpr.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "ws2_32.lib",
+            "crypt32.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "wsock32.lib",
+            "mpr.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "ws2_32.lib",
+            "crypt32.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../adxbin/src/valcor.cpp"
+      ],
+      "headers": []
+    },
+    {
+      "path": "windows/projects/valtrt/valtrt.vcxproj",
+      "rootNamespace": "valtrt",
+      "configurations": {
+        "Debug|Win32": {
+          "defines": [
+            "WIN32",
+            "_DEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Release|Win32": {
+          "defines": [
+            "WIN32",
+            "NDEBUG",
+            "_CONSOLE"
+          ],
+          "includeDirs": [],
+          "linkDeps": []
+        },
+        "Debug|x64": {
+          "defines": [
+            "_DEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "wsock32.lib",
+            "mpr.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "ws2_32.lib",
+            "crypt32.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        },
+        "Release|x64": {
+          "defines": [
+            "NDEBUG",
+            "_CONSOLE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "WIN32",
+            "NOMINMAX"
+          ],
+          "includeDirs": [
+            "$(SolutionDir)include"
+          ],
+          "linkDeps": [
+            "binmode.obj",
+            "libdiv.lib",
+            "libw32.lib",
+            "wsock32.lib",
+            "mpr.lib",
+            "dbghelp.lib",
+            "psapi.lib",
+            "secur32.lib",
+            "rpcrt4.lib",
+            "ntdsapi.lib",
+            "libexpatMT.lib",
+            "libxml2.lib",
+            "ws2_32.lib",
+            "crypt32.lib",
+            "libcrypto.lib",
+            "%(AdditionalDependencies)"
+          ]
+        }
+      },
+      "sources": [
+        "../../../adxbin/src/valcor.cpp"
+      ],
+      "headers": []
+    }
+  ]
+}

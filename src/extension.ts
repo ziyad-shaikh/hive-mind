@@ -2,7 +2,6 @@ import * as vscode from 'vscode';
 import { DependencyAnalyzer } from './analyzer/DependencyAnalyzer';
 import { SymbolAnalyzer } from './analyzer/SymbolAnalyzer';
 import { GitAnalyzer } from './analyzer/GitAnalyzer';
-import { ClangdClient } from './analyzer/ClangdClient';
 import { MacroExpander } from './analyzer/MacroExpander';
 import { BuildSubset } from './analyzer/BuildSubset';
 import { GraphCache } from './analyzer/GraphCache';
@@ -14,11 +13,11 @@ import { DependencyTreeProvider } from './views/DependencyTreeProvider';
 import { HiveMindFileDecorationProvider } from './views/HiveMindFileDecorationProvider';
 import { ImpactPreviewOnSave } from './views/ImpactPreviewOnSave';
 import { CoChangePanel } from './views/CoChangePanel';
+import { ModuleGraphPanel } from './views/ModuleGraphPanel';
 
 let analyzer: DependencyAnalyzer;
 let symbolAnalyzer: SymbolAnalyzer;
 let gitAnalyzer: GitAnalyzer;
-let clangdClient: ClangdClient | null = null;
 let macroExpander: MacroExpander | null = null;
 let buildSubset: BuildSubset | null = null;
 let statusBarItem: vscode.StatusBarItem;
@@ -27,6 +26,7 @@ let fileDecorationProvider: HiveMindFileDecorationProvider;
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
     analyzer = new DependencyAnalyzer();
+    analyzer.setExtensionRoot(context.extensionUri.fsPath);
     symbolAnalyzer = new SymbolAnalyzer();
     gitAnalyzer = new GitAnalyzer();
 
@@ -49,6 +49,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         { location: vscode.ProgressLocation.Window, title: 'Hive Mind: Indexing workspace...' },
         async () => { await analyzer.analyze(); }
     );
+    propagateProfile();
     updateStatusBar();
 
     // ── Git co-change analysis (background) ─────────────────────────────
@@ -81,7 +82,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     context.subscriptions.push(analyzer.outputChannel);
 
     // ── File watcher (debounced) ────────────────────────────────────────
-    const watchGlob = '**/*.{ts,tsx,js,jsx,mjs,cjs,vue,svelte,py,cs,go,rs,cpp,c,h,hpp,hxx,java,kt,kts,php,rb,swift,css,scss,sass,less,styl}';
+    const watchGlob = '**/*.{ts,tsx,js,jsx,mjs,cjs,vue,svelte,py,cs,go,rs,cpp,c,h,hpp,hxx,java,kt,kts,php,rb,swift,css,scss,sass,less,styl,y,ym4,x,l}';
     const watcher = vscode.workspace.createFileSystemWatcher(watchGlob, false, false, false);
     watcher.onDidChange(uri => {
         analyzer.debouncedUpdateFile(uri.fsPath);
@@ -126,6 +127,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
                 { location: vscode.ProgressLocation.Notification, title: 'Hive Mind: Re-analyzing workspace...' },
                 async () => { await analyzer.analyze(); }
             );
+            propagateProfile();
             symbolAnalyzer.clear();
             try { gitAnalyzer.analyze(); } catch { /* git not available */ }
             updateStatusBar();
@@ -135,6 +137,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
                 `Hive Mind: ${analyzer.getNodeCount()} files, ${analyzer.getEdgeCount()} relationships indexed.`
             );
             GraphPanel.refresh(analyzer);
+            ModuleGraphPanel.refresh(analyzer);
         }),
 
         vscode.commands.registerCommand('hiveMind.showIndexedFiles', () => {
@@ -168,24 +171,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             await vscode.commands.executeCommand('hiveMind.analyzeWorkspace');
         }),
 
-        vscode.commands.registerCommand('hiveMind.checkClangd', async () => {
-            const client = getClangdClient();
-            analyzer.outputChannel.show();
-            if (!client) {
-                analyzer.outputChannel.appendLine('[Hive Mind] No workspace folder open — clangd cannot start.');
-                return;
-            }
-            analyzer.outputChannel.appendLine('[Hive Mind] Probing clangd...');
-            const info = await client.getInfo();
-            if (info.available) {
-                analyzer.outputChannel.appendLine(`[Hive Mind] clangd ready ✔  exe=${info.executable}  version=${info.version ?? 'unknown'}`);
-                vscode.window.showInformationMessage(`clangd ready (version ${info.version ?? 'unknown'})`);
-            } else {
-                analyzer.outputChannel.appendLine(`[Hive Mind] clangd NOT available: ${info.reason}`);
-                vscode.window.showWarningMessage(`Hive Mind: clangd not available — ${info.reason}`);
-            }
-        }),
-
         vscode.commands.registerCommand('hiveMind.showStats', () => {
             const stats = analyzer.getStats();
             analyzer.outputChannel.clear();
@@ -207,7 +192,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     );
 
     // ── Register Copilot LM tools ───────────────────────────────────────
-    registerTools(context, analyzer, symbolAnalyzer, gitAnalyzer, getClangdClient, getMacroExpander, getBuildSubset);
+    registerTools(context, analyzer, symbolAnalyzer, gitAnalyzer, getMacroExpander, getBuildSubset);
 
     // ── Register @hivemind chat participant ──────────────────────────────
     registerChatParticipant(context, analyzer, symbolAnalyzer, gitAnalyzer);
@@ -217,6 +202,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         vscode.commands.registerCommand('hiveMind.showCoChangeHeatMap', (resourceUri?: vscode.Uri) => {
             const target = resourceUri?.fsPath ?? vscode.window.activeTextEditor?.document.uri.fsPath;
             CoChangePanel.createOrShow(analyzer, gitAnalyzer, target);
+        })
+    );
+
+    // ── Module Graph command (profile-driven module-level view) ──────────
+    context.subscriptions.push(
+        vscode.commands.registerCommand('hiveMind.showModuleGraph', () => {
+            ModuleGraphPanel.createOrShow(analyzer);
         })
     );
 
@@ -250,24 +242,18 @@ function updateStatusBar(): void {
     statusBarItem.text = `$(pulse) Hive Mind: ${files} files · ${edges} edges`;
 }
 
-export function deactivate(): void {
-    if (clangdClient) {
-        clangdClient.dispose().catch(() => { /* ignore */ });
-        clangdClient = null;
-    }
-    // remaining cleanup handled by context.subscriptions
+/**
+ * Push the active project profile into the compiler-driven subsystems so they
+ * can use its -D/-I set when compile_commands.json is missing (the X3 case).
+ */
+function propagateProfile(): void {
+    const profile = analyzer.getProfile();
+    if (macroExpander) { macroExpander.setProfile(profile); }
+    if (buildSubset) { buildSubset.setProfile(profile); }
 }
 
-/**
- * Lazily construct the ClangdClient against the first workspace folder.
- * Returns null if no workspace is open.
- */
-function getClangdClient(): ClangdClient | null {
-    if (clangdClient) { return clangdClient; }
-    const folder = vscode.workspace.workspaceFolders?.[0];
-    if (!folder) { return null; }
-    clangdClient = new ClangdClient(folder.uri.fsPath, analyzer.outputChannel);
-    return clangdClient;
+export function deactivate(): void {
+    // cleanup handled by context.subscriptions
 }
 
 /** Lazily construct the MacroExpander against the first workspace folder. */
@@ -280,6 +266,7 @@ function getMacroExpander(): MacroExpander | null {
         analyzer.outputChannel,
         () => analyzer.getIncludePaths()
     );
+    macroExpander.setProfile(analyzer.getProfile());
     return macroExpander;
 }
 
@@ -292,7 +279,8 @@ function getBuildSubset(): BuildSubset | null {
         getImpact: (seed, depth) => analyzer.getImpact(seed, depth),
         resolveFilePath: (input) => analyzer.resolveFilePath(input),
     });
+    buildSubset.setProfile(analyzer.getProfile());
     return buildSubset;
 }
 
-export { getClangdClient, getMacroExpander, getBuildSubset };
+export { getMacroExpander, getBuildSubset };

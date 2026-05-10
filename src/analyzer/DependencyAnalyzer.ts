@@ -3,6 +3,16 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { extractActiveCppIncludes } from './CppPreprocessor';
 import {
+    initCppParser,
+    isCppParserReady,
+    extractIncludesSync as tsExtractIncludesSync,
+    extractGrammarPrologueIncludesSync as tsExtractGrammarPrologueSync,
+    getInitFailureReason as tsGetInitFailureReason,
+} from './CppTreeSitterParser';
+import { detectProfile, isUmbrellaHeader, variantOf } from '../profiles';
+import type { ProjectProfile } from '../profiles';
+import { CppScopeResolver } from './CppScopeResolver';
+import {
     GraphCache,
     CachedFile,
     CachedSnapshot,
@@ -12,7 +22,7 @@ import {
 } from './GraphCache';
 
 /** Bumped when parser semantics change. Forces a full reindex on upgrade. */
-const PARSER_VERSION = 'v3-cppPreproc-2026-04';
+const PARSER_VERSION = 'v4-treeSitter-cpp-2026-05';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -231,6 +241,32 @@ const PARSERS: LanguageParser[] = [
             const re = /^import\s+(\w+)/gm;
             let m: RegExpExecArray | null;
             while ((m = re.exec(content)) !== null) { results.push(m[1]); }
+            return results;
+        },
+    },
+    {
+        // Bison / Lex / X3 grammar fragment files. These are not C++, but their
+        // %{ ... %} prologue contains C++ #include directives that are real
+        // edges into the include graph. parseFile() routes these extensions
+        // through the tree-sitter prologue extractor; this regex is the
+        // fallback when tree-sitter is not initialised.
+        extensions: ['.y', '.ym4', '.x', '.l'],
+        extract(content: string) {
+            const results: string[] = [];
+            const prologueRe = /%\{([\s\S]*?)%\}/g;
+            const includeRe = /^\s*#\s*include\s*[<"]([^>"]+)[>"]/gm;
+            let m: RegExpExecArray | null;
+            while ((m = prologueRe.exec(content)) !== null) {
+                const fragment = m[1];
+                let inc: RegExpExecArray | null;
+                includeRe.lastIndex = 0;
+                while ((inc = includeRe.exec(fragment)) !== null) {
+                    // Preserve angle-include sentinel for the resolver.
+                    const isAngle = fragment[inc.index + inc[0].lastIndexOf('<')] === '<' ||
+                                    /^\s*#\s*include\s*</.test(inc[0]);
+                    results.push(isAngle ? '<' + inc[1] : inc[1]);
+                }
+            }
             return results;
         },
     },
@@ -537,6 +573,10 @@ function resolveImport(
     if (['.c', '.cpp', '.cc', '.cxx', '.h', '.hpp', '.hxx'].includes(ext)) {
         return tryResolveCImport(importStr, fromDir, headerIndex, includePaths);
     }
+    if (['.y', '.ym4', '.x', '.l'].includes(ext)) {
+        // Grammar prologue includes are C/C++ headers — same resolver as .cpp.
+        return tryResolveCImport(importStr, fromDir, headerIndex, includePaths);
+    }
     if (ext === '.rs') {
         return tryResolveRustImport(importStr, fromFile, workspaceRoot);
     }
@@ -790,11 +830,78 @@ export class DependencyAnalyzer {
     /** Optional disk-backed cache. Set via `setCache()` before the first `analyze()`. */
     private cache: GraphCache | null = null;
 
+    /** Path to the extension root — used to locate bundled tree-sitter wasm files. */
+    private extensionRoot: string | null = null;
+
+    /** Active project profile (e.g., sage-x3-runtime). null when no profile matches. */
+    private profile: ProjectProfile | null = null;
+
+    /** Resolved umbrella-header absolute paths for the active profile. */
+    private umbrellaPaths = new Set<string>();
+
+    /** Lazily-built tree-sitter scope resolver for AST-precise C++ queries. */
+    private scopeResolver: CppScopeResolver | null = null;
+
     readonly outputChannel: vscode.OutputChannel;
 
     constructor() {
         this.workspaceRoots = (vscode.workspace.workspaceFolders ?? []).map(f => f.uri.fsPath);
         this.outputChannel = vscode.window.createOutputChannel('Hive Mind');
+    }
+
+    /**
+     * Tell the analyzer where the extension is installed so it can find bundled
+     * resources (tree-sitter wasms, profile JSON files, etc.). Call once during
+     * activation before `analyze()`.
+     */
+    setExtensionRoot(root: string): void {
+        this.extensionRoot = root;
+    }
+
+    /** Active project profile, or null if no profile matched the workspace. */
+    getProfile(): ProjectProfile | null {
+        return this.profile;
+    }
+
+    /** Resolve a profile-relative path (e.g. "include/adx_include.h") to absolute. */
+    resolveProfilePath(rel: string): string | null {
+        const root = this.workspaceRoots[0];
+        if (!root) {
+            return null;
+        }
+        const normalized = rel.replace(/[\\/]/g, path.sep);
+        const full = path.join(root, normalized);
+        return fs.existsSync(full) ? full : null;
+    }
+
+    /** Test whether `absPath` is one of the profile's umbrella headers. */
+    isUmbrella(absPath: string): boolean {
+        return this.umbrellaPaths.has(path.resolve(absPath).toLowerCase());
+    }
+
+    /**
+     * Lazily-instantiated scope resolver for C++ symbol queries (findReferences,
+     * findOverrides, callHierarchy, typeHierarchy). Replaces the clangd path.
+     * The resolver builds its index on first query.
+     */
+    getScopeResolver(): CppScopeResolver {
+        if (!this.scopeResolver) {
+            this.scopeResolver = new CppScopeResolver(this);
+        }
+        return this.scopeResolver;
+    }
+
+    /** Identify the build variant that owns this file (or null if it's common). */
+    getVariantOf(absPath: string): string | null {
+        if (!this.profile) {
+            return null;
+        }
+        const root = this.workspaceRoots[0];
+        if (!root) {
+            return null;
+        }
+        const rel = path.relative(root, absPath).replace(/\\/g, '/');
+        return variantOf(this.profile, rel);
     }
 
     private get primaryRoot(): string | undefined {
@@ -816,6 +923,42 @@ export class DependencyAnalyzer {
 
     async analyze(): Promise<void> {
         if (this.workspaceRoots.length === 0) { return; }
+
+        // The scope resolver's index becomes stale on every reindex.
+        if (this.scopeResolver) { this.scopeResolver.invalidate(); }
+
+        // Detect a project profile (e.g., sage-x3-runtime) for the primary
+        // workspace root. Profiles encode repo-specific knowledge — umbrella
+        // headers, module-naming, build variants — that generic static analysis
+        // can't infer. The analyzer falls back to generic behaviour if none matches.
+        this.profile = detectProfile(this.workspaceRoots[0]);
+        this.umbrellaPaths.clear();
+        if (this.profile) {
+            this.outputChannel.appendLine(`[Hive Mind] Active profile: ${this.profile.displayName} (${this.profile.id})`);
+            for (const rel of this.profile.umbrellaHeaders) {
+                const abs = this.resolveProfilePath(rel);
+                if (abs) {
+                    this.umbrellaPaths.add(path.resolve(abs).toLowerCase());
+                }
+            }
+            if (this.umbrellaPaths.size > 0) {
+                this.outputChannel.appendLine(`[Hive Mind] Umbrella headers: ${this.umbrellaPaths.size} resolved`);
+            }
+        } else {
+            this.outputChannel.appendLine('[Hive Mind] No project profile matched — using generic analysis');
+        }
+
+        // Initialise the tree-sitter C++ parser before parsing any files. Async
+        // boot of the WASM grammar is one-shot; subsequent parse calls are sync.
+        if (this.extensionRoot) {
+            await initCppParser(this.extensionRoot);
+            if (isCppParserReady()) {
+                this.outputChannel.appendLine('[Hive Mind] tree-sitter C++ parser ready');
+            } else {
+                const reason = tsGetInitFailureReason() ?? 'unknown reason';
+                this.outputChannel.appendLine(`[Hive Mind] tree-sitter unavailable (${reason}) — falling back to regex C++ parser`);
+            }
+        }
 
         const cfg = vscode.workspace.getConfiguration('hiveMind');
         const maxFiles = cfg.get<number>('maxFiles', 5000);
@@ -1005,12 +1148,18 @@ export class DependencyAnalyzer {
         return [...visited];
     }
 
-    getImpact(filePath: string, depth = 2): string[] {
+    getImpact(filePath: string, depth = 2, options?: { respectUmbrella?: boolean }): string[] {
         const resolved = this.resolveFilePath(filePath);
         if (!resolved) { return []; }
+        const respectUmbrella = options?.respectUmbrella ?? true;
         const visited = new Set<string>();
-        this.walk(resolved, depth, visited, 'dependents');
+        this.walk(resolved, depth, visited, 'dependents', respectUmbrella ? this.umbrellaPaths : undefined);
         visited.delete(resolved);
+        if (respectUmbrella) {
+            // Don't return umbrellas in the impact set themselves either —
+            // editing X to update its umbrella is rarely the user's intent.
+            for (const u of this.umbrellaPaths) { visited.delete(u); }
+        }
         return [...visited];
     }
 
@@ -1392,13 +1541,25 @@ export class DependencyAnalyzer {
         }
 
         // C/C++ files: use the preprocessor-aware extractor so dead #ifdef
-        // branches don't pollute the dependency graph. All other languages
-        // fall through to the regex-based PARSERS path.
+        // branches don't pollute the dependency graph. When #ifdef respect is
+        // off, prefer the tree-sitter parser if it loaded successfully (handles
+        // multi-line and comment-embedded #include directives correctly that
+        // the regex misses). Grammar files (.y/.ym4/.x/.l) get the same
+        // tree-sitter prologue treatment. All other languages use the legacy
+        // regex parser registered in PARSERS.
         const isCpp = ['.c', '.cpp', '.cc', '.cxx', '.h', '.hpp', '.hxx'].includes(ext);
+        const isGrammar = ['.y', '.ym4', '.x', '.l'].includes(ext);
         const respectIfdef = vscode.workspace.getConfiguration('hiveMind').get<boolean>('respectIfdefBranches', true);
-        const rawImports: string[] = (isCpp && respectIfdef)
-            ? this.extractCppIncludes(filePath, content)
-            : parser.extract(content);
+        let rawImports: string[];
+        if (isCpp && respectIfdef) {
+            rawImports = this.extractCppIncludes(filePath, content);
+        } else if (isCpp && isCppParserReady()) {
+            rawImports = tsExtractIncludesSync(content);
+        } else if (isGrammar && isCppParserReady()) {
+            rawImports = tsExtractGrammarPrologueSync(content);
+        } else {
+            rawImports = parser.extract(content);
+        }
 
         const deps = new Set<string>();
         for (const raw of rawImports) {
@@ -1533,16 +1694,24 @@ export class DependencyAnalyzer {
         filePath: string,
         depth: number,
         visited: Set<string>,
-        direction: 'dependencies' | 'dependents'
+        direction: 'dependencies' | 'dependents',
+        umbrellaPaths?: Set<string>
     ): void {
         if (visited.has(filePath)) { return; }
         visited.add(filePath);
         if (depth === 0) { return; }
+        // If this node is an umbrella header AND we're in umbrella-respecting
+        // mode AND we didn't start at an umbrella ourselves, stop traversing
+        // through it. The set of files that go through `adx_include.h` is the
+        // entire codebase; including them in an impact set is useless noise.
+        if (umbrellaPaths && visited.size > 1 && umbrellaPaths.has(path.resolve(filePath).toLowerCase())) {
+            return;
+        }
         const node = this.graph.get(filePath);
         if (!node) { return; }
         const nextDepth = depth === -1 ? -1 : depth - 1;
         for (const dep of node[direction]) {
-            this.walk(dep, nextDepth, visited, direction);
+            this.walk(dep, nextDepth, visited, direction, umbrellaPaths);
         }
     }
 

@@ -1,0 +1,227 @@
+{
+    "id": "sage-x3-runtime",
+    "displayName": "Sage X3 Runtime",
+    "match": {
+        "anyOf": [
+            { "fileExists": "x3-runtime-vs2022.slnf" },
+            { "fileExists": "x3-runtime-vs2022.sln" },
+            { "fileExists": "include/adx_include.h" }
+        ]
+    },
+
+    "configurations": {
+        "linux-release": {
+            "defines": {
+                "LINUX": "1",
+                "__linux__": "1",
+                "__GNUC__": "11",
+                "__x86_64__": "1",
+                "LINUXODBC": "1",
+                "_FILE_OFFSET_BITS": "64",
+                "NDEBUG": "1"
+            },
+            "includeRoots": [
+                "include",
+                "extlib",
+                "extlib/trex",
+                "extlib/linux/include",
+                "extlib/linux/openssl/include",
+                "extlib/linux/instantclient/sdk/include",
+                "extlib/cmocka-2.0.2/include",
+                "extlib/linux/libunwind/include",
+                "extlib/linux/snacodbc/include",
+                "/usr/include/libxml2",
+                "/usr/include/postgresql",
+                "/usr/pgsql-16/include"
+            ]
+        },
+        "linux-debug": {
+            "extends": "linux-release",
+            "defines": {
+                "_DEBUG": "1",
+                "NDEBUG": null
+            }
+        },
+        "darwin-release": {
+            "extends": "linux-release",
+            "defines": {
+                "LINUX": null,
+                "__linux__": null,
+                "DARWIN": "1",
+                "__APPLE__": "1"
+            },
+            "includeRoots": [
+                "include",
+                "extlib",
+                "extlib/trex",
+                "extlib/darwin/include",
+                "extlib/darwin/openssl/include",
+                "extlib/darwin/instantclient/sdk/include",
+                "extlib/cmocka-2.0.2/include",
+                "extlib/darwin/libunwind/include",
+                "extlib/darwin/snacodbc/include"
+            ]
+        },
+        "windows-x64-release": {
+            "defines": {
+                "WIN32": "1",
+                "_CONSOLE": "1",
+                "_CRT_SECURE_NO_DEPRECATE": "1",
+                "NOMINMAX": "1",
+                "NDEBUG": "1"
+            },
+            "implicitDefines": {
+                "_WIN32": "1",
+                "_WIN64": "1",
+                "_MSC_VER": "1930",
+                "_M_X64": "100"
+            },
+            "includeRoots": [
+                "include",
+                "adxbin/include",
+                "extlib",
+                "extlib/win/include",
+                "extlib/win/include/expat",
+                "extlib/win/include/libpq",
+                "extlib/win/x64/instantclient/sdk/include",
+                "extlib/cmocka-2.0.2/include",
+                "extlib/cmocka-1.1.7/include",
+                "src/grammar"
+            ]
+        },
+        "windows-x64-debug": {
+            "extends": "windows-x64-release",
+            "defines": {
+                "_DEBUG": "1",
+                "NDEBUG": null
+            }
+        }
+    },
+    "defaultConfiguration": "auto",
+
+    "umbrellaHeaders": [
+        "include/adx_include.h",
+        "test/adx_test.h"
+    ],
+
+    "modulePattern": {
+        "external": "include/{module}ext.h",
+        "internal": "include/{module}in.h",
+        "implGlob": "src/{module}*.cpp",
+        "knownModules": [
+            "apl", "cal", "div", "fil", "fsr", "gra", "inp", "ioc",
+            "men", "sap", "trt", "tsr", "var",
+            "ter", "afd", "val", "sys", "vtb", "tif", "tiv", "arch",
+            "avl", "dep", "prd", "w32"
+        ]
+    },
+
+    "testPattern": {
+        "linux":   { "from": "src/{name}.cpp", "to": "test/{name}_test.cpp" },
+        "windows": { "from": "src/{name}.cpp", "to": "windows/projects/tests/{name}_test/{name}_test.vcxproj" }
+    },
+
+    "generatedHeaders": [
+        { "name": "gram.tab.h",   "generatedFrom": "src/grammar/gram.ym4" },
+        { "name": "ins.tab.h",    "generatedFrom": "src/grammar/ins.ym4" },
+        { "name": "obj.tab.h",    "generatedFrom": "src/grammar/obj.ym4" },
+        { "name": "sdata.tab.h",  "generatedFrom": "src/grammar/sdata.ym4" },
+        { "name": "melgra.tab.h", "generatedFrom": "src/grammar/melgra.ym4" },
+        { "name": "version.sha",  "generatedBy": "make version" }
+    ],
+
+    "customSources": [
+        { "extension": ".y",   "kind": "bison",          "prologue": "%{...%}" },
+        { "extension": ".ym4", "kind": "bison-m4",       "prologue": "%{...%}" },
+        { "extension": ".x",   "kind": "bison-fragment", "prologue": "%{...%}" },
+        { "extension": ".l",   "kind": "lex",            "prologue": "%{...%}" }
+    ],
+
+    "buildVariants": [
+        {
+            "name": "sadora",
+            "description": "Oracle backend (uses Oracle Instant Client / OCCI)",
+            "extraSources": [
+                "src/db/ora/management.cpp",
+                "src/db/ora/specific.cpp",
+                "src/db/ora/oracli.cpp",
+                "src/db/ora/oradiv.cpp",
+                "src/db/ora/orafil.cpp",
+                "src/db/ora/oragen.cpp",
+                "src/db/ora/oralec.cpp"
+            ]
+        },
+        {
+            "name": "sadpgs",
+            "description": "PostgreSQL backend (uses libpq)",
+            "extraSources": [
+                "src/db/pgs/connection.cpp",
+                "src/db/pgs/management.cpp",
+                "src/db/pgs/result.cpp",
+                "src/db/pgs/specific.cpp",
+                "src/db/pgs/pgscli.cpp",
+                "src/db/pgs/pgsdiv.cpp",
+                "src/db/pgs/pgsfil.cpp",
+                "src/db/pgs/pgsgen.cpp"
+            ]
+        },
+        {
+            "name": "sadoss",
+            "description": "ODBC / MSSQL backend (uses unixodbc / msodbcsql)",
+            "extraSources": [
+                "src/db/sql/management.cpp",
+                "src/db/sql/specific.cpp",
+                "src/db/sql/sqlcel.cpp",
+                "src/db/sql/sqlcli.cpp",
+                "src/db/sql/sqldiv.cpp",
+                "src/db/sql/sqlfil.cpp",
+                "src/db/sql/sqlgen.cpp",
+                "src/db/sql/sqlwhe.cpp"
+            ]
+        },
+        {
+            "name": "sadldap",
+            "description": "LDAP admin tool (uses Oracle backend internally)",
+            "extraSources": [
+                "src/db/ora/management.cpp",
+                "src/db/ora/specific.cpp",
+                "src/db/ora/oracli.cpp",
+                "src/db/ora/oradiv.cpp",
+                "src/db/ora/orafil.cpp",
+                "src/db/ora/oragen.cpp",
+                "src/db/ora/oralec.cpp",
+                "adxbin/src/ldapadx.cpp"
+            ]
+        }
+    ],
+
+    "macros": {
+        "transparent": [
+            "EXCEPT", "THROW", "CATCH", "AdxException",
+            "ASSERT_ALLOCATION", "ASSERT_ADG_GROUP", "ASSERT_STATUS",
+            "ADG_FREE", "ADG_MEMFREE", "ADX_FREE",
+            "_CLOSE_"
+        ],
+        "platformConditional": [
+            "STRUCPY", "PATH_SEPARATOR", "HOMDIR",
+            "numersys", "numernet", "numerneth", "syserm",
+            "DMPT", "LIBC", "NOWAITPRINT",
+            "sleep", "srand48", "ulimit", "waitpid", "S_IFIFO"
+        ]
+    },
+
+    "compilerDriver": {
+        "windows": {
+            "exe": "cl.exe",
+            "preprocessFlags": ["/E", "/P", "/nologo"],
+            "syntaxOnlyFlags": ["/Zs", "/nologo"],
+            "discoverFlagsFrom": "windows/projects/{project}/{project}.vcxproj"
+        },
+        "linux": {
+            "exe": "g++",
+            "preprocessFlags": ["-E", "-P"],
+            "syntaxOnlyFlags": ["-fsyntax-only"],
+            "discoverFlagsFrom": "makefile"
+        }
+    }
+}

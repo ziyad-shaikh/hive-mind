@@ -30,6 +30,8 @@ so you don't need to read every file to understand the architecture.
 | Finding test files for a source file | \`hivemind_getTestFiles\` | Finds associated test files by naming convention. |
 | Finding files that change together | \`hivemind_coChanged\` | Git history analysis — surfaces implicit coupling. |
 
+For C/C++ codebases there are six additional tools that Hive Mind ships with — see the C/C++ instructions file.
+
 ## Workflow
 
 1. **Before touching any file:** Call \`hivemind_getContext\` on the target file. Read the context bundle to understand its role.
@@ -41,7 +43,7 @@ so you don't need to read every file to understand the architecture.
 ## Important Notes
 
 - Hive Mind's graph is **structural** (import/include relationships). It does not track runtime dispatch, reflection, or DI wiring.
-- For C/C++ codebases, Hive Mind parses \`compile_commands.json\` for include paths. If headers aren't resolving, the project may need a build first.
+- For C/C++ codebases, Hive Mind resolves includes via (in priority order) \`compile_commands.json\` → an active project profile (e.g. the built-in Sage X3 profile, auto-detected) → workspace heuristics. If headers aren't resolving, either generate a compile DB or check that a profile matches your repo.
 - The graph is re-indexed on file save. If you create new files, they'll be picked up automatically.
 - \`hivemind_search\` searches only indexed files (source code). It won't search node_modules, build outputs, etc.
 `;
@@ -232,20 +234,39 @@ Large C++ rebuilds take minutes-to-hours. After making a change:
 | Starting work on any \`.cpp\`/\`.h\` | \`hivemind_getCppPair\` + \`hivemind_getContext\` |
 | About to edit a header | \`hivemind_getImpact\` (depth 2) — stop if >20 dependents |
 | Encountered an uppercase token | \`hivemind_findMacro\` (exact:true) |
+| **Renaming any function / class / variable** | \`hivemind_findReferences\` (tree-sitter, scope-aware — see "Six C/C++ tools" below) |
+| **Touching a virtual method** | \`hivemind_findOverrides\` to enumerate every concrete implementation |
+| **Tracing a function's blast radius** | \`hivemind_callHierarchy\` (incoming/outgoing/both, depth 1–2) |
+| **Modifying a base class** | \`hivemind_typeHierarchy\` to enumerate every derived class |
+| **Need the actual macro expansion at a site** | \`hivemind_macroExpand\` runs the real preprocessor on the TU |
+| **Need to know "did I break the build?"** | \`hivemind_buildSubset\` runs syntax-only compile across the impact set |
 | Symbol could have multiple definitions | \`hivemind_findSymbol\` — read every result |
 | Tracing what a header pulls in | \`hivemind_getDependencies\` (depth 1) |
 | Finding the test for a source file | \`hivemind_getTestFiles\` |
 | Searching for code by keyword | \`hivemind_search\` with \`contextFile\` set to the area you care about |
 
+## Six C/C++ Tools You Should Use Aggressively
+
+These tools were built specifically to close the failure modes that grep cannot close. They use Hive Mind's own tree-sitter index (no clangd / no LSP dependency) plus the active project profile's flags (or \`compile_commands.json\` if present):
+
+1. **\`hivemind_findReferences\`** — every reference to a symbol, with comments, string literals, and dead \`#ifdef\` branches stripped before matching. Each hit is tagged \`high\` / \`medium\` / \`low\` confidence based on how unique the name is workspace-wide. **Use before any rename.** \`high\` means the name is unique; \`medium\`/\`low\` means manually verify the scope.
+2. **\`hivemind_findOverrides\`** — for a virtual method, walks the inheritance closure built during indexing and returns every concrete override across the codebase. **Use before changing a virtual method's signature, contract, or visibility.** Every \`high\`-confidence override must be updated in lockstep.
+3. **\`hivemind_callHierarchy\`** — incoming callers and/or outgoing callees of a function. Supports \`depth: 2\` for callers-of-callers in one call. **Use before changing a function's signature** to understand upstream and downstream blast radius.
+4. **\`hivemind_typeHierarchy\`** — supertypes (bases) and/or subtypes (derived) of a class. **Use before modifying any base class** — every subtype may be affected. Combine with \`findOverrides\` on individual virtual methods.
+5. **\`hivemind_macroExpand\`** — runs the real C/C++ preprocessor (\`cl.exe /E\` on Windows, \`g++ -E\` on Linux/Mac, with clang as fallback) using the file's flags. Returns the *actual* expansion at a specific source line. **Use when \`findMacro\` shows the \`#define\` text but you need to know what it becomes after \`#ifdef\`/-D flags/recursive expansion in this specific TU.** Headers are not supported — call this on a \`.cpp\`/\`.cc\`/\`.cxx\` that includes the header.
+6. **\`hivemind_buildSubset\`** — runs syntax-only compilation (\`cl.exe /Zs\` or \`g++ -fsyntax-only\`) on every TU in the impact set of a seed file. **Use after a refactor to confirm you haven't broken the build, without paying for a full link cycle.** Returns pass/fail per TU plus compiler diagnostics.
+
+The first four resolve through Hive Mind's tree-sitter index, so they work even when no \`compile_commands.json\` exists. The last two need either a compile DB **or** an active Hive Mind project profile (e.g. the built-in Sage X3 profile fills the gap when no compile DB is present).
+
 ## Things Hive Mind CANNOT see
 
-Be honest with the user about these blind spots:
+Be honest with the user about these remaining blind spots:
 
-- **Macro expansion** — Hive Mind sees \`#define\` text, but it does not preprocess. If a macro expands to an \`#include\` or function call, that edge is invisible.
-- **Conditional compilation outcomes** — Hive Mind indexes all branches of \`#ifdef\` chains. It does not know which one is active in a given build configuration.
-- **Virtual dispatch** — \`base->doThing()\` resolves to multiple concrete implementations at runtime. Hive Mind doesn't track type hierarchies (yet).
+- **Conditional compilation outcomes** — \`findReferences\` strips dead \`#ifdef\` branches based on the *currently active* configuration in the project profile. Other configurations (e.g. a different OS or build variant) may have additional references that are not surfaced. When in doubt, switch the active configuration and re-run.
 - **Dynamic loading** — \`dlopen\` / \`LoadLibrary\` / \`GetProcAddress\` resolve at runtime. The graph won't show these edges.
-- **Template instantiation sites** — declarations are visible, but specific instantiations across TUs are not tracked.
+- **Template instantiation sites** — declarations are visible, but specific instantiations across TUs are not tracked. \`callHierarchy\` follows direct calls only.
+- **Function pointers / callback dispatch** — \`findOverrides\` covers \`virtual\` methods declared with C++ inheritance; it does not track function-pointer assignments or \`std::function\` callbacks.
+- **Indirect macro-generated symbols** — \`findReferences\` does not preprocess; if a macro \`#define\`s a symbol name, references to that name will not be linked back to the macro that produced it. Use \`macroExpand\` at the call site to see what's actually generated.
 
 When you hit one of these gaps, fall back to careful manual reading and tell the user what assumption you're making.
 `;
@@ -253,7 +274,7 @@ When you hit one of these gaps, fall back to careful manual reading and tell the
 const CPP_AGENT_CONTENT = `---
 name: "C++ Refactor"
 description: "Use when refactoring C/C++ code, renaming or modifying public functions/classes in headers, splitting or merging headers, changing function signatures across .h/.cpp pairs, removing dead code, or any structural change in a native codebase. Specializes in macro-heavy, large-scale C/C++ repositories where header blast-radius and #ifdef variants make grep-based refactors dangerous."
-tools: [read, edit, search, todo, hivemind_getCppPair, hivemind_findMacro, hivemind_getContext, hivemind_planChange, hivemind_getImpact, hivemind_getDependencies, hivemind_search, hivemind_findSymbol, hivemind_detectCycles, hivemind_getTestFiles, hivemind_coChanged, hivemind_getRelatedFiles]
+tools: [read, edit, search, todo, hivemind_getCppPair, hivemind_findMacro, hivemind_findReferences, hivemind_findOverrides, hivemind_callHierarchy, hivemind_typeHierarchy, hivemind_macroExpand, hivemind_buildSubset, hivemind_getContext, hivemind_planChange, hivemind_getImpact, hivemind_getDependencies, hivemind_search, hivemind_findSymbol, hivemind_detectCycles, hivemind_getTestFiles, hivemind_coChanged, hivemind_getRelatedFiles]
 model: "Claude Sonnet 4.5 (Copilot)"
 argument-hint: "Describe the C++ refactor — e.g. 'rename Foo::bar to Foo::baz' or 'split Logger.h into Logger.h + LoggerInternal.h'"
 ---
@@ -268,9 +289,11 @@ You are slow and methodical *on purpose*.
 
 - **NEVER edit a public header without first calling \`hivemind_getImpact\`** on it. If impact > 20 files, surface the count to the user and ask for confirmation.
 - **NEVER edit a \`.cpp\` without first calling \`hivemind_getCppPair\`** to identify the matching header. Update both atomically.
-- **NEVER assume an uppercase identifier is a function.** Always run \`hivemind_findMacro\` first.
-- **NEVER trust a single \`hivemind_findSymbol\` result for a refactor target.** Run it without filters and read every variant — \`#ifdef\` may be hiding alternates.
-- **NEVER do a textual rename across the repo without first running \`hivemind_planChange\`.**
+- **NEVER assume an uppercase identifier is a function.** Always run \`hivemind_findMacro\` first. If you need its actual expansion at a site, run \`hivemind_macroExpand\`.
+- **NEVER rename a function/class/variable on grep results alone.** Run \`hivemind_findReferences\` first; respect the \`high\` / \`medium\` / \`low\` confidence flag on each hit.
+- **NEVER change a virtual method without first calling \`hivemind_findOverrides\`.** Every \`high\`-confidence override must be updated in lockstep.
+- **NEVER modify a base class without first calling \`hivemind_typeHierarchy\` for subtypes.**
+- **NEVER claim a refactor is complete without running \`hivemind_buildSubset\`** on the changed seed file (or a representative TU) to confirm syntax-only compilation passes.
 
 ## Refactor Protocol
 
@@ -279,15 +302,18 @@ For every refactor, execute these phases in order. Do not skip phases.
 ### Phase 1 — Investigate
 1. \`hivemind_getCppPair\` on the primary file.
 2. \`hivemind_getContext\` on the primary file (\`includeContent: false\`).
-3. If the target is a symbol: \`hivemind_findSymbol\` on the symbol name. List every definition site.
-4. If the target involves macros: \`hivemind_findMacro\` for any uppercase token in the code.
-5. Summarize findings in 5–10 bullets before proposing changes.
+3. If the target is a symbol that will be renamed/touched: \`hivemind_findReferences\` on the symbol name. Read the confidence flag on the first hit — that's the workspace-wide assessment.
+4. If the target is a virtual method: \`hivemind_findOverrides\` on the method name.
+5. If the target is a class or struct being modified: \`hivemind_typeHierarchy\` (direction \`subtypes\`, depth 2).
+6. If the target is a function whose contract is changing: \`hivemind_callHierarchy\` (direction \`incoming\`, depth 1 or 2).
+7. If the target involves macros: \`hivemind_findMacro\` for any uppercase token, and \`hivemind_macroExpand\` at any site where the expansion is non-obvious.
+8. Summarize findings in 5–10 bullets before proposing changes. Include reference / override counts and their confidence breakdown.
 
 ### Phase 2 — Plan
 1. \`hivemind_planChange\` with the primary file and a 1-sentence description.
 2. For every file in the "Files to Modify" list, call \`hivemind_getCppPair\` to ensure both halves are tracked.
 3. For every header in the modify list, call \`hivemind_getImpact\` (depth 2). Aggregate the dependent counts.
-4. Produce an explicit plan as a numbered list. Show the plan to the user. Ask for confirmation before editing.
+4. Produce an explicit plan as a numbered list — include the references / overrides / subtypes / call sites you found in Phase 1, and how each will be addressed. Show the plan to the user. Ask for confirmation before editing.
 
 ### Phase 3 — Execute
 1. Apply edits in this order: source files first, then headers (so the graph stays consistent if interrupted).
@@ -295,10 +321,12 @@ For every refactor, execute these phases in order. Do not skip phases.
 3. Keep edits minimal — do NOT reformat, reorder includes, or "tidy up" code outside the refactor scope.
 
 ### Phase 4 — Verify
-1. \`hivemind_getImpact\` on every modified header — confirm no new files appear vs. the original plan.
-2. \`hivemind_getTestFiles\` on every modified source — list the tests to run.
-3. \`hivemind_findSymbol\` on the renamed/changed symbol — confirm all sites are updated.
-4. If \`#ifdef\` variants exist, explicitly tell the user which platforms / configurations were updated and which were not.
+1. \`hivemind_findReferences\` on the renamed/changed symbol — confirm zero hits to the old name and that the new-name hits cover every prior site.
+2. If a virtual method changed: \`hivemind_findOverrides\` again — confirm every override now matches the new signature.
+3. \`hivemind_buildSubset\` with the seed file as \`filePath\` (or pass \`explicitTUs\` to scope it) — review pass/fail per TU. Surface every failing diagnostic.
+4. \`hivemind_getImpact\` on every modified header — confirm no new files appear vs. the original plan.
+5. \`hivemind_getTestFiles\` on every modified source — list the tests to run.
+6. If \`#ifdef\` variants exist, explicitly tell the user which platforms / configurations were updated and which were not.
 
 ## Output Format
 
@@ -328,14 +356,26 @@ Step-by-step protocol for safely refactoring C and C++ code in large native code
 
 ### Refactor a Public Function Signature
 
-1. \`hivemind_findSymbol\` on the function name. Note **every** definition site (different \`#ifdef\` variants may exist).
-2. \`hivemind_getCppPair\` on the file containing the declaration (the \`.h\`).
-3. \`hivemind_getImpact\` on that header. If > 20 dependents, surface the count and confirm with the user before proceeding.
-4. Edit the declaration in the header.
-5. Edit every definition (one per platform variant).
-6. \`hivemind_search\` for the old function name across the repo to find any text-only references (string literals, comments, doc files, build manifests).
-7. \`hivemind_getTestFiles\` on each modified source file. Update test cases if signatures changed.
-8. Verification: build the smallest target that includes the header (use \`hivemind_getDependencies\` reverse-walk to find a leaf-level test binary).
+1. \`hivemind_findReferences\` on the function name. Note the confidence flag — \`high\` means the name is unique workspace-wide; \`medium\`/\`low\` requires per-site verification.
+2. \`hivemind_callHierarchy\` (direction \`incoming\`, depth 1) on the function — every caller is now visible.
+3. \`hivemind_getCppPair\` on the file containing the declaration (the \`.h\`).
+4. \`hivemind_getImpact\` on that header. If > 20 dependents, surface the count and confirm with the user before proceeding.
+5. Edit the declaration in the header.
+6. Edit every definition (one per platform variant — \`hivemind_findSymbol\` will list them; \`#ifdef\` variants may apply).
+7. Edit every caller surfaced by \`hivemind_callHierarchy\` and every reference surfaced by \`hivemind_findReferences\`.
+8. \`hivemind_getTestFiles\` on each modified source file. Update test cases if signatures changed.
+9. **Verification:** \`hivemind_buildSubset\` with the header as the seed — confirm every dependent TU still parses. If any fail, the diagnostics tell you which call sites you missed.
+10. Re-run \`hivemind_findReferences\` on the new function name and the old function name; expect zero hits on the old, full coverage on the new.
+
+### Refactor a Virtual Method
+
+1. \`hivemind_findOverrides\` on the method name — note every concrete override and its confidence.
+2. \`hivemind_typeHierarchy\` (\`direction: subtypes\`, depth 2) on the base class — confirm the override list matches the type tree.
+3. \`hivemind_callHierarchy\` (incoming) on the base method to enumerate dispatch sites.
+4. Edit the base declaration first.
+5. Edit each \`high\`-confidence override.
+6. For \`medium\`/\`low\`-confidence overrides, manually open and verify before editing.
+7. **Verification:** \`hivemind_buildSubset\` on the base class header — every TU that includes the header is syntax-checked. Override mismatches show up as compile errors.
 
 ### Split a Header File
 
@@ -361,7 +401,8 @@ Step-by-step protocol for safely refactoring C and C++ code in large native code
 1. \`hivemind_findMacro\` on the macro name (exact match).
 2. If multiple definitions appear, read the \`#if\`/\`#ifdef\` context around each one to identify which platforms use which variant.
 3. If the body references *other* macros, recurse: call \`hivemind_findMacro\` on each.
-4. Document your findings before using the macro in new code.
+4. **For complex multi-line / token-pasting macros:** open one *call site* in a \`.cpp\` and run \`hivemind_macroExpand\` with the line number. The actual preprocessor output for that TU resolves all nested expansions, \`#ifdef\` selection, and \`-D\` flag effects.
+5. Document your findings before using the macro in new code.
 
 ### Investigate Header Blast Radius
 

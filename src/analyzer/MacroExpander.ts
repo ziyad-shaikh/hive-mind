@@ -3,6 +3,13 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as cp from 'child_process';
 import * as crypto from 'crypto';
+import {
+    detectCompiler,
+    buildPreprocessArgs,
+    profileFlagsFor,
+    type CompilerInfo,
+} from './CompilerDriver';
+import type { ProjectProfile } from '../profiles';
 
 // =============================================================================
 // MacroExpander — runs `clang -E` to compute real preprocessor expansions
@@ -111,10 +118,11 @@ function normalizeKey(p: string): string {
 // -----------------------------------------------------------------------------
 
 export class MacroExpander {
-    private clangPath: string | null = null;
-    private clangSearched = false;
+    private compilerInfo: CompilerInfo | null = null;
+    private compilerSearched = false;
     private cccIndex: CompileCommandsIndex | null = null;
     private cache = new Map<string, ExpansionResult>();
+    private profile: ProjectProfile | null = null;
 
     constructor(
         private readonly workspaceRoot: string,
@@ -122,124 +130,33 @@ export class MacroExpander {
         private readonly fallbackIncludePaths: () => string[]
     ) {}
 
-    /** Locate a clang binary (separate from clangd, but often in the same install). */
+    /** Provide an active project profile so we can use its -D/-I set when
+     *  compile_commands.json is missing (the typical X3 case). */
+    setProfile(profile: ProjectProfile | null): void {
+        this.profile = profile;
+    }
+
+    /**
+     * Locate a usable C/C++ compiler. Tries cl.exe on Windows, g++ on Linux/Mac,
+     * then falls back to clang. Cached after first successful lookup.
+     *
+     * Kept under the legacy name `locateClang()` for callers that don't care
+     * about the kind. Returns the path or null.
+     */
     locateClang(): string | null {
-        if (this.clangSearched) { return this.clangPath; }
-        this.clangSearched = true;
-
-        const exeName = process.platform === 'win32' ? 'clang.exe' : 'clang';
-        const tried: string[] = [];
-        const isFile = (p: string) => {
-            try { return fs.existsSync(p) && fs.statSync(p).isFile(); } catch { return false; }
-        };
-
-        // 1. User override
-        const cfg = vscode.workspace.getConfiguration('hivemind');
-        const cfgUpper = vscode.workspace.getConfiguration('hiveMind');
-        const configured = cfg.get<string>('clangPath') || cfgUpper.get<string>('clangPath');
-        if (configured) {
-            tried.push(configured);
-            if (isFile(configured)) { this.clangPath = configured; return configured; }
-        }
-
-        // 2. Look next to the auto-detected clangd (vscode-clangd's globalStorage install)
-        const ext = vscode.extensions.getExtension('llvm-vs-code-extensions.vscode-clangd');
-        if (ext) {
-            const globalStorage = this.guessGlobalStorage('llvm-vs-code-extensions.vscode-clangd');
-            for (const root of [globalStorage, ext.extensionPath]) {
-                const c = this.findInClangInstallTree(root);
-                if (c) { tried.push(c); if (isFile(c)) { this.clangPath = c; return c; } }
-            }
-        }
-
-        // 3. PATH
-        const pathSep = process.platform === 'win32' ? ';' : ':';
-        const pathDirs = (process.env.PATH ?? '').split(pathSep);
-        const exeNames = process.platform === 'win32'
-            ? [exeName]
-            : ['clang', 'clang-19', 'clang-18', 'clang-17', 'clang-16'];
-        for (const dir of pathDirs) {
-            if (!dir) { continue; }
-            for (const name of exeNames) {
-                const candidate = path.join(dir.replace(/^"|"$/g, ''), name);
-                tried.push(candidate);
-                if (isFile(candidate)) { this.clangPath = candidate; return candidate; }
-            }
-        }
-
-        // 4. Common install locations
-        const fixed: string[] = [];
-        if (process.platform === 'win32') {
-            fixed.push(
-                'C:\\Program Files\\LLVM\\bin\\clang.exe',
-                'C:\\Program Files (x86)\\LLVM\\bin\\clang.exe',
-                path.join(process.env.LOCALAPPDATA ?? '', 'Programs', 'LLVM', 'bin', 'clang.exe'),
-            );
-        } else if (process.platform === 'darwin') {
-            fixed.push(
-                '/usr/local/opt/llvm/bin/clang',
-                '/opt/homebrew/opt/llvm/bin/clang',
-                '/usr/local/bin/clang',
-            );
-        } else {
-            fixed.push('/usr/bin/clang', '/usr/local/bin/clang');
-        }
-        for (const c of fixed) {
-            tried.push(c);
-            if (isFile(c)) { this.clangPath = c; return c; }
-        }
-
-        this.logger.appendLine('[macroExpand] clang executable not found. Search trail:');
-        for (const t of tried) { this.logger.appendLine(`[macroExpand]   • ${t}`); }
-        return null;
+        const info = this.locateCompiler();
+        return info?.exe ?? null;
     }
 
-    private findInClangInstallTree(rootDir: string | null): string | null {
-        const exeName = process.platform === 'win32' ? 'clang.exe' : 'clang';
-        if (!rootDir) { return null; }
-        try {
-            const installDir = path.join(rootDir, 'install');
-            if (!fs.existsSync(installDir)) { return null; }
-            const versions = fs.readdirSync(installDir, { withFileTypes: true });
-            for (const v of versions) {
-                if (!v.isDirectory()) { continue; }
-                const versionDir = path.join(installDir, v.name);
-                const direct = path.join(versionDir, 'bin', exeName);
-                if (fs.existsSync(direct)) { return direct; }
-                const nested = fs.readdirSync(versionDir, { withFileTypes: true });
-                for (const n of nested) {
-                    if (!n.isDirectory()) { continue; }
-                    const candidate = path.join(versionDir, n.name, 'bin', exeName);
-                    if (fs.existsSync(candidate)) { return candidate; }
-                }
-            }
-        } catch { /* ignore */ }
-        return null;
-    }
-
-    private guessGlobalStorage(extensionId: string): string | null {
-        const candidates: string[] = [];
-        if (process.platform === 'win32') {
-            const appData = process.env.APPDATA;
-            if (appData) {
-                candidates.push(path.join(appData, 'Code', 'User', 'globalStorage', extensionId));
-                candidates.push(path.join(appData, 'Code - Insiders', 'User', 'globalStorage', extensionId));
-            }
-        } else if (process.platform === 'darwin') {
-            const home = process.env.HOME;
-            if (home) {
-                candidates.push(path.join(home, 'Library', 'Application Support', 'Code', 'User', 'globalStorage', extensionId));
-            }
-        } else {
-            const home = process.env.HOME;
-            if (home) {
-                candidates.push(path.join(home, '.config', 'Code', 'User', 'globalStorage', extensionId));
-            }
+    locateCompiler(): CompilerInfo | null {
+        if (this.compilerSearched) { return this.compilerInfo; }
+        this.compilerSearched = true;
+        const info = detectCompiler(this.logger);
+        if (info) {
+            this.logger.appendLine(`[macroExpand] Using ${info.kind} (${info.exe}) — ${info.note}`);
         }
-        for (const c of candidates) {
-            if (fs.existsSync(c)) { return c; }
-        }
-        return null;
+        this.compilerInfo = info;
+        return info;
     }
 
     /** Lazy load of compile_commands.json. Returns null if not found / malformed. */
@@ -276,37 +193,42 @@ export class MacroExpander {
     }
 
     /**
-     * Build the clang argument list for a given file.
-     * Returns null if no commands are available AND fallback fails to produce useful args.
+     * Build the compiler argument list for a given file. Three priorities:
+     *   1. compile_commands.json entry (most precise; reuse project's exact flags)
+     *   2. Active project profile (e.g. X3) — defines + include roots
+     *   3. fallbackIncludePaths heuristic (backward-compat last resort)
      */
-    private buildArgsFor(file: string): { args: string[]; usedCompileCommands: boolean } | null {
+    private buildArgsFor(file: string, info: CompilerInfo): { args: string[]; usedCompileCommands: boolean; usedProfile: boolean } | null {
         const ccc = this.loadCompileCommands();
         const entry = ccc?.byFile.get(normalizeKey(file));
         if (entry) {
-            // Reuse the project's exact flags. Strip -o/-c/output/source path; we'll add preprocessor flags.
             const original = entry.arguments && entry.arguments.length > 0
                 ? entry.arguments
                 : (entry.command ? splitCommand(entry.command) : []);
             const cleaned = this.sanitizeArgs(original, file);
-            // Preprocess only, suppress warnings, keep `# <line> "<file>"` markers (we need them).
-            const args = ['-E', '-w', ...cleaned, file];
-            return { args, usedCompileCommands: true };
+            // Preserve the legacy clang invocation when the entry came from a real
+            // compile DB. cl.exe-mode reuse is risky because flag formats differ.
+            const args = info.kind === 'cl'
+                ? ['/E', '/P', '/nologo', '/EHsc', ...cleaned, file]
+                : ['-E', '-w', ...cleaned, file];
+            return { args, usedCompileCommands: true, usedProfile: false };
         }
 
-        // Fallback: no compile_commands entry. Use discovered -I paths only.
-        const args: string[] = ['-E', '-w'];
-        for (const inc of this.fallbackIncludePaths()) {
-            args.push('-I', inc);
+        // Profile-driven path (the X3 runtime has no compile_commands.json).
+        if (this.profile) {
+            const extras = profileFlagsFor(this.profile, this.workspaceRoot);
+            const args = buildPreprocessArgs(info, file, extras);
+            return { args, usedCompileCommands: false, usedProfile: true };
         }
-        // Best-guess language standard for headers/cpp
-        const ext = path.extname(file).toLowerCase();
-        if (['.cpp', '.cxx', '.cc', '.c++', '.hpp', '.hxx', '.h++'].includes(ext)) {
-            args.push('-x', 'c++', '-std=c++17');
-        } else if (['.c', '.h'].includes(ext)) {
-            args.push('-x', 'c', '-std=c11');
-        }
-        args.push(file);
-        return { args, usedCompileCommands: false };
+
+        // Heuristic last resort.
+        const extras = {
+            defines: {} as Record<string, string>,
+            includeRoots: this.fallbackIncludePaths(),
+            workspaceRoot: '',  // include paths from fallbackIncludePaths are already absolute
+        };
+        const args = buildPreprocessArgs(info, file, extras);
+        return { args, usedCompileCommands: false, usedProfile: false };
     }
 
     /**
@@ -384,20 +306,21 @@ export class MacroExpander {
             };
         }
 
-        const clang = this.locateClang();
-        if (!clang) {
+        const compiler = this.locateCompiler();
+        if (!compiler) {
             return {
                 ok: false,
-                reason: 'clang executable not found.',
+                reason: 'No C/C++ compiler found.',
                 detail:
-                    'Install LLVM or set `hivemind.clangPath` to the absolute path of clang.exe. ' +
-                    'The clangd extension does not always bundle clang itself.',
+                    'Hive Mind looks for `cl.exe` (Windows), `g++` (Linux/Mac), and `clang` as a fallback. ' +
+                    'Install one, or set `hivemind.clangPath` to a specific compiler executable. ' +
+                    'On Windows, run a "Developer Command Prompt for VS 2022" so cl.exe is on PATH.',
             };
         }
 
-        const built = this.buildArgsFor(file);
+        const built = this.buildArgsFor(file, compiler);
         if (!built) {
-            return { ok: false, reason: 'Could not build clang arguments for this file.' };
+            return { ok: false, reason: 'Could not build compiler arguments for this file.' };
         }
 
         const stat = fs.statSync(file);
@@ -421,7 +344,7 @@ export class MacroExpander {
             const start = Date.now();
             const cwd = (this.loadCompileCommands()?.byFile.get(normalizeKey(file))?.directory) ?? this.workspaceRoot;
             try {
-                const result = cp.spawnSync(clang, built.args, {
+                const result = cp.spawnSync(compiler.exe, built.args, {
                     cwd,
                     encoding: 'utf-8',
                     timeout: timeoutMs,
@@ -431,18 +354,20 @@ export class MacroExpander {
                 if (result.error) {
                     return {
                         ok: false,
-                        reason: `Failed to invoke clang: ${result.error.message}`,
+                        reason: `Failed to invoke ${compiler.kind}: ${result.error.message}`,
                     };
                 }
                 if (result.status !== 0) {
                     const stderr = (result.stderr || '').toString().split(/\r?\n/).slice(-25).join('\n');
                     return {
                         ok: false,
-                        reason: `clang exited with code ${result.status}.`,
+                        reason: `${compiler.kind} exited with code ${result.status}.`,
                         detail: usedCompileCommands
-                            ? 'The compile_commands.json entry may use flags clang doesn\'t accept (often MSVC-only). ' +
-                              'You can edit the entry, set `hivemind.clangPath` to clang-cl, or expand a different TU.'
-                            : 'No compile_commands.json entry was found for this file. Provide one for accurate results.',
+                            ? 'The compile_commands.json entry may use flags this compiler doesn\'t accept. ' +
+                              'You can edit the entry, set `hivemind.clangPath` to a different compiler, or expand a different TU.'
+                            : built.usedProfile
+                                ? 'Compiled with X3 profile flags. If the failure is about missing system headers, the profile\'s include set may need updating.'
+                                : 'No compile_commands.json entry was found for this file. Activate a project profile or provide compile_commands.json for accurate results.',
                         clangExitCode: result.status ?? undefined,
                         clangStderr: stderr,
                     };
@@ -455,7 +380,7 @@ export class MacroExpander {
             } catch (e) {
                 return {
                     ok: false,
-                    reason: `Exception running clang: ${e instanceof Error ? e.message : String(e)}`,
+                    reason: `Exception running ${compiler.kind}: ${e instanceof Error ? e.message : String(e)}`,
                 };
             }
         }
