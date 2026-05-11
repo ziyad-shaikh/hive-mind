@@ -259,10 +259,11 @@ export class ModuleGraphPanel {
     #header { padding: 10px 16px; border-bottom: 1px solid var(--vscode-panel-border); display: flex; justify-content: space-between; align-items: center; gap: 12px; }
     #header h2 { margin: 0; font-size: 1.05em; }
     #header .subtitle { color: var(--vscode-descriptionForeground); font-size: 0.85em; }
+    #header .controls { display: flex; gap: 8px; align-items: center; }
+    #header label { font-size: 0.82em; color: var(--vscode-descriptionForeground); display: flex; gap: 4px; align-items: center; }
     #container { display: flex; height: calc(100vh - 50px); }
     #canvas-wrap { flex: 1; position: relative; }
-    #graph { width: 100%; height: 100%; cursor: grab; }
-    #graph:active { cursor: grabbing; }
+    #graph { width: 100%; height: 100%; display: block; }
     #sidebar { width: 320px; border-left: 1px solid var(--vscode-panel-border); padding: 12px 14px; overflow-y: auto; background: var(--vscode-sideBar-background); }
     #sidebar h3 { margin: 0 0 6px 0; font-size: 1em; }
     #sidebar .meta { color: var(--vscode-descriptionForeground); font-size: 0.85em; margin-bottom: 12px; }
@@ -276,11 +277,15 @@ export class ModuleGraphPanel {
     #sidebar .triplet-value { font-family: var(--vscode-editor-font-family); word-break: break-all; }
     #sidebar .variant-pill { display: inline-block; padding: 1px 8px; border-radius: 10px; background: var(--vscode-badge-background); color: var(--vscode-badge-foreground); font-size: 0.8em; margin-right: 4px; }
     .empty-state { padding: 20px; color: var(--vscode-descriptionForeground); text-align: center; font-size: 0.9em; }
-    .legend { position: absolute; bottom: 8px; left: 8px; background: var(--vscode-editor-background); border: 1px solid var(--vscode-panel-border); border-radius: 4px; padding: 6px 10px; font-size: 0.78em; color: var(--vscode-descriptionForeground); pointer-events: none; }
-    .legend-row { display: flex; align-items: center; gap: 4px; }
-    .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
-    button { padding: 4px 12px; background: var(--vscode-button-background); color: var(--vscode-button-foreground); border: none; border-radius: 4px; cursor: pointer; font-size: 0.85em; }
+    .legend { position: absolute; bottom: 8px; left: 8px; background: var(--vscode-editor-background); border: 1px solid var(--vscode-panel-border); border-radius: 4px; padding: 6px 10px; font-size: 0.78em; color: var(--vscode-descriptionForeground); pointer-events: none; line-height: 1.45; }
+    .legend-row { display: flex; align-items: center; gap: 6px; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .legend-bar { width: 14px; height: 3px; border-radius: 2px; flex-shrink: 0; }
+    select, button { padding: 4px 10px; background: var(--vscode-button-background); color: var(--vscode-button-foreground); border: none; border-radius: 4px; cursor: pointer; font-size: 0.85em; }
+    select { background: var(--vscode-dropdown-background); color: var(--vscode-dropdown-foreground); border: 1px solid var(--vscode-dropdown-border); }
     button:hover { background: var(--vscode-button-hoverBackground); }
+    .node-label { font-size: 12px; font-weight: 600; user-select: none; cursor: pointer; }
+    .node-label.dim { opacity: 0.25; }
 </style>
 </head>
 <body>
@@ -289,7 +294,16 @@ export class ModuleGraphPanel {
         <h2 id="title">Module Graph</h2>
         <div class="subtitle" id="subtitle"></div>
     </div>
-    <button onclick="vscode.postMessage({command:'refresh'})">Refresh</button>
+    <div class="controls">
+        <label>Sort
+            <select id="sort">
+                <option value="alpha">alphabetical</option>
+                <option value="degree">by coupling</option>
+                <option value="files">by file count</option>
+            </select>
+        </label>
+        <button onclick="vscode.postMessage({command:'refresh'})">Refresh</button>
+    </div>
 </div>
 <div id="container">
     <div id="canvas-wrap">
@@ -297,11 +311,13 @@ export class ModuleGraphPanel {
         <div class="legend">
             <div class="legend-row"><div class="legend-dot" style="background:#4b8bbe"></div>module · size = file count</div>
             <div class="legend-row"><div class="legend-dot" style="background:#c97a3a"></div>variant-tagged module</div>
-            <div class="legend-row">edge thickness = #include count</div>
+            <div class="legend-row"><div class="legend-bar" style="background:#4b8bbe"></div>edge thickness = #include count</div>
+            <div class="legend-row"><div class="legend-bar" style="background:#c97a3a"></div>on hover: outgoing edges</div>
+            <div class="legend-row"><div class="legend-bar" style="background:#5fb04c"></div>on hover: incoming edges</div>
         </div>
     </div>
     <div id="sidebar">
-        <div class="empty-state">Click a module to inspect its triplet and files.</div>
+        <div class="empty-state">Click a module to inspect its triplet and files.<br>Hover to highlight neighbours.</div>
     </div>
 </div>
 <script>
@@ -312,151 +328,230 @@ document.getElementById('title').textContent = 'Module Graph — ' + data.profil
 document.getElementById('subtitle').textContent =
     data.nodes.length + ' module(s) · ' + data.edges.length + ' inter-module edge(s)';
 
-// ── force-directed layout (small N — Verlet-style, no external deps) ─────
+// ── Radial chord-diagram layout (deterministic, no physics) ──────────
 const svg = document.getElementById('graph');
-const w = svg.clientWidth, h = svg.clientHeight;
-
-// Nodes get random initial positions clustered near center.
-const nodes = data.nodes.map((n, i) => ({
-    id: n.name,
-    data: n,
-    x: w / 2 + Math.cos((i / data.nodes.length) * 2 * Math.PI) * Math.min(w, h) * 0.32,
-    y: h / 2 + Math.sin((i / data.nodes.length) * 2 * Math.PI) * Math.min(w, h) * 0.32,
-    vx: 0, vy: 0,
-    r: 14 + Math.sqrt(n.fileCount) * 4,
-}));
-const idx = new Map(nodes.map(n => [n.id, n]));
-const links = data.edges.map(e => ({ source: idx.get(e.from), target: idx.get(e.to), weight: e.weight }))
-                        .filter(l => l.source && l.target);
-
-const REPULSION = 8000;     // pairwise repulsion
-const SPRING_LEN = 110;     // ideal edge length
-const SPRING_K = 0.04;      // edge attraction
-const DAMPING = 0.85;
-const CENTER_PULL = 0.005;
-
-function step() {
-    // Repulsion
-    for (const a of nodes) {
-        for (const b of nodes) {
-            if (a === b) continue;
-            const dx = a.x - b.x, dy = a.y - b.y;
-            const d2 = dx*dx + dy*dy + 1;
-            const f = REPULSION / d2;
-            a.vx += dx * f / Math.sqrt(d2);
-            a.vy += dy * f / Math.sqrt(d2);
-        }
-    }
-    // Springs
-    for (const l of links) {
-        const dx = l.target.x - l.source.x, dy = l.target.y - l.source.y;
-        const d = Math.sqrt(dx*dx + dy*dy) + 0.01;
-        const force = SPRING_K * (d - SPRING_LEN) * Math.log(1 + l.weight);
-        l.source.vx += (dx / d) * force;
-        l.source.vy += (dy / d) * force;
-        l.target.vx -= (dx / d) * force;
-        l.target.vy -= (dy / d) * force;
-    }
-    // Center pull
-    for (const n of nodes) {
-        n.vx += (w/2 - n.x) * CENTER_PULL;
-        n.vy += (h/2 - n.y) * CENTER_PULL;
-    }
-    // Integrate
-    for (const n of nodes) {
-        n.vx *= DAMPING; n.vy *= DAMPING;
-        n.x += n.vx; n.y += n.vy;
-        // Bound
-        n.x = Math.max(n.r + 10, Math.min(w - n.r - 10, n.x));
-        n.y = Math.max(n.r + 10, Math.min(h - n.r - 10, n.y));
-    }
-}
-
-// Run a fixed number of warmup iterations before first paint so the layout
-// settles instead of animating chaotically.
-for (let i = 0; i < 250; i++) { step(); }
-
-// ── render ────────────────────────────────────────────────────────────
 const NS = 'http://www.w3.org/2000/svg';
 function el(tag, attrs) {
     const e = document.createElementNS(NS, tag);
-    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    for (const k in attrs) e.setAttribute(k, String(attrs[k]));
     return e;
 }
 
+// Pre-compute per-node degree (in+out) once for sorting and node sizing.
+const degree = new Map();
+for (const n of data.nodes) degree.set(n.name, 0);
+for (const e of data.edges) {
+    degree.set(e.from, (degree.get(e.from) || 0) + 1);
+    degree.set(e.to, (degree.get(e.to) || 0) + 1);
+}
+
+const SORTERS = {
+    alpha: (a, b) => a.name.localeCompare(b.name),
+    degree: (a, b) => (degree.get(b.name) - degree.get(a.name)) || a.name.localeCompare(b.name),
+    files: (a, b) => (b.fileCount - a.fileCount) || a.name.localeCompare(b.name),
+};
+
+let nodeMeta = [];
+let linkMeta = [];
+let bidirSet = new Set();
+
+const edgeKey = (a, b) => a < b ? a + '|' + b : b + '|' + a;
+
+function buildModel(sortKey) {
+    const sorted = [...data.nodes].sort(SORTERS[sortKey] || SORTERS.alpha);
+    const N = sorted.length;
+    nodeMeta = sorted.map((n, i) => ({
+        id: n.name,
+        data: n,
+        angle: (i / N) * 2 * Math.PI - Math.PI / 2,  // start at 12 o'clock
+        r: 7 + Math.sqrt(n.fileCount) * 2.4,
+        x: 0, y: 0,
+    }));
+    const idx = new Map(nodeMeta.map(n => [n.id, n]));
+    linkMeta = data.edges
+        .map(e => ({ source: idx.get(e.from), target: idx.get(e.to), weight: e.weight }))
+        .filter(l => l.source && l.target);
+
+    bidirSet = new Set();
+    const seen = new Set();
+    for (const l of linkMeta) {
+        const fwd = l.source.id + '|' + l.target.id;
+        const rev = l.target.id + '|' + l.source.id;
+        if (seen.has(rev)) bidirSet.add(edgeKey(l.source.id, l.target.id));
+        seen.add(fwd);
+    }
+}
+
+// SVG group containers
 const linkGroup = el('g', { id: 'links' });
 const nodeGroup = el('g', { id: 'nodes' });
+const labelGroup = el('g', { id: 'labels' });
 svg.appendChild(linkGroup);
 svg.appendChild(nodeGroup);
+svg.appendChild(labelGroup);
 
-const linkEls = links.map(l => {
-    const path = el('line', {
-        x1: l.source.x, y1: l.source.y, x2: l.target.x, y2: l.target.y,
-        stroke: 'var(--vscode-charts-blue, #4b8bbe)',
-        'stroke-opacity': 0.35,
-        'stroke-width': Math.min(6, 1 + Math.log(1 + l.weight) * 1.2),
+let linkEls = [];
+let nodeEls = [];
+
+function buildElements() {
+    // Clear previous
+    while (linkGroup.firstChild) linkGroup.removeChild(linkGroup.firstChild);
+    while (nodeGroup.firstChild) nodeGroup.removeChild(nodeGroup.firstChild);
+    while (labelGroup.firstChild) labelGroup.removeChild(labelGroup.firstChild);
+
+    linkEls = linkMeta.map(l => {
+        const path = el('path', {
+            fill: 'none',
+            stroke: 'var(--vscode-charts-blue, #4b8bbe)',
+            'stroke-opacity': '0.20',
+            'stroke-width': Math.min(5, 1 + Math.log(1 + l.weight) * 1.0),
+            'stroke-linecap': 'round',
+        });
+        linkGroup.appendChild(path);
+        return { el: path, link: l };
     });
-    linkGroup.appendChild(path);
-    return { el: path, link: l };
-});
 
-const nodeEls = nodes.map(n => {
-    const g = el('g', { class: 'node', transform: 'translate(' + n.x + ',' + n.y + ')', style: 'cursor:pointer' });
-    const fill = n.data.variants.length > 0 ? '#c97a3a' : '#4b8bbe';
-    const circle = el('circle', { r: n.r, fill, 'fill-opacity': 0.85, stroke: 'var(--vscode-foreground)', 'stroke-opacity': 0.4, 'stroke-width': 1 });
-    const text = el('text', {
-        'text-anchor': 'middle', 'dominant-baseline': 'central',
-        'font-size': '11', 'font-weight': '600',
-        fill: 'var(--vscode-editor-background)',
-        'pointer-events': 'none',
+    nodeEls = nodeMeta.map(n => {
+        const g = el('g', { class: 'node', style: 'cursor:pointer' });
+        const fill = n.data.variants.length > 0 ? '#c97a3a' : '#4b8bbe';
+        const circle = el('circle', {
+            r: n.r, fill, 'fill-opacity': '0.92',
+            stroke: 'var(--vscode-foreground)', 'stroke-opacity': '0.35', 'stroke-width': '1.4',
+        });
+        g.appendChild(circle);
+        g.addEventListener('mouseenter', () => highlightNode(n.id));
+        g.addEventListener('mouseleave', clearHighlight);
+        g.addEventListener('click', () => selectNode(n.data));
+        nodeGroup.appendChild(g);
+
+        const text = el('text', {
+            class: 'node-label',
+            fill: 'var(--vscode-foreground)',
+        });
+        text.textContent = n.id;
+        text.addEventListener('mouseenter', () => highlightNode(n.id));
+        text.addEventListener('mouseleave', clearHighlight);
+        text.addEventListener('click', () => selectNode(n.data));
+        labelGroup.appendChild(text);
+
+        return { node: n, g, circle, textEl: text };
     });
-    text.textContent = n.id;
-    g.appendChild(circle); g.appendChild(text);
-    g.addEventListener('click', () => selectNode(n.data));
-    nodeGroup.appendChild(g);
-    return { el: g, node: n, circle };
-});
+}
 
-// Continue running the simulation lightly so newly-clicked nodes settle without jolt.
-function animate() {
-    step();
+let cx = 0, cy = 0, R = 0;
+
+function pathFor(l) {
+    const sx = l.source.x, sy = l.source.y;
+    const tx = l.target.x, ty = l.target.y;
+    const midX = (sx + tx) / 2, midY = (sy + ty) / 2;
+    // Pull control point ~65% of the way from chord midpoint toward the circle centre.
+    // The result is a soft inward arc, dense at the centre, that doesn't actually pass
+    // through (0,0) — so it stays visible behind the central whitespace.
+    let ctrlX = midX + (cx - midX) * 0.65;
+    let ctrlY = midY + (cy - midY) * 0.65;
+    // For pairs of edges (A→B and B→A), nudge control points perpendicular to the
+    // chord so the two arcs are visually distinct rather than overlapping.
+    if (bidirSet.has(edgeKey(l.source.id, l.target.id))) {
+        const dirSign = l.source.id < l.target.id ? 1 : -1;
+        const dx = tx - sx, dy = ty - sy;
+        const len = Math.sqrt(dx*dx + dy*dy) || 1;
+        const off = Math.min(28, R * 0.12);
+        ctrlX += (-dy / len) * off * dirSign;
+        ctrlY += ( dx / len) * off * dirSign;
+    }
+    return 'M ' + sx + ' ' + sy + ' Q ' + ctrlX + ' ' + ctrlY + ' ' + tx + ' ' + ty;
+}
+
+function layout() {
+    const w = svg.clientWidth, h = svg.clientHeight;
+    if (w === 0 || h === 0) { return false; }
+    cx = w / 2; cy = h / 2;
+    // Reserve outer margin for labels (~100px should fit the longest module name).
+    R = Math.max(60, Math.min(cx, cy) - 100);
+
     for (const ne of nodeEls) {
-        ne.el.setAttribute('transform', 'translate(' + ne.node.x + ',' + ne.node.y + ')');
+        const a = ne.node.angle;
+        ne.node.x = cx + R * Math.cos(a);
+        ne.node.y = cy + R * Math.sin(a);
+        ne.g.setAttribute('transform', 'translate(' + ne.node.x + ',' + ne.node.y + ')');
+
+        const labelDist = R + ne.node.r + 10;
+        const lx = cx + labelDist * Math.cos(a);
+        const ly = cy + labelDist * Math.sin(a);
+        ne.textEl.setAttribute('x', lx);
+        ne.textEl.setAttribute('y', ly);
+        const cosA = Math.cos(a);
+        const anchor = Math.abs(cosA) < 0.15 ? 'middle' : (cosA > 0 ? 'start' : 'end');
+        ne.textEl.setAttribute('text-anchor', anchor);
+        ne.textEl.setAttribute('dominant-baseline', 'central');
     }
     for (const le of linkEls) {
-        le.el.setAttribute('x1', le.link.source.x); le.el.setAttribute('y1', le.link.source.y);
-        le.el.setAttribute('x2', le.link.target.x); le.el.setAttribute('y2', le.link.target.y);
+        le.el.setAttribute('d', pathFor(le.link));
     }
+    return true;
 }
-let frame = 0, raf = null;
-function pump() {
-    if (frame++ < 200) { animate(); raf = requestAnimationFrame(pump); }
-    else { raf = null; }
-}
-pump();
 
-// Drag support
-let drag = null;
-svg.addEventListener('mousedown', (ev) => {
-    const pt = svg.createSVGPoint(); pt.x = ev.clientX; pt.y = ev.clientY;
-    const ctm = svg.getScreenCTM().inverse();
-    const p = pt.matrixTransform(ctm);
-    let hit = null;
-    for (const ne of nodeEls) {
-        const dx = ne.node.x - p.x, dy = ne.node.y - p.y;
-        if (dx*dx + dy*dy < ne.node.r * ne.node.r) { hit = ne; break; }
+function rebuild(sortKey) {
+    buildModel(sortKey);
+    buildElements();
+    if (!layout()) {
+        requestAnimationFrame(() => layout());
     }
-    if (hit) drag = { node: hit.node, dx: hit.node.x - p.x, dy: hit.node.y - p.y };
+}
+
+rebuild('alpha');
+
+document.getElementById('sort').addEventListener('change', (ev) => {
+    rebuild(ev.target.value);
 });
-svg.addEventListener('mousemove', (ev) => {
-    if (!drag) return;
-    const pt = svg.createSVGPoint(); pt.x = ev.clientX; pt.y = ev.clientY;
-    const p = pt.matrixTransform(svg.getScreenCTM().inverse());
-    drag.node.x = p.x + drag.dx; drag.node.y = p.y + drag.dy;
-    drag.node.vx = 0; drag.node.vy = 0;
-    if (!raf) { frame = 0; pump(); }
+
+let resizeTimer;
+window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(layout, 80);
 });
-window.addEventListener('mouseup', () => { drag = null; });
+
+// ── highlight on hover ───────────────────────────────────────────────
+function highlightNode(id) {
+    const neighbours = new Set();
+    for (const l of linkMeta) {
+        if (l.source.id === id) neighbours.add(l.target.id);
+        if (l.target.id === id) neighbours.add(l.source.id);
+    }
+    for (const le of linkEls) {
+        const isOut = le.link.source.id === id;
+        const isIn = le.link.target.id === id;
+        if (isOut) {
+            le.el.setAttribute('stroke', '#c97a3a');
+            le.el.setAttribute('stroke-opacity', '0.9');
+        } else if (isIn) {
+            le.el.setAttribute('stroke', '#5fb04c');
+            le.el.setAttribute('stroke-opacity', '0.9');
+        } else {
+            le.el.setAttribute('stroke-opacity', '0.04');
+        }
+    }
+    for (const ne of nodeEls) {
+        const isSelf = ne.node.id === id;
+        const isNeighbour = neighbours.has(ne.node.id);
+        ne.circle.setAttribute('fill-opacity', (isSelf || isNeighbour) ? '1.0' : '0.22');
+        if (isSelf || isNeighbour) {
+            ne.textEl.classList.remove('dim');
+        } else {
+            ne.textEl.classList.add('dim');
+        }
+    }
+}
+function clearHighlight() {
+    for (const le of linkEls) {
+        le.el.setAttribute('stroke', 'var(--vscode-charts-blue, #4b8bbe)');
+        le.el.setAttribute('stroke-opacity', '0.20');
+    }
+    for (const ne of nodeEls) {
+        ne.circle.setAttribute('fill-opacity', '0.92');
+        ne.textEl.classList.remove('dim');
+    }
+}
 
 // ── sidebar ───────────────────────────────────────────────────────────
 function selectNode(d) {
