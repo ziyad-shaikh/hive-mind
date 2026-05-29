@@ -4,6 +4,7 @@ import { SymbolAnalyzer } from './analyzer/SymbolAnalyzer';
 import { GitAnalyzer } from './analyzer/GitAnalyzer';
 import { MacroExpander } from './analyzer/MacroExpander';
 import { BuildSubset } from './analyzer/BuildSubset';
+import { GitHubClient } from './analyzer/GitHubClient';
 import { GraphCache } from './analyzer/GraphCache';
 import { GraphPanel } from './graph/GraphPanel';
 import { registerTools } from './tools';
@@ -20,6 +21,7 @@ let symbolAnalyzer: SymbolAnalyzer;
 let gitAnalyzer: GitAnalyzer;
 let macroExpander: MacroExpander | null = null;
 let buildSubset: BuildSubset | null = null;
+let gitHubClient: GitHubClient | null = null;
 let statusBarItem: vscode.StatusBarItem;
 let treeProvider: DependencyTreeProvider;
 let fileDecorationProvider: HiveMindFileDecorationProvider;
@@ -192,7 +194,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     );
 
     // ── Register Copilot LM tools ───────────────────────────────────────
-    registerTools(context, analyzer, symbolAnalyzer, gitAnalyzer, getMacroExpander, getBuildSubset);
+    registerTools(context, analyzer, symbolAnalyzer, gitAnalyzer, getMacroExpander, getBuildSubset, getGitHubClient);
 
     // ── Register @hivemind chat participant ──────────────────────────────
     registerChatParticipant(context, analyzer, symbolAnalyzer, gitAnalyzer);
@@ -283,4 +285,13 @@ function getBuildSubset(): BuildSubset | null {
     return buildSubset;
 }
 
-export { getMacroExpander, getBuildSubset };
+/** Lazily construct the GitHubClient for API access. */
+function getGitHubClient(): GitHubClient | null {
+    if (gitHubClient) { return gitHubClient; }
+    const folder = vscode.workspace.workspaceFolders?.[0];
+    if (!folder) { return null; }
+    gitHubClient = new GitHubClient();
+    return gitHubClient;
+}
+
+export { getMacroExpander, getBuildSubset, getGitHubClient };

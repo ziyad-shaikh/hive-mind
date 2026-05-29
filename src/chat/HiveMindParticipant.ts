@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { DependencyAnalyzer } from '../analyzer/DependencyAnalyzer';
 import { SymbolAnalyzer } from '../analyzer/SymbolAnalyzer';
 import { GitAnalyzer } from '../analyzer/GitAnalyzer';
+import { PARTICIPANT_INSTRUCTIONS } from './participantInstructions';
 
 interface HiveMindChatResult extends vscode.ChatResult {
     metadata?: { command?: string };
@@ -38,6 +39,7 @@ export function registerChatParticipant(
 
     const participant = vscode.chat.createChatParticipant('hivemind.hivemind', handler);
     participant.iconPath = new vscode.ThemeIcon('pulse');
+    (participant as any).instructions = PARTICIPANT_INSTRUCTIONS;
 
     participant.followupProvider = {
         provideFollowups(result: HiveMindChatResult, _context: vscode.ChatContext, _token: vscode.CancellationToken) {

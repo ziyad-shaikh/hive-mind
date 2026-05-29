@@ -807,6 +807,7 @@ export class DependencyAnalyzer {
     private includePaths: string[] = [];
     private tsConfigPaths: PathAliases | null = null;
     private extraIgnored = new Set<string>();
+    private externalDirs: string[] = [];
     private _debounceTimers = new Map<string, NodeJS.Timeout>();
 
     /**
@@ -964,6 +965,7 @@ export class DependencyAnalyzer {
         const maxFiles = cfg.get<number>('maxFiles', 5000);
         const ignoredDirs = cfg.get<string[]>('ignoredDirectories', []);
         this.extraIgnored = new Set(ignoredDirs);
+        this.externalDirs = cfg.get<string[]>('externalDirectories', []);
         this.graph.clear();
         this.headerIndex.clear();
         this.includePaths = [];
@@ -1145,7 +1147,7 @@ export class DependencyAnalyzer {
         const visited = new Set<string>();
         this.walk(resolved, depth, visited, 'dependencies');
         visited.delete(resolved);
-        return [...visited];
+        return [...visited].filter(f => !this.isExternal(f));
     }
 
     getImpact(filePath: string, depth = 2, options?: { respectUmbrella?: boolean }): string[] {
@@ -1160,7 +1162,7 @@ export class DependencyAnalyzer {
             // editing X to update its umbrella is rarely the user's intent.
             for (const u of this.umbrellaPaths) { visited.delete(u); }
         }
-        return [...visited];
+        return [...visited].filter(f => !this.isExternal(f));
     }
 
     getRelatedFiles(filePath: string): { dependencies: string[]; dependents: string[] } {
@@ -1169,8 +1171,8 @@ export class DependencyAnalyzer {
         const node = this.graph.get(resolved);
         if (!node) { return { dependencies: [], dependents: [] }; }
         return {
-            dependencies: [...node.dependencies],
-            dependents: [...node.dependents],
+            dependencies: [...node.dependencies].filter(f => !this.isExternal(f)),
+            dependents: [...node.dependents].filter(f => !this.isExternal(f)),
         };
     }
 
@@ -1185,6 +1187,38 @@ export class DependencyAnalyzer {
     /** Get all absolute file paths in the graph */
     getAllFilePaths(): string[] {
         return [...this.graph.keys()];
+    }
+
+    /**
+     * Returns true if the file belongs to an "external" directory — one that is
+     * indexed for resolution but should be excluded from analysis outputs
+     * (orphans, cycles, impact lists, etc.).
+     */
+    isExternal(absPath: string): boolean {
+        if (this.externalDirs.length === 0) { return false; }
+        const rel = this.toRelative(absPath);
+        const normalised = rel.replace(/\\/g, '/');
+        for (const ext of this.externalDirs) {
+            const extNorm = ext.replace(/\\/g, '/').replace(/\/$/, '');
+            // Match as a directory segment (e.g. "extlib" matches "src/extlib/foo.h")
+            // or as a prefix path (e.g. "thirdparty/windows" matches "thirdparty/windows/...")
+            if (normalised.includes('/' + extNorm + '/') ||
+                normalised.startsWith(extNorm + '/') ||
+                normalised.split('/').includes(extNorm)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Get all absolute file paths excluding external directories */
+    getAllInternalFilePaths(): string[] {
+        return [...this.graph.keys()].filter(f => !this.isExternal(f));
+    }
+
+    /** Get the raw graph node for a file (for tools that need direct access to deps/dependents sets). */
+    getGraphNode(absPath: string): FileNode | undefined {
+        return this.graph.get(absPath);
     }
 
     getEdgeCount(): number {
@@ -1228,7 +1262,7 @@ export class DependencyAnalyzer {
         };
 
         for (const nodeId of this.graph.keys()) {
-            if (!visited.has(nodeId)) { dfs(nodeId); }
+            if (!visited.has(nodeId) && !this.isExternal(nodeId)) { dfs(nodeId); }
         }
         return cycles;
     }
@@ -1246,6 +1280,7 @@ export class DependencyAnalyzer {
         let orphans = 0;
 
         for (const node of this.graph.values()) {
+            if (this.isExternal(node.id)) { continue; }
             languages[node.language] = (languages[node.language] ?? 0) + 1;
             const conns = node.dependencies.size + node.dependents.size;
             hubs.push({ path: node.relativePath, connections: conns });

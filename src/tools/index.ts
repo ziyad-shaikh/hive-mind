@@ -6,11 +6,15 @@ import { SymbolAnalyzer } from '../analyzer/SymbolAnalyzer';
 import { GitAnalyzer } from '../analyzer/GitAnalyzer';
 import { MacroExpander } from '../analyzer/MacroExpander';
 import { BuildSubset } from '../analyzer/BuildSubset';
+import { GitHubClient } from '../analyzer/GitHubClient';
+import { parseCppSync, isCppParserReady } from '../analyzer/CppTreeSitterParser';
 
 /** Lazy accessor for the shared MacroExpander singleton (or null if no workspace open). */
 type MacroExpanderProvider = () => MacroExpander | null;
 /** Lazy accessor for the shared BuildSubset singleton (or null if no workspace open). */
 type BuildSubsetProvider = () => BuildSubset | null;
+/** Lazy accessor for the shared GitHubClient singleton (or null if no workspace open). */
+type GitHubClientProvider = () => GitHubClient | null;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Shared helpers
@@ -1956,6 +1960,750 @@ class BuildSubsetTool implements vscode.LanguageModelTool<BuildSubsetInput> {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Tool: hivemind_getWarnings  — C++ diagnostics from the VS Code Problems panel
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface GetWarningsInput {
+    filePath?: string;
+    severity?: 'error' | 'warning' | 'information' | 'hint' | 'all';
+    source?: string;
+    maxResults?: number;
+}
+
+class GetWarningsTool implements vscode.LanguageModelTool<GetWarningsInput> {
+    constructor(private readonly analyzer: DependencyAnalyzer) {}
+
+    async invoke(
+        options: vscode.LanguageModelToolInvocationOptions<GetWarningsInput>,
+        _token: vscode.CancellationToken
+    ): Promise<vscode.LanguageModelToolResult> {
+        const { filePath, severity = 'warning', source, maxResults = 100 } = options.input;
+
+        const severityMap: Record<string, vscode.DiagnosticSeverity> = {
+            'error': vscode.DiagnosticSeverity.Error,
+            'warning': vscode.DiagnosticSeverity.Warning,
+            'information': vscode.DiagnosticSeverity.Information,
+            'hint': vscode.DiagnosticSeverity.Hint,
+        };
+
+        // Determine which URIs to include
+        let targetUris: Set<string> | null = null;
+        if (filePath) {
+            const resolved = this.analyzer.resolveFilePath(filePath);
+            if (!resolved) {
+                return new vscode.LanguageModelToolResult([
+                    new vscode.LanguageModelTextPart(`⚠️ File "${filePath}" not found in the Hive Mind index.`),
+                ]);
+            }
+            const { dependents } = this.analyzer.getRelatedFiles(resolved);
+            targetUris = new Set([resolved, ...dependents].map(f => vscode.Uri.file(f).toString()));
+        }
+
+        interface DiagEntry {
+            file: string; line: number; col: number;
+            message: string; source: string; code: string;
+            severity: vscode.DiagnosticSeverity;
+        }
+
+        const entries: DiagEntry[] = [];
+        for (const [uri, diags] of vscode.languages.getDiagnostics()) {
+            if (targetUris && !targetUris.has(uri.toString())) { continue; }
+            const fsPath = uri.fsPath;
+            if (!fsPath) { continue; }
+
+            for (const d of diags) {
+                if (severity !== 'all') {
+                    const wanted = severityMap[severity];
+                    if (wanted === undefined || d.severity > wanted) { continue; }
+                }
+                if (source && d.source && !d.source.toLowerCase().includes(source.toLowerCase())) { continue; }
+
+                entries.push({
+                    file: this.analyzer.toRelative(fsPath) ?? fsPath,
+                    line: d.range.start.line + 1,
+                    col: d.range.start.character + 1,
+                    message: d.message,
+                    source: d.source ?? '',
+                    code: typeof d.code === 'object' ? String((d.code as { value: unknown }).value) : String(d.code ?? ''),
+                    severity: d.severity,
+                });
+            }
+        }
+
+        entries.sort((a, b) => a.severity - b.severity || a.file.localeCompare(b.file) || a.line - b.line);
+
+        if (entries.length === 0) {
+            const scopeNote = filePath ? ` for \`${filePath}\` and its dependents` : '';
+            return new vscode.LanguageModelToolResult([
+                new vscode.LanguageModelTextPart(`No ${severity === 'all' ? '' : severity + ' '}diagnostics found${scopeNote}.`),
+            ]);
+        }
+
+        const severityLabel = (s: vscode.DiagnosticSeverity) => ['Error', 'Warning', 'Info', 'Hint'][s] ?? 'Unknown';
+        const shown = entries.slice(0, maxResults);
+
+        const sourceCounts = new Map<string, number>();
+        for (const e of entries) {
+            const k = e.source || 'unknown';
+            sourceCounts.set(k, (sourceCounts.get(k) ?? 0) + 1);
+        }
+
+        const lines: string[] = [];
+        const scopeNote = filePath ? ` (scoped to \`${filePath}\` + dependents)` : ' (workspace-wide)';
+        lines.push(`# C++ Diagnostics — ${entries.length} result(s)${scopeNote}\n`);
+
+        if (sourceCounts.size > 1) {
+            lines.push(`## Summary by Source\n`);
+            lines.push(`| Source | Count |`);
+            lines.push(`|--------|-------|`);
+            for (const [src, count] of [...sourceCounts.entries()].sort((a, b) => b[1] - a[1])) {
+                lines.push(`| ${src || '(unknown)'} | ${count} |`);
+            }
+            lines.push('');
+        }
+
+        lines.push(`## Diagnostics\n`);
+        lines.push(`| Severity | File | Line | Code | Message | Source |`);
+        lines.push(`|----------|------|------|------|---------|--------|`);
+        for (const e of shown) {
+            const msg = e.message.replace(/\|/g, '\\|').replace(/\n/g, ' ').slice(0, 120);
+            lines.push(`| ${severityLabel(e.severity)} | \`${e.file}\` | ${e.line} | ${e.code} | ${msg} | ${e.source} |`);
+        }
+        if (entries.length > maxResults) {
+            lines.push(`\n_Showing ${maxResults} of ${entries.length} results. Use \`filePath\` to scope or increase \`maxResults\`._`);
+        }
+
+        return new vscode.LanguageModelToolResult([
+            new vscode.LanguageModelTextPart(lines.join('\n')),
+        ]);
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Tool: hivemind_getCodeQLAlerts  — parse SARIF output from CodeQL / static analysis
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface GetCodeQLAlertsInput {
+    sarifPath?: string;
+    ruleId?: string;
+    filePath?: string;
+    severity?: string;
+    maxResults?: number;
+    source?: 'local' | 'github' | 'both';
+}
+
+// Minimal SARIF type subset
+interface SarifArtifactLocation { uri?: string; uriBaseId?: string; }
+interface SarifPhysicalLocation {
+    artifactLocation?: SarifArtifactLocation;
+    region?: { startLine?: number; startColumn?: number; };
+}
+interface SarifLocation { physicalLocation?: SarifPhysicalLocation; }
+interface SarifMessage { text?: string; markdown?: string; }
+interface SarifResult {
+    ruleId?: string;
+    message?: SarifMessage;
+    locations?: SarifLocation[];
+    level?: string;
+}
+interface SarifRule {
+    id?: string;
+    name?: string;
+    shortDescription?: SarifMessage;
+}
+interface SarifRun {
+    tool?: { driver?: { name?: string; rules?: SarifRule[]; }; };
+    results?: SarifResult[];
+}
+interface SarifDocument { runs?: SarifRun[]; }
+
+class GetCodeQLAlertsTool implements vscode.LanguageModelTool<GetCodeQLAlertsInput> {
+    constructor(private readonly analyzer: DependencyAnalyzer, private readonly ghProvider: GitHubClientProvider) {}
+
+    async invoke(
+        options: vscode.LanguageModelToolInvocationOptions<GetCodeQLAlertsInput>,
+        _token: vscode.CancellationToken
+    ): Promise<vscode.LanguageModelToolResult> {
+        const { sarifPath, ruleId, filePath, severity, maxResults = 50, source = 'both' } = options.input;
+        const roots = this.analyzer.getWorkspaceRoots();
+        const workspaceRoot = roots[0];
+        if (!workspaceRoot) {
+            return new vscode.LanguageModelToolResult([
+                new vscode.LanguageModelTextPart('⚠️ No workspace root found.'),
+            ]);
+        }
+
+        interface AlertEntry {
+            tool: string; ruleId: string; ruleName: string;
+            level: string; file: string; line: number; message: string;
+            origin: 'local' | 'github';
+        }
+
+        const alerts: AlertEntry[] = [];
+
+        // ── Local SARIF scan ────────────────────────────────────────────
+        if (source === 'local' || source === 'both') {
+            let sarifFiles: string[];
+            if (sarifPath) {
+                const abs = path.isAbsolute(sarifPath) ? sarifPath : path.join(workspaceRoot, sarifPath);
+                if (fs.existsSync(abs)) { sarifFiles = [abs]; }
+                else { sarifFiles = []; }
+            } else {
+                sarifFiles = this.findSarifFiles(workspaceRoot);
+            }
+
+            const ruleMap = new Map<string, SarifRule>();
+            for (const sf of sarifFiles) {
+                let doc: SarifDocument;
+                try { doc = JSON.parse(fs.readFileSync(sf, 'utf8')) as SarifDocument; }
+                catch { continue; }
+
+                for (const run of doc.runs ?? []) {
+                    const toolName = run.tool?.driver?.name ?? 'Unknown';
+                    for (const rule of run.tool?.driver?.rules ?? []) {
+                        if (rule.id) { ruleMap.set(rule.id, rule); }
+                    }
+                    for (const result of run.results ?? []) {
+                        const rid = result.ruleId ?? '';
+                        const rule = ruleMap.get(rid);
+                        const ruleName = rule?.name ?? rule?.shortDescription?.text ?? '';
+                        const level = result.level ?? 'warning';
+
+                        if (ruleId && !rid.toLowerCase().includes(ruleId.toLowerCase())) { continue; }
+                        if (severity && !level.toLowerCase().includes(severity.toLowerCase())) { continue; }
+
+                        const loc = result.locations?.[0];
+                        const rawUri = loc?.physicalLocation?.artifactLocation?.uri ?? '';
+                        const fileRel = this.resolveArtifactUri(rawUri, workspaceRoot);
+
+                        if (filePath) {
+                            const resolved = this.analyzer.resolveFilePath(filePath);
+                            const targetRel = resolved ? this.analyzer.toRelative(resolved) : filePath;
+                            if (targetRel && !fileRel.includes(targetRel) && !targetRel.includes(fileRel)) { continue; }
+                        }
+
+                        const line = loc?.physicalLocation?.region?.startLine ?? 0;
+                        const msg = (result.message?.text ?? result.message?.markdown ?? '')
+                            .replace(/\n/g, ' ').slice(0, 200);
+
+                        alerts.push({ tool: toolName, ruleId: rid, ruleName, level, file: fileRel, line, message: msg, origin: 'local' });
+                    }
+                }
+            }
+        }
+
+        // ── GitHub API scan ─────────────────────────────────────────────
+        if (source === 'github' || source === 'both') {
+            const gh = this.ghProvider();
+            if (gh && gh.isAvailable()) {
+                const result = await gh.getCodeScanningAlerts({ severity });
+                if (!result.error) {
+                    for (const alert of result.alerts) {
+                        const rid = alert.rule.id ?? '';
+                        if (ruleId && !rid.toLowerCase().includes(ruleId.toLowerCase())) { continue; }
+
+                        const alertFile = alert.most_recent_instance.location?.path ?? '';
+                        if (filePath) {
+                            const resolved = this.analyzer.resolveFilePath(filePath);
+                            const targetRel = resolved ? this.analyzer.toRelative(resolved) : filePath;
+                            if (targetRel && !alertFile.includes(targetRel) && !targetRel.includes(alertFile)) { continue; }
+                        }
+
+                        alerts.push({
+                            tool: alert.tool.name ?? 'CodeQL',
+                            ruleId: rid,
+                            ruleName: alert.rule.description ?? '',
+                            level: alert.rule.severity ?? 'warning',
+                            file: alertFile,
+                            line: alert.most_recent_instance.location?.start_line ?? 0,
+                            message: (alert.most_recent_instance.message?.text ?? '').replace(/\n/g, ' ').slice(0, 200),
+                            origin: 'github',
+                        });
+                    }
+                } else if (source === 'github') {
+                    // Only show error if user explicitly asked for GitHub
+                    return new vscode.LanguageModelToolResult([
+                        new vscode.LanguageModelTextPart(`⚠️ ${result.error}`),
+                    ]);
+                }
+            } else if (source === 'github') {
+                return new vscode.LanguageModelToolResult([
+                    new vscode.LanguageModelTextPart(
+                        '⚠️ GitHub integration unavailable. Ensure the workspace has a git remote pointing to github.com and you are signed in via VS Code\'s GitHub account.'
+                    ),
+                ]);
+            }
+        }
+
+        if (alerts.length === 0) {
+            const filterNote = [
+                ruleId ? `ruleId="${ruleId}"` : '',
+                filePath ? `file="${filePath}"` : '',
+                severity ? `level="${severity}"` : '',
+            ].filter(Boolean).join(', ');
+            return new vscode.LanguageModelToolResult([
+                new vscode.LanguageModelTextPart(
+                    `No CodeQL/SARIF alerts found${filterNote ? ` matching: ${filterNote}` : ''}.`
+                ),
+            ]);
+        }
+
+        const levelOrder: Record<string, number> = { error: 0, warning: 1, note: 2, none: 3 };
+        alerts.sort((a, b) =>
+            (levelOrder[a.level] ?? 1) - (levelOrder[b.level] ?? 1) ||
+            a.file.localeCompare(b.file) ||
+            a.line - b.line
+        );
+
+        const ruleCounts = new Map<string, number>();
+        for (const a of alerts) { ruleCounts.set(a.ruleId || 'unknown', (ruleCounts.get(a.ruleId || 'unknown') ?? 0) + 1); }
+
+        const shown = alerts.slice(0, maxResults);
+        const lines: string[] = [];
+        const localCount = alerts.filter(a => a.origin === 'local').length;
+        const ghCount = alerts.filter(a => a.origin === 'github').length;
+        const sourceNote = localCount && ghCount
+            ? ` (${localCount} local SARIF, ${ghCount} GitHub API)`
+            : ghCount ? ' (GitHub API)' : ' (local SARIF)';
+        lines.push(`# CodeQL / Static Analysis Alerts — ${alerts.length} total${sourceNote}\n`);
+
+        lines.push(`## Top Rules\n`);
+        lines.push(`| Rule | Count |`);
+        lines.push(`|------|-------|`);
+        for (const [rule, count] of [...ruleCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10)) {
+            lines.push(`| \`${rule}\` | ${count} |`);
+        }
+        lines.push('');
+
+        lines.push(`## Alerts\n`);
+        lines.push(`| Level | Rule | File | Line | Source | Message |`);
+        lines.push(`|-------|------|------|------|--------|---------|`);
+        for (const a of shown) {
+            const msg = a.message.replace(/\|/g, '\\|').slice(0, 100);
+            lines.push(`| ${a.level} | \`${a.ruleId}\` | \`${a.file}\` | ${a.line} | ${a.origin} | ${msg} |`);
+        }
+        if (alerts.length > maxResults) {
+            lines.push(`\n_Showing ${maxResults} of ${alerts.length} alerts. Filter with \`ruleId\`, \`filePath\`, or \`severity\`._`);
+        }
+
+        return new vscode.LanguageModelToolResult([
+            new vscode.LanguageModelTextPart(lines.join('\n')),
+        ]);
+    }
+
+    private findSarifFiles(workspaceRoot: string): string[] {
+        const found: string[] = [];
+        const searchDirs = [
+            workspaceRoot,
+            path.join(workspaceRoot, '.github'),
+            path.join(workspaceRoot, '.github', 'codeql-results'),
+            path.join(workspaceRoot, 'results'),
+            path.join(workspaceRoot, 'build'),
+            path.join(workspaceRoot, 'out'),
+        ];
+        for (const dir of searchDirs) {
+            if (!fs.existsSync(dir)) { continue; }
+            let entries: fs.Dirent[];
+            try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch { continue; }
+            for (const entry of entries) {
+                if (entry.isFile() && entry.name.endsWith('.sarif')) {
+                    found.push(path.join(dir, entry.name));
+                } else if (entry.isDirectory() && dir === workspaceRoot &&
+                           !entry.name.startsWith('.') && entry.name !== 'node_modules') {
+                    // One extra level from root only
+                    try {
+                        for (const sub of fs.readdirSync(path.join(dir, entry.name), { withFileTypes: true })) {
+                            if (sub.isFile() && sub.name.endsWith('.sarif')) {
+                                found.push(path.join(dir, entry.name, sub.name));
+                            }
+                        }
+                    } catch { /* skip */ }
+                }
+            }
+        }
+        return [...new Set(found)];
+    }
+
+    private resolveArtifactUri(uri: string, workspaceRoot: string): string {
+        let resolved = uri;
+        if (resolved.startsWith('file:///')) { resolved = resolved.slice(8); }
+        else if (resolved.startsWith('file://')) { resolved = resolved.slice(7); }
+        // Normalise separators for display
+        const normalised = resolved.replace(/\//g, '/');
+        const abs = path.isAbsolute(normalised)
+            ? normalised
+            : path.join(workspaceRoot, normalised);
+        if (fs.existsSync(abs)) {
+            return path.relative(workspaceRoot, abs).replace(/\\/g, '/');
+        }
+        return normalised;
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Tool: hivemind_getCIWarnings  — GitHub Actions build warnings/errors
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface GetCIWarningsInput {
+    workflowFileName?: string;
+    branch?: string;
+    filePath?: string;
+    level?: 'failure' | 'warning' | 'notice' | 'all';
+    maxResults?: number;
+}
+
+class GetCIWarningsTool implements vscode.LanguageModelTool<GetCIWarningsInput> {
+    constructor(private readonly analyzer: DependencyAnalyzer, private readonly ghProvider: GitHubClientProvider) {}
+
+    async invoke(
+        options: vscode.LanguageModelToolInvocationOptions<GetCIWarningsInput>,
+        _token: vscode.CancellationToken
+    ): Promise<vscode.LanguageModelToolResult> {
+        const { workflowFileName, branch, filePath, level = 'all', maxResults = 100 } = options.input;
+
+        const gh = this.ghProvider();
+        if (!gh || !gh.isAvailable()) {
+            return new vscode.LanguageModelToolResult([
+                new vscode.LanguageModelTextPart(
+                    '⚠️ GitHub integration unavailable. Ensure the workspace has a git remote pointing to github.com and you are signed in via VS Code\'s GitHub account (Accounts menu in the sidebar).'
+                ),
+            ]);
+        }
+
+        const result = await gh.getCIWarnings({ workflowFileName, branch });
+
+        if (result.error) {
+            return new vscode.LanguageModelToolResult([
+                new vscode.LanguageModelTextPart(`⚠️ ${result.error}`),
+            ]);
+        }
+
+        if (!result.run) {
+            return new vscode.LanguageModelToolResult([
+                new vscode.LanguageModelTextPart(
+                    'No completed workflow runs found.' +
+                    (workflowFileName ? ` Checked workflow: \`${workflowFileName}\`.` : ' Checked all workflows.') +
+                    (branch ? ` Branch: \`${branch}\`.` : '')
+                ),
+            ]);
+        }
+
+        let annotations = result.annotations;
+
+        // Filter by level
+        if (level !== 'all') {
+            annotations = annotations.filter(a => a.annotation_level === level);
+        }
+
+        // Filter by file path
+        if (filePath) {
+            const resolved = this.analyzer.resolveFilePath(filePath);
+            const targetRel = resolved ? this.analyzer.toRelative(resolved) : filePath;
+            annotations = annotations.filter(a => {
+                if (!targetRel) { return true; }
+                return a.path.includes(targetRel) || targetRel.includes(a.path);
+            });
+        }
+
+        if (annotations.length === 0) {
+            const filterNote = [
+                level !== 'all' ? `level="${level}"` : '',
+                filePath ? `file="${filePath}"` : '',
+            ].filter(Boolean).join(', ');
+            return new vscode.LanguageModelToolResult([
+                new vscode.LanguageModelTextPart(
+                    `No build annotations found in the latest CI run${filterNote ? ` matching: ${filterNote}` : ''}.\n\n` +
+                    `**Run:** ${result.run.name} (${result.run.conclusion ?? result.run.status})\n` +
+                    `**Branch:** ${result.run.head_branch}\n` +
+                    `**URL:** ${result.run.html_url}`
+                ),
+            ]);
+        }
+
+        // Sort: failures first, then warnings, then notices
+        const levelOrder: Record<string, number> = { failure: 0, warning: 1, notice: 2 };
+        annotations.sort((a, b) =>
+            (levelOrder[a.annotation_level] ?? 1) - (levelOrder[b.annotation_level] ?? 1) ||
+            a.path.localeCompare(b.path) ||
+            a.start_line - b.start_line
+        );
+
+        const shown = annotations.slice(0, maxResults);
+
+        // Summary counts
+        const counts = { failure: 0, warning: 0, notice: 0 };
+        for (const a of annotations) {
+            if (a.annotation_level in counts) { counts[a.annotation_level as keyof typeof counts]++; }
+        }
+
+        const lines: string[] = [];
+        lines.push(`# CI Build Annotations — ${annotations.length} total\n`);
+        lines.push(`**Workflow:** ${result.run.name}`);
+        lines.push(`**Branch:** ${result.run.head_branch}`);
+        lines.push(`**Status:** ${result.run.conclusion ?? result.run.status}`);
+        lines.push(`**URL:** ${result.run.html_url}\n`);
+
+        if (counts.failure || counts.warning || counts.notice) {
+            lines.push(`**Summary:** ${counts.failure} errors, ${counts.warning} warnings, ${counts.notice} notices\n`);
+        }
+
+        // Check runs overview
+        if (result.checkRuns.length > 0) {
+            lines.push(`## Check Runs\n`);
+            lines.push(`| Name | Status | Conclusion | Annotations |`);
+            lines.push(`|------|--------|------------|-------------|`);
+            for (const cr of result.checkRuns.slice(0, 20)) {
+                lines.push(`| ${cr.name} | ${cr.status} | ${cr.conclusion ?? '-'} | ${cr.output.annotations_count} |`);
+            }
+            lines.push('');
+        }
+
+        lines.push(`## Annotations\n`);
+        lines.push(`| Level | File | Line | Title | Message |`);
+        lines.push(`|-------|------|------|-------|---------|`);
+        for (const a of shown) {
+            const msg = (a.message ?? '').replace(/\|/g, '\\|').replace(/\n/g, ' ').slice(0, 120);
+            const title = (a.title ?? '').replace(/\|/g, '\\|').slice(0, 50);
+            lines.push(`| ${a.annotation_level} | \`${a.path}\` | ${a.start_line} | ${title} | ${msg} |`);
+        }
+        if (annotations.length > maxResults) {
+            lines.push(`\n_Showing ${maxResults} of ${annotations.length} annotations. Filter with \`filePath\` or \`level\`._`);
+        }
+
+        return new vscode.LanguageModelToolResult([
+            new vscode.LanguageModelTextPart(lines.join('\n')),
+        ]);
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Tool: hivemind_unusedIncludes  — detect likely-unused #include directives
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface UnusedIncludesInput {
+    filePath: string;
+    confidence?: 'high' | 'all';
+}
+
+class UnusedIncludesTool implements vscode.LanguageModelTool<UnusedIncludesInput> {
+    constructor(private readonly analyzer: DependencyAnalyzer) {}
+
+    async invoke(
+        options: vscode.LanguageModelToolInvocationOptions<UnusedIncludesInput>,
+        _token: vscode.CancellationToken
+    ): Promise<vscode.LanguageModelToolResult> {
+        const { filePath, confidence = 'all' } = options.input;
+        const resolved = this.analyzer.resolveFilePath(filePath);
+        if (!resolved) {
+            return new vscode.LanguageModelToolResult([
+                new vscode.LanguageModelTextPart(`⚠️ File "${filePath}" not found in the Hive Mind index.`),
+            ]);
+        }
+
+        const ext = path.extname(resolved).toLowerCase();
+        if (!['.c', '.cpp', '.cc', '.cxx', '.h', '.hpp', '.hxx', '.inl', '.ipp', '.tpp'].includes(ext)) {
+            return new vscode.LanguageModelToolResult([
+                new vscode.LanguageModelTextPart(`⚠️ This tool only works on C/C++ files. "${filePath}" is a ${ext} file.`),
+            ]);
+        }
+
+        if (!isCppParserReady()) {
+            return new vscode.LanguageModelToolResult([
+                new vscode.LanguageModelTextPart('⚠️ Tree-sitter C++ parser is not available. Cannot analyze includes.'),
+            ]);
+        }
+
+        // Read and parse the source file
+        let sourceText: string;
+        try {
+            sourceText = fs.readFileSync(resolved, 'utf8');
+        } catch {
+            return new vscode.LanguageModelToolResult([
+                new vscode.LanguageModelTextPart(`⚠️ Could not read file "${filePath}".`),
+            ]);
+        }
+
+        // Extract all identifiers used in the source file (rough but effective)
+        const usedIdentifiers = this.extractIdentifiers(sourceText);
+
+        // Get the file's direct dependencies from the graph
+        const node = this.analyzer.getGraphNode(resolved);
+        if (!node) {
+            return new vscode.LanguageModelToolResult([
+                new vscode.LanguageModelTextPart(`⚠️ File "${filePath}" is not in the dependency graph.`),
+            ]);
+        }
+
+        // Extract #include lines with line numbers for reporting
+        const includeLines = this.extractIncludeLines(sourceText);
+
+        interface IncludeAnalysis {
+            includeLine: string;
+            lineNumber: number;
+            resolvedPath: string | null;
+            headerSymbols: string[];
+            usedSymbols: string[];
+            verdict: 'unused' | 'likely-unused' | 'used';
+        }
+
+        const results: IncludeAnalysis[] = [];
+
+        for (const inc of includeLines) {
+            // Find which resolved dependency this include maps to
+            const matchedDep = this.findResolvedDep(inc.path, resolved, node.dependencies);
+
+            if (!matchedDep) {
+                // Include not resolved — could be external SDK header
+                results.push({
+                    includeLine: inc.raw,
+                    lineNumber: inc.line,
+                    resolvedPath: null,
+                    headerSymbols: [],
+                    usedSymbols: [],
+                    verdict: 'likely-unused',
+                });
+                continue;
+            }
+
+            // Parse the header to get its exported symbols
+            let headerText: string;
+            try {
+                headerText = fs.readFileSync(matchedDep, 'utf8');
+            } catch {
+                continue;
+            }
+
+            const headerParsed = parseCppSync(headerText);
+            const headerSymbolNames = headerParsed.symbols.map(s => s.name);
+
+            // Also extract macro definitions from the header
+            const macroNames = this.extractMacroNames(headerText);
+            const allHeaderSymbols = [...new Set([...headerSymbolNames, ...macroNames])];
+
+            // Check which header symbols are referenced in the source
+            const usedFromHeader = allHeaderSymbols.filter(sym => usedIdentifiers.has(sym));
+
+            let verdict: 'unused' | 'likely-unused' | 'used';
+            if (usedFromHeader.length > 0) {
+                verdict = 'used';
+            } else if (allHeaderSymbols.length === 0) {
+                // Header declares no symbols we can detect — might be a config/pragma header
+                verdict = 'likely-unused';
+            } else {
+                verdict = 'unused';
+            }
+
+            results.push({
+                includeLine: inc.raw,
+                lineNumber: inc.line,
+                resolvedPath: matchedDep,
+                headerSymbols: allHeaderSymbols.slice(0, 20),
+                usedSymbols: usedFromHeader.slice(0, 10),
+                verdict,
+            });
+        }
+
+        // Filter by confidence
+        const unused = results.filter(r =>
+            confidence === 'high' ? r.verdict === 'unused' : r.verdict !== 'used'
+        );
+
+        if (unused.length === 0) {
+            return new vscode.LanguageModelToolResult([
+                new vscode.LanguageModelTextPart(
+                    `All ${results.length} #include directives in \`${rel(this.analyzer, resolved)}\` appear to be in use.`
+                ),
+            ]);
+        }
+
+        const lines: string[] = [];
+        lines.push(`# Unused Includes — \`${rel(this.analyzer, resolved)}\`\n`);
+        lines.push(`Found **${unused.length}** potentially unused include(s) out of ${results.length} total.\n`);
+
+        lines.push(`| Line | Include | Status | Header Exports (sample) |`);
+        lines.push(`|------|---------|--------|-------------------------|`);
+
+        for (const r of unused) {
+            const headerRel = r.resolvedPath ? `\`${rel(this.analyzer, r.resolvedPath)}\`` : '(unresolved)';
+            const exports = r.headerSymbols.length > 0
+                ? r.headerSymbols.slice(0, 5).join(', ') + (r.headerSymbols.length > 5 ? '...' : '')
+                : '(none detected)';
+            lines.push(`| ${r.lineNumber} | ${r.includeLine} | **${r.verdict}** | ${exports} |`);
+        }
+
+        lines.push(`\n## Recommended Actions\n`);
+        lines.push(`- **unused**: No symbols from this header are referenced. Safe to remove (verify with \`hivemind_buildSubset\`).`);
+        lines.push(`- **likely-unused**: Unresolved or no detectable exports. May be a system header, config, or pragma-only header — review manually.\n`);
+        lines.push(`> ⚠️ This analysis is heuristic. Macros that generate code, template metaprogramming, and ADL can create invisible dependencies. Always validate removals with \`hivemind_buildSubset\`.`);
+
+        return new vscode.LanguageModelToolResult([
+            new vscode.LanguageModelTextPart(lines.join('\n')),
+        ]);
+    }
+
+    /** Extract all C/C++ identifiers from source text (fast regex scan). */
+    private extractIdentifiers(source: string): Set<string> {
+        const ids = new Set<string>();
+        // Strip comments and string literals to avoid false positives
+        const stripped = source
+            .replace(/\/\/[^\n]*/g, '')
+            .replace(/\/\*[\s\S]*?\*\//g, '')
+            .replace(/"(?:[^"\\]|\\.)*"/g, '')
+            .replace(/'(?:[^'\\]|\\.)*'/g, '');
+        // Extract identifiers (C/C++ identifier rules)
+        const re = /\b([A-Za-z_]\w*)\b/g;
+        let m: RegExpExecArray | null;
+        while ((m = re.exec(stripped)) !== null) {
+            ids.add(m[1]);
+        }
+        return ids;
+    }
+
+    /** Extract #include lines with line numbers and paths. */
+    private extractIncludeLines(source: string): { raw: string; path: string; line: number }[] {
+        const results: { raw: string; path: string; line: number }[] = [];
+        const lines = source.split('\n');
+        for (let i = 0; i < lines.length; i++) {
+            const m = lines[i].match(/^\s*#\s*include\s*[<"]([^>"]+)[>"]/);
+            if (m) {
+                results.push({ raw: lines[i].trim(), path: m[1], line: i + 1 });
+            }
+        }
+        return results;
+    }
+
+    /** Extract #define macro names from header source. */
+    private extractMacroNames(source: string): string[] {
+        const names: string[] = [];
+        const re = /^\s*#\s*define\s+([A-Za-z_]\w*)/gm;
+        let m: RegExpExecArray | null;
+        while ((m = re.exec(source)) !== null) {
+            names.push(m[1]);
+        }
+        return names;
+    }
+
+    /** Find which resolved dependency corresponds to an include path. */
+    private findResolvedDep(includePath: string, fromFile: string, deps: Set<string>): string | null {
+        const includeNorm = includePath.replace(/\\/g, '/').toLowerCase();
+        const baseName = path.basename(includePath).toLowerCase();
+
+        for (const dep of deps) {
+            const depNorm = dep.replace(/\\/g, '/').toLowerCase();
+            // Exact suffix match (e.g., "net/socket.h" matches ".../net/socket.h")
+            if (depNorm.endsWith('/' + includeNorm) || depNorm.endsWith('\\' + includeNorm)) {
+                return dep;
+            }
+            // Basename match
+            if (path.basename(dep).toLowerCase() === baseName) {
+                return dep;
+            }
+        }
+        return null;
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Registration
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -1965,7 +2713,8 @@ export function registerTools(
     symbolAnalyzer: SymbolAnalyzer,
     gitAnalyzer: GitAnalyzer,
     macroExpanderProvider: MacroExpanderProvider,
-    buildSubsetProvider: BuildSubsetProvider
+    buildSubsetProvider: BuildSubsetProvider,
+    gitHubClientProvider: GitHubClientProvider
 ): void {
     context.subscriptions.push(
         vscode.lm.registerTool('hivemind_getDependencies', new GetDependenciesTool(analyzer)),
@@ -1987,5 +2736,9 @@ export function registerTools(
         vscode.lm.registerTool('hivemind_typeHierarchy',   new TypeHierarchyTool(analyzer)),
         vscode.lm.registerTool('hivemind_macroExpand',     new MacroExpandTool(analyzer, macroExpanderProvider)),
         vscode.lm.registerTool('hivemind_buildSubset',     new BuildSubsetTool(analyzer, buildSubsetProvider)),
+        vscode.lm.registerTool('hivemind_getWarnings',     new GetWarningsTool(analyzer)),
+        vscode.lm.registerTool('hivemind_getCodeQLAlerts', new GetCodeQLAlertsTool(analyzer, gitHubClientProvider)),
+        vscode.lm.registerTool('hivemind_getCIWarnings',   new GetCIWarningsTool(analyzer, gitHubClientProvider)),
+        vscode.lm.registerTool('hivemind_unusedIncludes',  new UnusedIncludesTool(analyzer)),
     );
 }

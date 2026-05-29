@@ -2,7 +2,7 @@
   "name": "hive-mind",
   "displayName": "Hive Mind - Code Dependency Graph",
   "description": "Visualizes code dependencies as an interactive Obsidian-style graph and provides Copilot tools to analyze change impact across your codebase.",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "publisher": "hive-mind",
   "engines": {
     "vscode": "^1.87.0"
@@ -105,7 +105,7 @@
       },
       {
         "command": "hiveMind.scaffoldInstructions",
-        "title": "Hive Mind: Scaffold AI Instructions & Skills"
+        "title": "Hive Mind: Scaffold Copilot Instructions"
       },
       {
         "command": "hiveMind.invalidateCache",
@@ -192,6 +192,14 @@
           "default": [],
           "description": "Additional directory names to exclude from analysis (on top of the built-in list like node_modules, .git, dist, etc.)."
         },
+        "hiveMind.externalDirectories": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "markdownDescription": "Directory names (or relative paths) containing external/third-party code that should be **indexed for import resolution** but **excluded from analysis outputs** (orphan counts, circular dependency detection, impact lists, dependency lists, etc.). Use this for directories like `extlib`, `thirdparty`, `external`, or OS-specific build imports that you don't modify.\n\nExample: `[\"extlib\", \"thirdparty/windows\", \"thirdparty/linux\"]`"
+        },
         "hivemind.clangPath": {
           "type": "string",
           "default": "",
@@ -215,7 +223,7 @@
           "code-graph"
         ],
         "displayName": "Get File Dependencies",
-        "modelDescription": "Returns all files that a given source file imports or depends on (direct and transitive). Use this to understand what a file relies on before modifying it.",
+        "modelDescription": "Returns all files that a given source file imports or depends on (direct and transitive). Use this ONLY when you need a specific depth-controlled dependency list and already have general context. DO NOT call this as your first tool — call hivemind_getContext instead, which includes dependencies plus much more. DO NOT use this to find what depends on a file (that's hivemind_getImpact). Prefer hivemind_planChange when planning a multi-file edit.",
         "canBeReferencedInPrompt": true,
         "inputSchema": {
           "type": "object",
@@ -244,7 +252,7 @@
           "code-graph"
         ],
         "displayName": "Get Change Impact",
-        "modelDescription": "Given a file being modified, returns all other files that import or depend on it — i.e., files that may need to be updated as a result of the change. Always call this when editing a file to check for downstream impact.",
+        "modelDescription": "Given a file being modified, returns all files that import or transitively depend on it (downstream blast radius). Use ONLY for a focused reverse-dependency query with depth control. DO NOT call this as your first tool — hivemind_getContext already includes dependents. Prefer hivemind_planChange when planning multi-file changes (it scores and prioritizes the impacted files). DO NOT use this to find what a file imports (that's hivemind_getDependencies).",
         "canBeReferencedInPrompt": true,
         "inputSchema": {
           "type": "object",
@@ -269,7 +277,7 @@
           "code-graph"
         ],
         "displayName": "Get Related Files",
-        "modelDescription": "Returns all files directly connected to a given file in the dependency graph — both what it imports and what imports it. Use to get a complete picture of a file's role in the codebase.",
+        "modelDescription": "Returns direct imports AND direct dependents of a file in one call (1-hop both directions). Use ONLY when you need a quick bidirectional snapshot without depth traversal. DO NOT call this as your first tool — hivemind_getContext is strictly better (includes this data plus tests, co-changed files, and symbols). DO NOT use this for transitive analysis (use getDependencies or getImpact with depth > 1).",
         "canBeReferencedInPrompt": true,
         "inputSchema": {
           "type": "object",
@@ -294,7 +302,7 @@
           "code-graph"
         ],
         "displayName": "Get Full Dependency Graph",
-        "modelDescription": "Returns the complete dependency graph of the workspace as structured data including hub files, language breakdown, and circular dependencies. Use this to understand overall architecture.",
+        "modelDescription": "Returns a workspace-level architectural overview: hub files, language breakdown, edge counts, and cycle summary. Use this ONLY for high-level 'how is this codebase structured?' questions. DO NOT use for file-specific queries (use hivemind_getContext). DO NOT use to detect cycles in detail (use hivemind_detectCycles for the actual cycle chains).",
         "canBeReferencedInPrompt": true,
         "inputSchema": {
           "type": "object",
@@ -317,7 +325,7 @@
           "code-graph"
         ],
         "displayName": "Detect Circular Dependencies",
-        "modelDescription": "Detects and returns all circular dependency chains in the workspace. Use when investigating build issues, module coupling, or architecture health.",
+        "modelDescription": "Detects and returns all circular dependency chains in the workspace with full cycle paths. Use when the user asks about circular imports, cyclic dependencies, or build-order issues. DO NOT confuse with hivemind_getFullGraph (which only reports a cycle count, not the actual chains).",
         "canBeReferencedInPrompt": true,
         "inputSchema": {
           "type": "object",
@@ -335,7 +343,7 @@
           "code-graph"
         ],
         "displayName": "Get Related Test Files",
-        "modelDescription": "Given a source file, returns its associated test files (e.g. foo.test.ts for foo.ts). Given a test file, returns the source file it tests. Use this to find tests that should be updated when modifying source code.",
+        "modelDescription": "Given a source file, returns its associated test files (e.g. foo.test.ts for foo.ts), and vice versa. Use ONLY when you need the test mapping alone (e.g. 'which tests cover this file?'). DO NOT call this as your first tool — hivemind_getContext already includes test files. Prefer hivemind_planChange when planning edits (it includes tests in the plan).",
         "canBeReferencedInPrompt": true,
         "inputSchema": {
           "type": "object",
@@ -361,7 +369,7 @@
           "code-graph"
         ],
         "displayName": "Find Symbol Across Workspace",
-        "modelDescription": "Searches for a function, class, interface, type, or variable by name across all indexed workspace files. Returns file locations and symbol kinds. Use this to find where a symbol is defined.",
+        "modelDescription": "Searches for a function, class, interface, type, or variable by name across all workspace files. Returns file locations and symbol kinds (definition sites). Use when you need to locate a symbol's definition file. DO NOT use this to find usages/references of a C/C++ symbol (use hivemind_findReferences). DO NOT use as your first tool when exploring a file — hivemind_getContext already includes exported symbols for the target file.",
         "canBeReferencedInPrompt": true,
         "inputSchema": {
           "type": "object",
@@ -387,7 +395,7 @@
           "code-graph"
         ],
         "displayName": "Get Co-Changed Files",
-        "modelDescription": "Returns files that frequently change together with the given file based on git history. These are historically coupled files that may need to be updated together even without direct import relationships.",
+        "modelDescription": "Returns files that frequently change together with the given file based on git commit history (temporal coupling). These are files that SHOULD be co-modified even without import relationships. Use ONLY when you specifically need git-history coupling data. DO NOT call this as your first tool — hivemind_getContext already includes co-changed files. Prefer hivemind_planChange for change planning (it factors co-change into its scoring).",
         "canBeReferencedInPrompt": true,
         "inputSchema": {
           "type": "object",
@@ -413,7 +421,7 @@
           "ai"
         ],
         "displayName": "Get Curated Context Bundle",
-        "modelDescription": "Returns a comprehensive context bundle for a file: its dependencies, dependents, test files, co-changed files, and exported symbols — all in a single call. Use this FIRST when starting work on any file to understand its role and connections. Optionally include the file's source content. This is the recommended starting tool — it replaces calling getDependencies, getImpact, getTestFiles, coChanged, and findSymbol separately.",
+        "modelDescription": "THE RECOMMENDED FIRST TOOL. Returns a comprehensive context bundle for a file: dependencies, dependents, test files, co-changed files, and exported symbols — all in one call. ALWAYS call this first when starting work on any file. It replaces calling getDependencies, getImpact, getTestFiles, coChanged, and findSymbol separately — DO NOT call those individually unless you need deeper depth or specific filtering that getContext doesn't provide. After calling this, use hivemind_planChange if you need a prioritized edit plan.",
         "canBeReferencedInPrompt": true,
         "inputSchema": {
           "type": "object",
@@ -448,7 +456,7 @@
           "ai"
         ],
         "displayName": "Plan a Code Change",
-        "modelDescription": "Given a file and a description of intended changes, returns a prioritized plan: which files to modify, which to read for context, which tests to run, and which files are peripherally affected. Scores files by structural dependencies, test relationships, and git co-change history. Use this BEFORE making multi-file changes to avoid missing impacted files.",
+        "modelDescription": "Given a file and a description of intended changes, returns a PRIORITIZED edit plan: files to modify (scored), files to read for context, tests to run, and peripherally affected files. Combines structural deps + test relationships + git co-change history into a single ranked output. Use this BEFORE making any multi-file change. Superior to calling getImpact/getTestFiles/coChanged separately because it scores and categorizes. Requires a `description` of what you're changing — if you don't know the change yet, use hivemind_getContext first.",
         "canBeReferencedInPrompt": true,
         "inputSchema": {
           "type": "object",
@@ -480,7 +488,7 @@
           "code-graph"
         ],
         "displayName": "Structural-Aware Code Search",
-        "modelDescription": "Searches the entire workspace for text or regex patterns, then ranks results by combining match count with structural signals from the dependency graph. Files whose graph neighbors also match (cluster signal), files near a contextFile, hub files, and files with matching exported symbols are boosted. Use this instead of raw grep when you want the most relevant files first — not just files with the most hits. Supports an optional contextFile to bias results toward a specific area of the codebase.",
+        "modelDescription": "Searches the workspace for text or regex patterns, ranking results by dependency-graph structural signals (not just hit count). Boosts files whose graph neighbors also match, files near contextFile, and hub files. Use this for 'where is X used/referenced across the whole codebase?' questions. DO NOT confuse with hivemind_findSymbol (which finds definitions only) or hivemind_findReferences (which is C/C++-specific scope-aware reference finding). This tool works on ANY language and searches raw text.",
         "canBeReferencedInPrompt": true,
         "inputSchema": {
           "type": "object",
@@ -528,7 +536,7 @@
           "code-graph"
         ],
         "displayName": "Get C/C++ Header/Source Pair",
-        "modelDescription": "Given a C/C++ file (.h, .hpp, .cpp, .cc, .inl, .ipp, etc.), returns the matching header/source/inline files by basename match. Use this BEFORE editing any C++ file — modifying a function in foo.cpp almost always requires updating its declaration in foo.h. Skipping this is the #1 cause of broken C++ refactors.",
+        "modelDescription": "Given a C/C++ file, returns the matching header/source/inline pair files (.h↔.cpp↔.inl). ALWAYS call this BEFORE editing any C++ file — the declaration in the header must stay in sync with the implementation. Only relevant for C/C++ files. DO NOT use for non-C/C++ languages. DO NOT confuse with hivemind_getDependencies (which shows all imports, not the header/source pair).",
         "canBeReferencedInPrompt": true,
         "inputSchema": {
           "type": "object",
@@ -556,7 +564,7 @@
           "code-graph"
         ],
         "displayName": "Find C/C++ Macro Definitions",
-        "modelDescription": "Locates `#define` macro definitions across all C/C++ files in the workspace. Returns ONLY definitions (not usages) — distinguishes object-like vs function-like macros, shows the body, and reports multiple definitions when present (e.g. platform-gated variants). Use this whenever you encounter a SCREAMING_SNAKE_CASE token in C/C++ code and aren't sure if it's a macro, before assuming what it expands to. Critical for codebases like FCIMPL/QCALL/HCIMPL/BEGIN_PINVOKE-style macro-heavy frameworks.",
+        "modelDescription": "Locates `#define` macro definitions across all C/C++ files. Returns ONLY the definition text (not usages). Use this to look up what a macro IS (its body text). DO NOT use this if you need the actual expanded result after preprocessing — use hivemind_macroExpand instead (it runs the real preprocessor and handles #ifdef, -D flags, and recursive expansion). DO NOT use this for non-macro symbols — use hivemind_findSymbol for functions/classes or hivemind_findReferences for usage sites.",
         "canBeReferencedInPrompt": true,
         "inputSchema": {
           "type": "object",
@@ -877,6 +885,166 @@
                 "type": "string"
               },
               "description": "Optional explicit list of TUs to compile. Skips the impact-graph walk; only these files are checked."
+            }
+          },
+          "required": [
+            "filePath"
+          ]
+        }      },
+      {
+        "name": "hivemind_getWarnings",
+        "toolReferenceName": "hivemindWarnings",
+        "tags": [
+          "hivemind",
+          "cpp",
+          "c++",
+          "warnings",
+          "diagnostics",
+          "problems",
+          "compiler"
+        ],
+        "displayName": "Get C++ Compiler Warnings",
+        "modelDescription": "Returns compiler warnings and errors from the LOCAL VS Code Problems panel (IntelliSense, clang-tidy, MSVC diagnostics running in the IDE). Scoped to a file + its dependents when filePath is provided. Use this for LOCAL, real-time IDE diagnostics that update as you edit. DO NOT confuse with hivemind_getCIWarnings (which fetches from the remote GitHub Actions pipeline) or hivemind_getCodeQLAlerts (which is for static-analysis/security findings). This tool shows what the IDE sees RIGHT NOW.",
+        "canBeReferencedInPrompt": true,
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "filePath": {
+              "type": "string",
+              "description": "Optional path to a C/C++ file. If supplied, results are limited to this file and all files that include it."
+            },
+            "severity": {
+              "type": "string",
+              "enum": ["error", "warning", "information", "hint", "all"],
+              "description": "Minimum severity to include. 'warning' (default) returns errors and warnings; 'all' returns everything including hints."
+            },
+            "source": {
+              "type": "string",
+              "description": "Optional filter by diagnostic source, e.g. 'MSVC', 'clang-tidy', 'C/C++'. Case-insensitive substring match."
+            },
+            "maxResults": {
+              "type": "number",
+              "description": "Maximum rows to return. Default 100."
+            }
+          }
+        }
+      },
+      {
+        "name": "hivemind_getCodeQLAlerts",
+        "toolReferenceName": "hivemindCodeQL",
+        "tags": [
+          "hivemind",
+          "cpp",
+          "c++",
+          "codeql",
+          "sarif",
+          "static-analysis",
+          "security",
+          "github"
+        ],
+        "displayName": "Get CodeQL / SARIF Static Analysis Alerts",
+        "modelDescription": "Returns CodeQL and static analysis alerts (security vulnerabilities, code quality issues) from local SARIF files AND/OR the GitHub code-scanning API. Use this when the user asks about CodeQL findings, static analysis results, security alerts, or SARIF output. DO NOT confuse with hivemind_getWarnings (which is local IDE compiler diagnostics) or hivemind_getCIWarnings (which is build pipeline annotations like compiler errors/warnings from CI). This tool is specifically for STATIC ANALYSIS tools: CodeQL, clang-tidy SARIF, MSVC /analyze, etc.",
+        "canBeReferencedInPrompt": true,
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "sarifPath": {
+              "type": "string",
+              "description": "Optional explicit path to a `.sarif` file, relative to workspace root or absolute. If omitted, Hive Mind searches common output locations."
+            },
+            "ruleId": {
+              "type": "string",
+              "description": "Optional rule filter, e.g. 'cpp/buffer-overflow' or just 'buffer'. Case-insensitive substring match."
+            },
+            "filePath": {
+              "type": "string",
+              "description": "Optional file path to restrict alerts to a single source file."
+            },
+            "severity": {
+              "type": "string",
+              "description": "Optional severity filter: 'error', 'warning', or 'note'. Case-insensitive substring match against the SARIF `level` field."
+            },
+            "source": {
+              "type": "string",
+              "enum": ["local", "github", "both"],
+              "description": "Where to look for alerts. 'local' = SARIF files in workspace, 'github' = GitHub code-scanning API, 'both' (default) = check both."
+            },
+            "maxResults": {
+              "type": "number",
+              "description": "Maximum alert rows to return. Default 50."
+            }
+          }
+        }
+      },
+      {
+        "name": "hivemind_getCIWarnings",
+        "toolReferenceName": "hivemindCI",
+        "tags": [
+          "hivemind",
+          "ci",
+          "build",
+          "warnings",
+          "errors",
+          "github-actions",
+          "pipeline"
+        ],
+        "displayName": "Get CI Build Warnings (GitHub Actions)",
+        "modelDescription": "Fetches build warnings, errors, and annotations from the REMOTE GitHub Actions CI pipeline (the latest completed workflow run). Use this when the user asks about CI failures, pipeline errors, build-breaking warnings, or 'why did the build fail?'. DO NOT confuse with hivemind_getWarnings (which is local IDE diagnostics) or hivemind_getCodeQLAlerts (which is static-analysis/security findings). This tool is specifically for GitHub Actions build output: compiler errors, linker failures, and check-run annotations from CI.",
+        "canBeReferencedInPrompt": true,
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "workflowFileName": {
+              "type": "string",
+              "description": "Optional workflow file name (e.g. 'runtime-build.yml', 'ci.yml'). If omitted, uses the latest completed run across all workflows."
+            },
+            "branch": {
+              "type": "string",
+              "description": "Optional branch filter (e.g. 'main', 'develop'). If omitted, uses the latest run across all branches."
+            },
+            "filePath": {
+              "type": "string",
+              "description": "Optional file path to restrict annotations to a specific source file."
+            },
+            "level": {
+              "type": "string",
+              "enum": ["failure", "warning", "notice", "all"],
+              "description": "Filter by annotation level. 'all' (default) returns everything."
+            },
+            "maxResults": {
+              "type": "number",
+              "description": "Maximum annotation rows to return. Default 100."
+            }
+          }
+        }
+      },
+      {
+        "name": "hivemind_unusedIncludes",
+        "toolReferenceName": "hivemindUnusedIncludes",
+        "tags": [
+          "hivemind",
+          "cpp",
+          "c++",
+          "includes",
+          "unused",
+          "cleanup",
+          "refactor",
+          "header"
+        ],
+        "displayName": "Detect Unused C/C++ Includes",
+        "modelDescription": "Analyzes a C/C++ file and reports which #include directives appear to be unused — i.e., no symbols exported by the included header are referenced in the source file. Uses tree-sitter parsing + identifier cross-referencing. Results are heuristic: macros, templates, and ADL can create invisible dependencies. ALWAYS verify removals with hivemind_buildSubset afterward. Use this when cleaning up headers, reducing compile times, or auditing include hygiene. Only works on C/C++ files. DO NOT confuse with hivemind_getDependencies (which shows resolved deps but doesn't tell you if they're actually used).",
+        "canBeReferencedInPrompt": true,
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "filePath": {
+              "type": "string",
+              "description": "Path to a C/C++ file to analyze for unused includes."
+            },
+            "confidence": {
+              "type": "string",
+              "enum": ["high", "all"],
+              "description": "'high' = only report includes where we positively identified exported symbols AND none are used. 'all' (default) = also report unresolved/empty headers as 'likely-unused'."
             }
           },
           "required": [

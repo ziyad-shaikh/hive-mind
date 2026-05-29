@@ -131,3 +131,6 @@ for (const e of [...data.edges].sort((a, b) => b.weight - a.weight).slice(0, 10)
 
 if (data.nodes.length === 0) { console.error('FAIL: 0 modules with files — module classifier may be broken.'); process.exit(1); }
 console.log('\nSmoke test passed.');
+
+
+console.log('\nNOTE: This is a smoke test to verify ModuleGraphPanel.buildData() runs without error and produces plausible output. It is not a unit test and does not verify correctness of the output.');
