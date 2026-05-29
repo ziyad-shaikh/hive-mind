@@ -4,6 +4,7 @@ import { SymbolAnalyzer } from './analyzer/SymbolAnalyzer';
 import { GitAnalyzer } from './analyzer/GitAnalyzer';
 import { MacroExpander } from './analyzer/MacroExpander';
 import { BuildSubset } from './analyzer/BuildSubset';
+import { SanitizerRunner } from './analyzer/SanitizerRunner';
 import { GitHubClient } from './analyzer/GitHubClient';
 import { GraphCache } from './analyzer/GraphCache';
 import { GraphPanel } from './graph/GraphPanel';
@@ -21,6 +22,7 @@ let symbolAnalyzer: SymbolAnalyzer;
 let gitAnalyzer: GitAnalyzer;
 let macroExpander: MacroExpander | null = null;
 let buildSubset: BuildSubset | null = null;
+let sanitizerRunner: SanitizerRunner | null = null;
 let gitHubClient: GitHubClient | null = null;
 let statusBarItem: vscode.StatusBarItem;
 let treeProvider: DependencyTreeProvider;
@@ -194,7 +196,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     );
 
     // ── Register Copilot LM tools ───────────────────────────────────────
-    registerTools(context, analyzer, symbolAnalyzer, gitAnalyzer, getMacroExpander, getBuildSubset, getGitHubClient);
+    registerTools(context, analyzer, symbolAnalyzer, gitAnalyzer, getMacroExpander, getBuildSubset, getSanitizerRunner, getGitHubClient);
 
     // ── Register @hivemind chat participant ──────────────────────────────
     registerChatParticipant(context, analyzer, symbolAnalyzer, gitAnalyzer);
@@ -252,6 +254,7 @@ function propagateProfile(): void {
     const profile = analyzer.getProfile();
     if (macroExpander) { macroExpander.setProfile(profile); }
     if (buildSubset) { buildSubset.setProfile(profile); }
+    if (sanitizerRunner) { sanitizerRunner.setProfile(profile); }
 }
 
 export function deactivate(): void {
@@ -294,4 +297,14 @@ function getGitHubClient(): GitHubClient | null {
     return gitHubClient;
 }
 
-export { getMacroExpander, getBuildSubset, getGitHubClient };
+/** Lazily construct the SanitizerRunner for ASan builds. */
+function getSanitizerRunner(): SanitizerRunner | null {
+    if (sanitizerRunner) { return sanitizerRunner; }
+    const folder = vscode.workspace.workspaceFolders?.[0];
+    if (!folder) { return null; }
+    sanitizerRunner = new SanitizerRunner(folder.uri.fsPath, analyzer.outputChannel);
+    sanitizerRunner.setProfile(analyzer.getProfile());
+    return sanitizerRunner;
+}
+
+export { getMacroExpander, getBuildSubset, getSanitizerRunner, getGitHubClient };

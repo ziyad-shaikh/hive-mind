@@ -6,6 +6,7 @@ import { SymbolAnalyzer } from '../analyzer/SymbolAnalyzer';
 import { GitAnalyzer } from '../analyzer/GitAnalyzer';
 import { MacroExpander } from '../analyzer/MacroExpander';
 import { BuildSubset } from '../analyzer/BuildSubset';
+import { SanitizerRunner } from '../analyzer/SanitizerRunner';
 import { GitHubClient } from '../analyzer/GitHubClient';
 import { parseCppSync, isCppParserReady } from '../analyzer/CppTreeSitterParser';
 
@@ -13,6 +14,8 @@ import { parseCppSync, isCppParserReady } from '../analyzer/CppTreeSitterParser'
 type MacroExpanderProvider = () => MacroExpander | null;
 /** Lazy accessor for the shared BuildSubset singleton (or null if no workspace open). */
 type BuildSubsetProvider = () => BuildSubset | null;
+/** Lazy accessor for the shared SanitizerRunner singleton (or null if no workspace open). */
+type SanitizerRunnerProvider = () => SanitizerRunner | null;
 /** Lazy accessor for the shared GitHubClient singleton (or null if no workspace open). */
 type GitHubClientProvider = () => GitHubClient | null;
 
@@ -1960,6 +1963,155 @@ class BuildSubsetTool implements vscode.LanguageModelTool<BuildSubsetInput> {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Tool: hivemind_asanBuild  — compile with AddressSanitizer and run
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface AsanBuildInput {
+    /** File(s) to compile with ASan. Can be a single path or comma-separated list. */
+    filePath: string;
+    /** Which sanitizers: 'address' (default), 'undefined', or 'address,undefined'. MSVC only supports 'address'. */
+    sanitizers?: 'address' | 'undefined' | 'address,undefined';
+    /** Command to run the sanitized binary (e.g. the test executable). If omitted, only compiles. */
+    runCommand?: string;
+    /** Working directory for the run command. */
+    runCwd?: string;
+    /** Max parallel compiles. Default 4. */
+    parallelism?: number;
+}
+
+class AsanBuildTool implements vscode.LanguageModelTool<AsanBuildInput> {
+    constructor(
+        private readonly analyzer: DependencyAnalyzer,
+        private readonly sanitizerRunner: SanitizerRunnerProvider
+    ) {}
+
+    async invoke(
+        options: vscode.LanguageModelToolInvocationOptions<AsanBuildInput>,
+        token: vscode.CancellationToken
+    ): Promise<vscode.LanguageModelToolResult> {
+        const { filePath, sanitizers, runCommand, runCwd, parallelism } = options.input;
+
+        const runner = this.sanitizerRunner();
+        if (!runner) {
+            return text(`⚠️ \`hivemind_asanBuild\` requires a workspace folder. None is open.`);
+        }
+
+        // Resolve file paths (supports comma-separated list)
+        const rawPaths = filePath.split(',').map(p => p.trim()).filter(Boolean);
+        const resolvedFiles: string[] = [];
+        for (const rp of rawPaths) {
+            const resolved = this.analyzer.resolveFilePath(rp);
+            if (!resolved) {
+                return text(`⚠️ File "${rp}" not found in the Hive Mind index.`);
+            }
+            resolvedFiles.push(resolved);
+        }
+
+        if (token.isCancellationRequested) {
+            return text('⚠️ Cancelled.');
+        }
+
+        const result = await runner.run({
+            files: resolvedFiles,
+            sanitizers: sanitizers || 'address',
+            runCommand,
+            runCwd,
+            parallelism,
+        });
+
+        // Format the report
+        const out: string[] = [];
+        const fileList = resolvedFiles.map(f => '`' + rel(this.analyzer, f) + '`').join(', ');
+        out.push(`# ASan Build: ${fileList}`);
+        out.push('');
+
+        if (result.error) {
+            out.push(`❌ **Error:** ${result.error}`);
+            return text(...out);
+        }
+
+        out.push(`**Compiler:** ${result.compiler}  · **Sanitizers:** \`${result.sanitizers}\`  · **Wall:** ${(result.durationMs / 1000).toFixed(1)}s`);
+        out.push('');
+
+        // Compile phase
+        if (result.compileFailed === 0 && result.compilePassed > 0) {
+            out.push(`✅ **${result.compilePassed}/${result.compileResults.length} file(s) compiled** with sanitizer flags.`);
+        } else if (result.compileFailed > 0) {
+            out.push(`❌ **${result.compileFailed} compile failure(s)** — sanitized binary not produced.`);
+            out.push('');
+            out.push('## Compile Errors');
+            for (const r of result.compileResults.filter(r => !r.ok)) {
+                out.push(`### \`${rel(this.analyzer, r.file)}\`  · exit ${r.exitCode}`);
+                out.push('```');
+                out.push(r.diagnostics || '(no diagnostics)');
+                out.push('```');
+                out.push('');
+            }
+        }
+
+        // Run phase
+        if (result.runResult) {
+            out.push('');
+            out.push('## Runtime Sanitizer Report');
+            out.push('');
+            const rr = result.runResult;
+
+            if (rr.issues.length === 0 && rr.exitCode === 0) {
+                out.push('✅ **No sanitizer issues detected.** Binary ran clean.');
+            } else if (rr.issues.length === 0 && rr.exitCode !== 0) {
+                out.push(`⚠️ Binary exited with code ${rr.exitCode} but no sanitizer reports were captured.`);
+                if (rr.rawOutput) {
+                    out.push('');
+                    out.push('<details><summary>Raw output (last 2KB)</summary>');
+                    out.push('');
+                    out.push('```');
+                    out.push(rr.rawOutput.slice(-2048));
+                    out.push('```');
+                    out.push('</details>');
+                }
+            } else {
+                out.push(`❌ **${rr.issues.length} sanitizer issue(s) detected** (exit code ${rr.exitCode}, ${(rr.durationMs / 1000).toFixed(1)}s)`);
+                out.push('');
+
+                // Issue table
+                out.push('| # | Type | File | Line | Function |');
+                out.push('|---|------|------|------|----------|');
+                for (let i = 0; i < Math.min(rr.issues.length, 25); i++) {
+                    const issue = rr.issues[i];
+                    const fname = issue.function || '—';
+                    out.push(`| ${i + 1} | \`${issue.type}\` | \`${path.basename(issue.file)}\` | ${issue.line} | \`${fname}\` |`);
+                }
+                if (rr.issues.length > 25) {
+                    out.push(`| … | _${rr.issues.length - 25} more_ | | | |`);
+                }
+                out.push('');
+
+                // Detailed stack traces for first few
+                const detailed = rr.issues.slice(0, 5);
+                for (let i = 0; i < detailed.length; i++) {
+                    const issue = detailed[i];
+                    out.push(`### Issue ${i + 1}: \`${issue.type}\``);
+                    out.push(`**${issue.summary}**`);
+                    out.push('');
+                    out.push('<details><summary>Stack trace</summary>');
+                    out.push('');
+                    out.push('```');
+                    out.push(issue.stackTrace.slice(0, 3000));
+                    out.push('```');
+                    out.push('</details>');
+                    out.push('');
+                }
+            }
+        } else if (!runCommand) {
+            out.push('');
+            out.push('_No `runCommand` provided — compile-only mode. Provide a test binary path to detect runtime issues._');
+        }
+
+        return text(...out);
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Tool: hivemind_getWarnings  — C++ diagnostics from the VS Code Problems panel
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -2714,6 +2866,7 @@ export function registerTools(
     gitAnalyzer: GitAnalyzer,
     macroExpanderProvider: MacroExpanderProvider,
     buildSubsetProvider: BuildSubsetProvider,
+    sanitizerRunnerProvider: SanitizerRunnerProvider,
     gitHubClientProvider: GitHubClientProvider
 ): void {
     context.subscriptions.push(
@@ -2736,6 +2889,7 @@ export function registerTools(
         vscode.lm.registerTool('hivemind_typeHierarchy',   new TypeHierarchyTool(analyzer)),
         vscode.lm.registerTool('hivemind_macroExpand',     new MacroExpandTool(analyzer, macroExpanderProvider)),
         vscode.lm.registerTool('hivemind_buildSubset',     new BuildSubsetTool(analyzer, buildSubsetProvider)),
+        vscode.lm.registerTool('hivemind_asanBuild',       new AsanBuildTool(analyzer, sanitizerRunnerProvider)),
         vscode.lm.registerTool('hivemind_getWarnings',     new GetWarningsTool(analyzer)),
         vscode.lm.registerTool('hivemind_getCodeQLAlerts', new GetCodeQLAlertsTool(analyzer, gitHubClientProvider)),
         vscode.lm.registerTool('hivemind_getCIWarnings',   new GetCIWarningsTool(analyzer, gitHubClientProvider)),
