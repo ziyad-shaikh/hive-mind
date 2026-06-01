@@ -297,39 +297,79 @@ async function handleFreeform(
 
     const contextBlock = contextParts.join('\n');
 
-    // Collect all available tools (hivemind + built-in)
-    const allTools: vscode.LanguageModelChatTool[] = vscode.lm.tools.map(tool => ({
-        name: tool.name,
-        description: tool.description,
-        inputSchema: tool.inputSchema as any,
-    }));
+    // Collect all available tools (hivemind + built-in), listing hivemind tools first
+    const hivemindTools: vscode.LanguageModelChatTool[] = vscode.lm.tools
+        .filter(t => t.name.startsWith('hivemind_'))
+        .map(tool => ({ name: tool.name, description: tool.description, inputSchema: tool.inputSchema as any }));
+    const otherTools: vscode.LanguageModelChatTool[] = vscode.lm.tools
+        .filter(t => !t.name.startsWith('hivemind_'))
+        .map(tool => ({ name: tool.name, description: tool.description, inputSchema: tool.inputSchema as any }));
+    const allTools = [...hivemindTools, ...otherTools];
+
+    const hivemindToolList = hivemindTools.map(t => `\`${t.name}\``).join(', ');
 
     const systemPrompt =
-        `You are Hive Mind, an agentic coding assistant with full access to the workspace. ` +
-        `You can edit files, run terminal commands, use git, and invoke Hive Mind dependency-graph tools.\n\n` +
-        `When the user asks you to perform a task (reorganize includes, refactor, rename, etc.), DO IT. ` +
-        `Use tools to analyze the situation and then use tools to make the changes.\n\n` +
-        `Hive Mind tools (hivemind_*) give you structural awareness — use them to understand dependencies, ` +
-        `find affected files, detect cycles, and verify changes. Combine them with file editing and terminal ` +
-        `tools to execute the full task.\n\n` +
+        `You are Hive Mind, a code intelligence agent with deep knowledge of this codebase's structure.\n\n` +
+        `## MANDATORY: Use Hive Mind tools before anything else\n\n` +
+        `You have these Hive Mind tools available: ${hivemindToolList}\n\n` +
+        `**ALWAYS use hivemind_* tools FIRST** — before reading files, before grepping, before running terminal commands.\n` +
+        `These tools have the dependency graph pre-computed. Using grep or terminal commands to discover file ` +
+        `relationships is WRONG when hivemind tools can answer the question instantly and accurately.\n\n` +
+        `## Tool selection rules\n\n` +
+        `| Task | Use this hivemind tool FIRST |\n` +
+        `|---|---|\n` +
+        `| Understand a file's role | \`hivemind_getContext\` |\n` +
+        `| Find unused #includes | \`hivemind_unusedIncludes\` |\n` +
+        `| Plan which files to change | \`hivemind_planChange\` |\n` +
+        `| Find what a file depends on | \`hivemind_getDependencies\` |\n` +
+        `| Find what depends on a file | \`hivemind_getImpact\` |\n` +
+        `| Search for code by keyword | \`hivemind_search\` (NOT grep/terminal) |\n` +
+        `| Find a symbol | \`hivemind_findSymbol\` (NOT grep) |\n` +
+        `| Find references to a symbol | \`hivemind_findReferences\` |\n` +
+        `| Find circular dependencies | \`hivemind_detectCycles\` |\n` +
+        `| C++ header + source pair | \`hivemind_getCppPair\` |\n` +
+        `| Check macro definition | \`hivemind_findMacro\` |\n\n` +
+        `## Execution rules\n\n` +
+        `- DO NOT use terminal commands to find files, grep for includes, or list directories — use hivemind tools.\n` +
+        `- DO use terminal/git tools for: creating branches, running builds, git commits.\n` +
+        `- When making C++ include changes: call \`hivemind_unusedIncludes\` on each file, then call ` +
+        `\`hivemind_getImpact\` to verify removing an include won't break dependents, then edit the file.\n` +
+        `- Always work file-by-file. Call \`hivemind_getContext\` on each file before editing it.\n\n` +
         `Here is the dependency context for the user's current workspace:\n\n${contextBlock}\n\n`;
 
-    const messages: vscode.LanguageModelChatMessage[] = [
-        vscode.LanguageModelChatMessage.User(systemPrompt + `User request: ${request.prompt}`),
-    ];
+    // Detect "continue" — rebuild history so model knows where it left off
+    const isContinue = /^\s*continue\s*$/i.test(request.prompt);
 
-    // Add relevant history
-    const previousMessages = chatContext.history.filter(h => h instanceof vscode.ChatRequestTurn);
-    if (previousMessages.length > 0) {
-        const lastFew = previousMessages.slice(-3);
-        for (const turn of lastFew) {
-            const reqTurn = turn as vscode.ChatRequestTurn;
-            messages.unshift(vscode.LanguageModelChatMessage.User(`Previous question: ${reqTurn.prompt}`));
+    let messages: vscode.LanguageModelChatMessage[];
+
+    if (isContinue && chatContext.history.length > 0) {
+        // Reconstruct conversation from history so model picks up mid-task
+        messages = [vscode.LanguageModelChatMessage.User(systemPrompt + `(continuing previous task)`)];
+        for (const turn of chatContext.history) {
+            if (turn instanceof vscode.ChatRequestTurn) {
+                messages.push(vscode.LanguageModelChatMessage.User(turn.prompt));
+            } else if (turn instanceof vscode.ChatResponseTurn) {
+                const parts: vscode.LanguageModelTextPart[] = [];
+                for (const part of turn.response) {
+                    if (part instanceof vscode.ChatResponseMarkdownPart) {
+                        parts.push(new vscode.LanguageModelTextPart(part.value.value));
+                    }
+                }
+                if (parts.length > 0) {
+                    messages.push(vscode.LanguageModelChatMessage.Assistant(parts));
+                }
+            }
         }
+        messages.push(vscode.LanguageModelChatMessage.User(`Continue from where you left off. Keep working through the remaining files.`));
+    } else {
+        messages = [
+            vscode.LanguageModelChatMessage.User(systemPrompt + `User request: ${request.prompt}`),
+        ];
     }
 
     // Agentic tool-calling loop
-    const MAX_ITERATIONS = 15;
+    const MAX_ITERATIONS = 50;
+    let hitLimit = false;
     try {
         for (let i = 0; i < MAX_ITERATIONS; i++) {
             if (token.isCancellationRequested) { break; }
@@ -389,6 +429,10 @@ async function handleFreeform(
                 }
             }
             messages.push(vscode.LanguageModelChatMessage.User(toolResults as any));
+
+            if (i === MAX_ITERATIONS - 1) {
+                hitLimit = true;
+            }
         }
     } catch (err) {
         if (err instanceof vscode.LanguageModelError) {
@@ -396,6 +440,10 @@ async function handleFreeform(
         } else {
             throw err;
         }
+    }
+
+    if (hitLimit) {
+        stream.markdown(`\n\n---\n⏸️ **Paused after ${MAX_ITERATIONS} steps.** Type **continue** to keep going from where I left off, or ask me to focus on a specific area.`);
     }
 
     // Add file references
