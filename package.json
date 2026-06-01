@@ -2,10 +2,10 @@
   "name": "hive-mind",
   "displayName": "Hive Mind - Code Dependency Graph",
   "description": "Visualizes code dependencies as an interactive Obsidian-style graph and provides Copilot tools to analyze change impact across your codebase.",
-  "version": "0.3.1",
+  "version": "0.3.0",
   "publisher": "hive-mind",
   "engines": {
-    "vscode": "^1.87.0"
+    "vscode": "^1.95.0"
   },
   "categories": [
     "Other",
@@ -891,52 +891,6 @@
             "filePath"
           ]
         }      },
-      {
-        "name": "hivemind_asanBuild",
-        "toolReferenceName": "hivemindAsanBuild",
-        "tags": [
-          "hivemind",
-          "cpp",
-          "c++",
-          "asan",
-          "sanitizer",
-          "memory",
-          "address-sanitizer",
-          "undefined-behavior"
-        ],
-        "displayName": "ASan Build & Run",
-        "modelDescription": "Compiles C/C++ file(s) with AddressSanitizer (`/fsanitize=address` on MSVC, `-fsanitize=address` on GCC/Clang) and optionally runs the resulting binary to capture runtime memory errors (heap-buffer-overflow, use-after-free, stack-buffer-overflow, memory leaks, etc.). Does NOT require any external install — ASan is built into modern compilers. Use this when investigating crashes, memory corruption, or validating a fix for a buffer-related bug. Requires: `filePath` (one or more .cpp/.c files, comma-separated). Optional: `sanitizers` ('address'|'undefined'|'address,undefined'), `runCommand` (binary to execute after compile), `runCwd`, `parallelism`. Returns compile diagnostics + structured sanitizer reports with file/line/function/stack trace. MSVC only supports 'address'. DO NOT confuse with hivemind_buildSubset (syntax-only check, no codegen, no ASan).",
-        "canBeReferencedInPrompt": true,
-        "inputSchema": {
-          "type": "object",
-          "properties": {
-            "filePath": {
-              "type": "string",
-              "description": "File(s) to compile with ASan. Comma-separated for multiple files. Workspace-relative or absolute paths."
-            },
-            "sanitizers": {
-              "type": "string",
-              "enum": ["address", "undefined", "address,undefined"],
-              "description": "Which sanitizers to enable. Default 'address'. MSVC only supports 'address'."
-            },
-            "runCommand": {
-              "type": "string",
-              "description": "Command to run the sanitized binary (e.g. path to test executable). If omitted, only compiles."
-            },
-            "runCwd": {
-              "type": "string",
-              "description": "Working directory for the run command. Defaults to workspace root."
-            },
-            "parallelism": {
-              "type": "number",
-              "description": "Max concurrent compiler processes. Default min(4, CPU count)."
-            }
-          },
-          "required": [
-            "filePath"
-          ]
-        }
-      },
       {
         "name": "hivemind_getWarnings",
         "toolReferenceName": "hivemindWarnings",

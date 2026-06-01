@@ -295,15 +295,27 @@ async function handleFreeform(
         contextParts.push('');
     }
 
-    // Send augmented prompt to LLM
     const contextBlock = contextParts.join('\n');
+
+    // Collect all available tools (hivemind + built-in)
+    const allTools: vscode.LanguageModelChatTool[] = vscode.lm.tools.map(tool => ({
+        name: tool.name,
+        description: tool.description,
+        inputSchema: tool.inputSchema as any,
+    }));
+
+    const systemPrompt =
+        `You are Hive Mind, an agentic coding assistant with full access to the workspace. ` +
+        `You can edit files, run terminal commands, use git, and invoke Hive Mind dependency-graph tools.\n\n` +
+        `When the user asks you to perform a task (reorganize includes, refactor, rename, etc.), DO IT. ` +
+        `Use tools to analyze the situation and then use tools to make the changes.\n\n` +
+        `Hive Mind tools (hivemind_*) give you structural awareness — use them to understand dependencies, ` +
+        `find affected files, detect cycles, and verify changes. Combine them with file editing and terminal ` +
+        `tools to execute the full task.\n\n` +
+        `Here is the dependency context for the user's current workspace:\n\n${contextBlock}\n\n`;
+
     const messages: vscode.LanguageModelChatMessage[] = [
-        vscode.LanguageModelChatMessage.User(
-            `You are Hive Mind, an expert code dependency analysis assistant. You help developers understand how their codebase is connected and what the impact of changes will be.\n\n` +
-            `Here is the dependency context for the user's current workspace:\n\n${contextBlock}\n\n` +
-            `Answer the user's question using this context. Reference specific files and relationships when relevant. Be concise and actionable.\n\n` +
-            `User question: ${request.prompt}`
-        ),
+        vscode.LanguageModelChatMessage.User(systemPrompt + `User request: ${request.prompt}`),
     ];
 
     // Add relevant history
@@ -316,16 +328,71 @@ async function handleFreeform(
         }
     }
 
+    // Agentic tool-calling loop
+    const MAX_ITERATIONS = 15;
     try {
-        const response = await request.model.sendRequest(messages, {}, token);
-
-        for await (const chunk of response.text) {
+        for (let i = 0; i < MAX_ITERATIONS; i++) {
             if (token.isCancellationRequested) { break; }
-            stream.markdown(chunk);
+
+            const response = await request.model.sendRequest(
+                messages,
+                { tools: allTools, toolMode: vscode.LanguageModelChatToolMode.Auto },
+                token
+            );
+
+            // Collect all parts from the response
+            const textChunks: string[] = [];
+            const toolCalls: vscode.LanguageModelToolCallPart[] = [];
+
+            for await (const part of response.stream) {
+                if (token.isCancellationRequested) { break; }
+                if (part instanceof vscode.LanguageModelTextPart) {
+                    textChunks.push(part.value);
+                    stream.markdown(part.value);
+                } else if (part instanceof vscode.LanguageModelToolCallPart) {
+                    toolCalls.push(part);
+                }
+            }
+
+            // If no tool calls, the model is done
+            if (toolCalls.length === 0) {
+                break;
+            }
+
+            // Invoke each tool and feed results back
+            const assistantMsg = vscode.LanguageModelChatMessage.Assistant(
+                textChunks.map(t => new vscode.LanguageModelTextPart(t))
+                    .concat(toolCalls as any)
+            );
+            messages.push(assistantMsg);
+
+            const toolResults: (vscode.LanguageModelTextPart | vscode.LanguageModelToolResultPart)[] = [];
+            for (const call of toolCalls) {
+                if (token.isCancellationRequested) { break; }
+                stream.progress(`Running ${call.name}...`);
+                try {
+                    const result = await vscode.lm.invokeTool(call.name, {
+                        input: call.input,
+                        toolInvocationToken: request.toolInvocationToken,
+                        tokenizationOptions: {
+                            tokenBudget: 4096,
+                            countTokens: (text: string, _token?: vscode.CancellationToken) => {
+                                return request.model.countTokens(text);
+                            },
+                        },
+                    }, token);
+                    toolResults.push(new vscode.LanguageModelToolResultPart(call.callId, result.content as any));
+                } catch (toolErr: any) {
+                    toolResults.push(new vscode.LanguageModelToolResultPart(call.callId, [
+                        new vscode.LanguageModelTextPart(`Error invoking ${call.name}: ${toolErr?.message ?? toolErr}`),
+                    ]));
+                }
+            }
+            messages.push(vscode.LanguageModelChatMessage.User(toolResults as any));
         }
     } catch (err) {
         if (err instanceof vscode.LanguageModelError) {
-            stream.markdown(`Sorry, I encountered an error communicating with the language model: ${err.message}\n`);
+            stream.markdown(`\n\nError communicating with the language model: ${err.message}\n`);
         } else {
             throw err;
         }
