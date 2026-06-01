@@ -367,11 +367,14 @@ async function handleFreeform(
         ];
     }
 
-    // Agentic tool-calling loop
-    const MAX_ITERATIONS = 50;
-    let hitLimit = false;
+    // Agentic tool-calling loop — runs until model stops calling tools or user cancels.
+    // Loop-detector: if the same tool is called with identical args 3 times in a row, abort.
+    let lastCallSignature = '';
+    let repeatCount = 0;
+    let aborted: string | null = null;
     try {
-        for (let i = 0; i < MAX_ITERATIONS; i++) {
+        // eslint-disable-next-line no-constant-condition
+        while (true) {
             if (token.isCancellationRequested) { break; }
 
             const response = await request.model.sendRequest(
@@ -397,6 +400,19 @@ async function handleFreeform(
             // If no tool calls, the model is done
             if (toolCalls.length === 0) {
                 break;
+            }
+
+            // Loop detection: compare this iteration's calls to the previous one
+            const signature = toolCalls.map(c => `${c.name}:${JSON.stringify(c.input)}`).sort().join('|');
+            if (signature === lastCallSignature) {
+                repeatCount++;
+                if (repeatCount >= 2) {
+                    aborted = `Detected repeated identical tool calls (${toolCalls.map(c => c.name).join(', ')}). Stopping to prevent an infinite loop.`;
+                    break;
+                }
+            } else {
+                repeatCount = 0;
+                lastCallSignature = signature;
             }
 
             // Invoke each tool and feed results back
@@ -429,10 +445,6 @@ async function handleFreeform(
                 }
             }
             messages.push(vscode.LanguageModelChatMessage.User(toolResults as any));
-
-            if (i === MAX_ITERATIONS - 1) {
-                hitLimit = true;
-            }
         }
     } catch (err) {
         if (err instanceof vscode.LanguageModelError) {
@@ -442,8 +454,8 @@ async function handleFreeform(
         }
     }
 
-    if (hitLimit) {
-        stream.markdown(`\n\n---\n⏸️ **Paused after ${MAX_ITERATIONS} steps.** Type **continue** to keep going from where I left off, or ask me to focus on a specific area.`);
+    if (aborted) {
+        stream.markdown(`\n\n---\n⚠️ ${aborted} Type **continue** to resume, or rephrase your request.`);
     }
 
     // Add file references
