@@ -18,6 +18,7 @@ if (!existsSync(join(HIVE, 'out', 'analyzer', 'CppScopeResolver.js'))) {
 const suites = [
     { name: 'profile',         path: './profile.test.mjs' },
     { name: 'module-graph',    path: './module-graph.test.mjs' },
+    { name: 'rust-dependency', path: './rust-dependency.test.mjs' },
     { name: 'scope-resolver',  path: './scope-resolver.test.mjs' },
 ];
 

@@ -42,6 +42,8 @@ See `HOW-TO.md` for example I/O for every tool.
 
 Pan/zoom canvas showing the dependency graph centered on any file, with depth controls, hover highlighting, click-to-navigate, and live updates as you save files.
 
+Rust projects use the same graph. Hive Mind maps `mod`, `use`, `pub use`, `#[path]`, and `include!` relationships to Rust source files. It also resolves nested Cargo workspace crates and grouped imports. Rust nodes use a separate color in the graph.
+
 ### Module Graph (profile-driven)
 
 Aggregates the file-level graph into module-level nodes and edges using the active project profile's `modulePattern`. For Sage X3, this turns 431 source files into 25 module bubbles connected by aggregated #include traffic — a single picture of the runtime's architecture.
@@ -151,6 +153,8 @@ See `HOW-TO.md` for the full developer guide.
 A `DependencyAnalyzer` walks the workspace once, parses each file with the appropriate parser (tree-sitter for C/C++, regex-light for the polyglot fallback), and builds a bidirectional file → file edge graph. A `CppScopeResolver` builds a per-file decl + call-edge index on top of tree-sitter for AST-precise C/C++ queries. A `GitAnalyzer` mines `git log` for co-change history. Results are persisted to disk between sessions via `GraphCache`. The 17 LM tools, three webview panels, the chat participant, and the dependency tree view are all read-only consumers of this index.
 
 For C/C++ specifically, a `ProjectProfile` provides `-D` flags, include roots, module patterns, build variants, and umbrella header lists — so the same analysis works whether the project has `compile_commands.json` or not. Profiles are auto-detected via match rules (e.g. *"this is the X3 runtime if `include/adx_include.h` exists"*).
+
+For Rust, a Cargo-aware resolver maps module paths to `.rs` files. It uses the nearest `Cargo.toml` to separate crates and resolve workspace crate imports.
 
 See `src/analyzer/`, `src/profiles/`, and `src/tools/index.ts` for the implementation.
 

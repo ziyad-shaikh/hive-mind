@@ -12,6 +12,7 @@ import {
 import { detectProfile, isUmbrellaHeader, variantOf } from '../profiles';
 import type { ProjectProfile } from '../profiles';
 import { CppScopeResolver } from './CppScopeResolver';
+import { extractRustReferences, RustDependencyResolver } from './RustDependencyResolver';
 import {
     GraphCache,
     CachedFile,
@@ -22,7 +23,7 @@ import {
 } from './GraphCache';
 
 /** Bumped when parser semantics change. Forces a full reindex on upgrade. */
-const PARSER_VERSION = 'v4-treeSitter-cpp-2026-05';
+const PARSER_VERSION = 'v5-rust-modules-2026-10';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -187,13 +188,7 @@ const PARSERS: LanguageParser[] = [
         // Rust
         extensions: ['.rs'],
         extract(content: string) {
-            const results: string[] = [];
-            const modRe = /^mod\s+(\w+)\s*;/gm;
-            const useRe = /^use\s+((?:crate|super|self)(?:::\w+)+)/gm;
-            let m: RegExpExecArray | null;
-            while ((m = modRe.exec(content)) !== null) { results.push('mod:' + m[1]); }
-            while ((m = useRe.exec(content)) !== null) { results.push('use:' + m[1]); }
-            return results;
+            return extractRustReferences(content);
         },
     },
     {
@@ -477,43 +472,6 @@ function pickClosest(fromDir: string, candidates: string[]): string {
     return best;
 }
 
-function tryResolveRustImport(importStr: string, fromFile: string, workspaceRoot: string): string | null {
-    const fromDir = path.dirname(fromFile);
-
-    if (importStr.startsWith('mod:')) {
-        const modName = importStr.slice(4);
-        const sibling = path.join(fromDir, modName + '.rs');
-        if (fs.existsSync(sibling)) { return sibling; }
-        const nested = path.join(fromDir, modName, 'mod.rs');
-        if (fs.existsSync(nested)) { return nested; }
-        return null;
-    }
-    if (importStr.startsWith('use:')) {
-        const usePath = importStr.slice(4);
-        const parts = usePath.split('::');
-        if (parts[0] === 'crate') {
-            const relParts = parts.slice(1);
-            const srcDir = path.join(workspaceRoot, 'src');
-            for (const slice of [relParts, relParts.slice(0, -1)]) {
-                if (slice.length === 0) { continue; }
-                const candidate = path.join(srcDir, ...slice) + '.rs';
-                if (fs.existsSync(candidate)) { return candidate; }
-                const modCandidate = path.join(srcDir, ...slice, 'mod.rs');
-                if (fs.existsSync(modCandidate)) { return modCandidate; }
-            }
-        }
-        if (parts[0] === 'super') {
-            const parentDir = path.dirname(fromDir);
-            const relParts = parts.slice(1);
-            if (relParts.length > 0) {
-                const candidate = path.join(parentDir, ...relParts) + '.rs';
-                if (fs.existsSync(candidate)) { return candidate; }
-            }
-        }
-    }
-    return null;
-}
-
 function tryResolveJavaImport(importStr: string, workspaceRoot: string): string | null {
     const relPath = importStr.replace(/\./g, path.sep);
     for (const srcRoot of ['src/main/java', 'src/main/kotlin', 'src', 'app/src/main/java', 'app/src/main/kotlin']) {
@@ -556,7 +514,8 @@ function resolveImport(
     workspaceRoot: string,
     headerIndex: Map<string, string[]>,
     includePaths: string[],
-    tsConfigPaths: PathAliases | null
+    tsConfigPaths: PathAliases | null,
+    rustResolver: RustDependencyResolver | null
 ): string | null {
     const ext = path.extname(fromFile).toLowerCase();
     const fromDir = path.dirname(fromFile);
@@ -578,7 +537,7 @@ function resolveImport(
         return tryResolveCImport(importStr, fromDir, headerIndex, includePaths);
     }
     if (ext === '.rs') {
-        return tryResolveRustImport(importStr, fromFile, workspaceRoot);
+        return rustResolver?.resolve(importStr, fromFile) ?? null;
     }
     if (['.java', '.kt', '.kts'].includes(ext)) {
         return tryResolveJavaImport(importStr, workspaceRoot);
@@ -806,6 +765,7 @@ export class DependencyAnalyzer {
     private headerIndex = new Map<string, string[]>();
     private includePaths: string[] = [];
     private tsConfigPaths: PathAliases | null = null;
+    private rustResolver: RustDependencyResolver | null = null;
     private extraIgnored = new Set<string>();
     private externalDirs: string[] = [];
     private _debounceTimers = new Map<string, NodeJS.Timeout>();
@@ -1002,6 +962,14 @@ export class DependencyAnalyzer {
             `[Hive Mind] Found ${validUris.length} source files across ${this.workspaceRoots.length} workspace root(s)`
         );
 
+        const rustFiles = validUris.filter(uri => path.extname(uri.fsPath).toLowerCase() === '.rs').map(uri => uri.fsPath);
+        this.rustResolver = rustFiles.length > 0 ? new RustDependencyResolver(rustFiles, this.workspaceRoots) : null;
+        if (this.rustResolver) {
+            this.outputChannel.appendLine(
+                `[Hive Mind] Rust module resolver: ${rustFiles.length} file(s) across ${this.rustResolver.crateCount} crate(s)`
+            );
+        }
+
         // Build header index for C/C++ — stores all matches per key
         for (const uri of validUris) {
             const ext = path.extname(uri.fsPath).toLowerCase();
@@ -1073,7 +1041,8 @@ export class DependencyAnalyzer {
         let reparsed = 0;
         for (const uri of validUris) {
             const cached = cachedFiles?.get(uri.fsPath);
-            if (cached && this.isCachedFileStillFresh(uri.fsPath, cached)) {
+            const isRust = path.extname(uri.fsPath).toLowerCase() === '.rs';
+            if (cached && !isRust && this.isCachedFileStillFresh(uri.fsPath, cached)) {
                 this.adoptCachedFile(uri.fsPath, cached);
                 reused++;
             } else {
@@ -1114,6 +1083,14 @@ export class DependencyAnalyzer {
 
     updateFile(filePath: string): void {
         if (this.workspaceRoots.length === 0 || isIgnored(filePath, this.extraIgnored)) { return; }
+        if (path.extname(filePath).toLowerCase() === '.rs') {
+            const rustFiles = [...this.graph.keys()].filter(file => path.extname(file).toLowerCase() === '.rs');
+            if (!rustFiles.includes(filePath) && fs.existsSync(filePath)) { rustFiles.push(filePath); }
+            this.rustResolver = new RustDependencyResolver(rustFiles, this.workspaceRoots);
+            for (const rustFile of rustFiles) { this.parseFile(rustFile); }
+            this.buildDependents();
+            return;
+        }
         const existing = this.graph.get(filePath);
         if (existing) {
             for (const dep of existing.dependencies) {
@@ -1139,6 +1116,14 @@ export class DependencyAnalyzer {
             this.graph.get(dep)?.dependencies.delete(filePath);
         }
         this.graph.delete(filePath);
+        if (path.extname(filePath).toLowerCase() === '.rs') {
+            const rustFiles = [...this.graph.keys()].filter(file => path.extname(file).toLowerCase() === '.rs');
+            this.rustResolver = rustFiles.length > 0
+                ? new RustDependencyResolver(rustFiles, this.workspaceRoots)
+                : null;
+            for (const rustFile of rustFiles) { this.parseFile(rustFile); }
+            this.buildDependents();
+        }
     }
 
     getDependencies(filePath: string, depth = 2): string[] {
@@ -1599,7 +1584,8 @@ export class DependencyAnalyzer {
         const deps = new Set<string>();
         for (const raw of rawImports) {
             const resolved = resolveImport(
-                raw, filePath, this.primaryRoot ?? '', this.headerIndex, this.includePaths, this.tsConfigPaths
+                raw, filePath, this.primaryRoot ?? '', this.headerIndex, this.includePaths, this.tsConfigPaths,
+                this.rustResolver
             );
             if (resolved && resolved !== filePath) {
                 deps.add(resolved);
