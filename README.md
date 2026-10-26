@@ -84,7 +84,7 @@ code --install-extension hive-mind-0.1.0.vsix
 
 ### Option 2 — Build from source
 
-**Prerequisites:** Node.js 20+, npm, Git.
+**Prerequisites:** Node.js 22.13+, npm, Git.
 
 ```bash
 git clone <repository-url>
@@ -166,7 +166,7 @@ See `src/analyzer/`, `src/profiles/`, and `src/tools/index.ts` for the implement
 npm install
 npm run compile      # tsc -p .
 npm run watch        # tsc -watch
-npm test             # 16-test suite, ~10 s
+npm test             # run the test suite
 npm run lint         # eslint src
 npm run package      # build .vsix
 ```
@@ -187,7 +187,7 @@ git push --follow-tags
 
 ## Requirements
 
-- **VS Code 1.87+**
+- **VS Code 1.95+**
 - **GitHub Copilot** extension (for LM tools and chat participant)
 - **Git** (optional, for co-change analysis)
 - **A C/C++ compiler** (`cl.exe`, `g++`, or `clang`) — only needed for `macroExpand` and `buildSubset`
@@ -204,4 +204,4 @@ See `ROADMAP.md` for upcoming features and `MEMORY_AUDIT_PLAN.md` for the planne
 
 ## License
 
-TBD — pick a license before the first public release.
+No license is granted for this repository. All rights are reserved.

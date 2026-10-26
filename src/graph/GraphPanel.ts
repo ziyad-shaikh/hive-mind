@@ -159,6 +159,11 @@ export class GraphPanel {
         const graphJson = JSON.stringify(graph);
         const focusJson = JSON.stringify(this.focusFile ?? null);
         const depthVal = this.depth;
+        const isolatedNotice = graph.nodes.length === 1 && graph.edges.length === 0
+            ? graph.nodes[0].language === 'unknown'
+                ? `<div id="isolated-notice">This file type is not indexed. Open a supported source file and run the command again.</div>`
+                : `<div id="isolated-notice">No local file relationships were found. Standard-library and external dependency source files are not shown.</div>`
+            : '';
 
         return /* html */ `<!DOCTYPE html>
 <html lang="en">
@@ -194,6 +199,13 @@ export class GraphPanel {
     border-radius: 8px; padding: 8px 12px; backdrop-filter: blur(8px);
     font-size: 10px; color: #585b70; line-height: 1.6;
   }
+  #isolated-notice {
+    position: absolute; top: 62px; left: 50%; transform: translateX(-50%);
+    z-index: 10; max-width: 560px; padding: 8px 12px; border-radius: 6px;
+    background: var(--vscode-editorWarning-background, rgba(255,190,50,0.12));
+    color: var(--vscode-editorWarning-foreground, #cca700); font-size: 11px;
+    text-align: center;
+  }
   #canvas { display: block; }
 </style>
 </head>
@@ -206,6 +218,7 @@ export class GraphPanel {
   <button id="btn-refocus">Re-focus Active File</button>
   <span id="stats"></span>
 </div>
+${isolatedNotice}
 <div id="help">
   Scroll: zoom · Drag: pan · Double-click: open file<br>
   Right-click: re-center on file

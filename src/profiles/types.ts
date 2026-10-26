@@ -36,6 +36,9 @@ export interface ProjectProfile {
     /** Headers produced by the build system, not present in the source tree. */
     generatedHeaders: GeneratedHeader[];
 
+    /** Third-party directories to index for resolution but exclude from analysis views. */
+    externalDirectories?: string[];
+
     /** Non-C++ source files we should still index for #include edges. */
     customSources: CustomSource[];
 

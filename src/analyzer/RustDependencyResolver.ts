@@ -17,6 +17,8 @@ interface RustCrate {
 interface RustFileInfo {
     crate: RustCrate;
     modulePath: string[];
+    modules: Map<string, string>;
+    rootFile: string;
 }
 
 /** Extract file-level Rust relationships without treating symbols as files. */
@@ -104,7 +106,32 @@ export class RustDependencyResolver {
             if (modulePath.length === 0 && (!rustCrate.rootFile || path.basename(file) === 'lib.rs')) {
                 rustCrate.rootFile = file;
             }
-            this.fileInfo.set(norm(file), { crate: rustCrate, modulePath });
+        }
+
+        for (const file of files) {
+            const manifest = findNearestManifest(file, workspaceRoots);
+            const crateDir = manifest ? path.dirname(manifest) : findWorkspaceRoot(file, workspaceRoots);
+            const rustCrate = crateByManifest.get(norm(manifest ?? crateDir));
+            if (!rustCrate) { continue; }
+            const modulePath = modulePathForFile(file, rustCrate.sourceDir);
+            if (modulePath) {
+                this.fileInfo.set(norm(file), {
+                    crate: rustCrate,
+                    modulePath,
+                    modules: rustCrate.modules,
+                    rootFile: rustCrate.rootFile ?? file,
+                });
+            } else {
+                // Integration tests, examples, benches, and custom Cargo targets
+                // are independent crate roots. They can still import workspace
+                // libraries by their Cargo package or [lib] name.
+                this.fileInfo.set(norm(file), {
+                    crate: rustCrate,
+                    modulePath: [],
+                    modules: new Map([['', file]]),
+                    rootFile: file,
+                });
+            }
         }
     }
 
@@ -125,7 +152,12 @@ export class RustDependencyResolver {
                 const candidate = path.resolve(path.dirname(fromFile), pathAttribute);
                 return this.fileInfo.has(norm(candidate)) ? candidate : null;
             }
-            return info.crate.modules.get(moduleKey([...info.modulePath, name])) ?? null;
+            const indexed = info.modules.get(moduleKey([...info.modulePath, name]));
+            if (indexed) { return indexed; }
+            for (const candidate of declaredModuleCandidates(fromFile, name)) {
+                if (this.fileInfo.has(norm(candidate))) { return candidate; }
+            }
+            return null;
         }
 
         if (reference.startsWith(INCLUDE_PREFIX)) {
@@ -137,36 +169,62 @@ export class RustDependencyResolver {
         const parts = reference.slice(USE_PREFIX.length).split('::').filter(Boolean);
         if (parts.length === 0) { return null; }
 
-        let rustCrate = info.crate;
+        let modules = info.modules;
+        let rootFile: string | null = info.rootFile;
         let modulePath: string[];
+        let canResolveToRoot = false;
         if (parts[0] === 'crate') {
             parts.shift();
             modulePath = [];
+            canResolveToRoot = true;
         } else if (parts[0] === 'self') {
             parts.shift();
             modulePath = [...info.modulePath];
+            canResolveToRoot = true;
         } else if (parts[0] === 'super') {
             modulePath = [...info.modulePath];
             while (parts[0] === 'super') {
                 parts.shift();
                 modulePath.pop();
             }
+            canResolveToRoot = true;
         } else {
             const external = this.crateNames.get(parts[0]);
-            if (external && external !== info.crate) {
-                rustCrate = external;
+            if (external) {
+                modules = external.modules;
+                rootFile = external.rootFile;
                 parts.shift();
+                canResolveToRoot = true;
+            } else if (!info.modules.has(moduleKey([parts[0]]))) {
+                // Standard-library and third-party crates have no local file.
+                return null;
             }
             modulePath = [];
         }
 
         const candidatePath = [...modulePath, ...parts];
         for (let length = candidatePath.length; length >= modulePath.length; length--) {
-            const candidate = rustCrate.modules.get(moduleKey(candidatePath.slice(0, length)));
+            const candidate = modules.get(moduleKey(candidatePath.slice(0, length)));
             if (candidate) { return candidate; }
         }
-        return rustCrate.rootFile;
+        return canResolveToRoot ? rootFile : null;
     }
+}
+
+function declaredModuleCandidates(fromFile: string, name: string): string[] {
+    const directory = path.dirname(fromFile);
+    const stem = path.basename(fromFile, '.rs');
+    const candidates = [
+        path.join(directory, name + '.rs'),
+        path.join(directory, name, 'mod.rs'),
+    ];
+    if (!['lib', 'main', 'mod'].includes(stem)) {
+        candidates.unshift(
+            path.join(directory, stem, name + '.rs'),
+            path.join(directory, stem, name, 'mod.rs'),
+        );
+    }
+    return candidates;
 }
 
 function expandUseTree(value: string): string[] {

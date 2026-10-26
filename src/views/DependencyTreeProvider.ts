@@ -11,15 +11,6 @@ interface CycleItem  { kind: 'cycle';   index: number; files: string[] }
 
 type TreeItem = SectionItem | FileItem | CycleItem;
 
-// ── Language → icon mapping (ThemeIcon ids) ────────────────────────────
-const langIcon: Record<string, string> = {
-    typescript: 'symbol-method', javascript: 'symbol-method',
-    c: 'symbol-field', cpp: 'symbol-field', 'c/c++ header': 'symbol-interface',
-    python: 'symbol-variable', go: 'symbol-constant', rust: 'symbol-struct',
-    java: 'symbol-class', csharp: 'symbol-class', ruby: 'symbol-color',
-    php: 'symbol-event', swift: 'symbol-enum', css: 'symbol-color',
-};
-
 // ────────────────────────────────────────────────────────────────────────
 export class DependencyTreeProvider implements vscode.TreeDataProvider<TreeItem> {
     private _onDidChangeTreeData = new vscode.EventEmitter<TreeItem | undefined>();

@@ -373,7 +373,6 @@ async function handleFreeform(
     let repeatCount = 0;
     let aborted: string | null = null;
     try {
-        // eslint-disable-next-line no-constant-condition
         while (true) {
             if (token.isCancellationRequested) { break; }
 

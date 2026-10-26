@@ -1,10 +1,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import * as vscode from 'vscode';
 import type {
     ProjectProfile,
     ProfileMatch,
-    BuildConfiguration,
 } from './types';
 
 import sageX3Runtime from './sage-x3-runtime.json';

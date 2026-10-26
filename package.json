@@ -2,7 +2,7 @@
   "name": "hive-mind",
   "displayName": "Hive Mind - Code Dependency Graph",
   "description": "Visualizes code dependencies as an interactive Obsidian-style graph and provides Copilot tools to analyze change impact across your codebase.",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "publisher": "hive-mind",
   "engines": {
     "vscode": "^1.95.0"
@@ -306,12 +306,7 @@
         "canBeReferencedInPrompt": true,
         "inputSchema": {
           "type": "object",
-          "properties": {
-            "maxNodes": {
-              "type": "number",
-              "description": "Maximum number of nodes to return. Defaults to 150."
-            }
-          },
+          "properties": {},
           "required": []
         }
       },
@@ -890,7 +885,8 @@
           "required": [
             "filePath"
           ]
-        }      },
+        }
+      },
       {
         "name": "hivemind_getWarnings",
         "toolReferenceName": "hivemindWarnings",
@@ -915,7 +911,13 @@
             },
             "severity": {
               "type": "string",
-              "enum": ["error", "warning", "information", "hint", "all"],
+              "enum": [
+                "error",
+                "warning",
+                "information",
+                "hint",
+                "all"
+              ],
               "description": "Minimum severity to include. 'warning' (default) returns errors and warnings; 'all' returns everything including hints."
             },
             "source": {
@@ -966,7 +968,11 @@
             },
             "source": {
               "type": "string",
-              "enum": ["local", "github", "both"],
+              "enum": [
+                "local",
+                "github",
+                "both"
+              ],
               "description": "Where to look for alerts. 'local' = SARIF files in workspace, 'github' = GitHub code-scanning API, 'both' (default) = check both."
             },
             "maxResults": {
@@ -1008,7 +1014,12 @@
             },
             "level": {
               "type": "string",
-              "enum": ["failure", "warning", "notice", "all"],
+              "enum": [
+                "failure",
+                "warning",
+                "notice",
+                "all"
+              ],
               "description": "Filter by annotation level. 'all' (default) returns everything."
             },
             "maxResults": {
@@ -1043,7 +1054,10 @@
             },
             "confidence": {
               "type": "string",
-              "enum": ["high", "all"],
+              "enum": [
+                "high",
+                "all"
+              ],
               "description": "'high' = only report includes where we positively identified exported symbols AND none are used. 'all' (default) = also report unresolved/empty headers as 'likely-unused'."
             }
           },
@@ -1064,14 +1078,18 @@
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
-    "@types/vscode": "^1.87.0",
-    "@typescript-eslint/eslint-plugin": "^7.0.0",
-    "@typescript-eslint/parser": "^7.0.0",
-    "eslint": "^8.57.0",
+    "@types/vscode": "1.95.0",
+    "@typescript-eslint/eslint-plugin": "^8.72.0",
+    "@typescript-eslint/parser": "^8.72.0",
+    "@vscode/vsce": "^4.0.0",
+    "eslint": "^10.13.0",
     "typescript": "^5.3.0"
   },
   "dependencies": {
     "tree-sitter-cpp": "^0.23.4",
     "web-tree-sitter": "^0.26.8"
+  },
+  "overrides": {
+    "@azure/msal-node": "^7.1.1"
   }
 }

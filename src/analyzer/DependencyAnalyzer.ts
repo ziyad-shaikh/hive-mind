@@ -9,7 +9,7 @@ import {
     extractGrammarPrologueIncludesSync as tsExtractGrammarPrologueSync,
     getInitFailureReason as tsGetInitFailureReason,
 } from './CppTreeSitterParser';
-import { detectProfile, isUmbrellaHeader, variantOf } from '../profiles';
+import { detectProfile, variantOf } from '../profiles';
 import type { ProjectProfile } from '../profiles';
 import { CppScopeResolver } from './CppScopeResolver';
 import { extractRustReferences, RustDependencyResolver } from './RustDependencyResolver';
@@ -23,7 +23,7 @@ import {
 } from './GraphCache';
 
 /** Bumped when parser semantics change. Forces a full reindex on upgrade. */
-const PARSER_VERSION = 'v5-rust-modules-2026-10';
+const PARSER_VERSION = 'v6-rust-cargo-targets-2026-10';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -925,7 +925,10 @@ export class DependencyAnalyzer {
         const maxFiles = cfg.get<number>('maxFiles', 5000);
         const ignoredDirs = cfg.get<string[]>('ignoredDirectories', []);
         this.extraIgnored = new Set(ignoredDirs);
-        this.externalDirs = cfg.get<string[]>('externalDirectories', []);
+        this.externalDirs = [
+            ...(this.profile?.externalDirectories ?? []),
+            ...cfg.get<string[]>('externalDirectories', []),
+        ].filter((value, index, values) => values.indexOf(value) === index);
         this.graph.clear();
         this.headerIndex.clear();
         this.includePaths = [];
@@ -1208,7 +1211,10 @@ export class DependencyAnalyzer {
 
     getEdgeCount(): number {
         let count = 0;
-        for (const n of this.graph.values()) { count += n.dependencies.size; }
+        for (const n of this.graph.values()) {
+            if (this.isExternal(n.id)) { continue; }
+            count += [...n.dependencies].filter(dep => !this.isExternal(dep)).length;
+        }
         return count;
     }
 
@@ -1239,7 +1245,7 @@ export class DependencyAnalyzer {
             const node = this.graph.get(nodeId);
             if (node) {
                 for (const dep of node.dependencies) {
-                    if (this.graph.has(dep)) { dfs(dep); }
+                    if (this.graph.has(dep) && !this.isExternal(dep)) { dfs(dep); }
                 }
             }
             stack.delete(nodeId);
@@ -1264,17 +1270,20 @@ export class DependencyAnalyzer {
         const hubs: { path: string; connections: number }[] = [];
         let orphans = 0;
 
+        let totalFiles = 0;
         for (const node of this.graph.values()) {
             if (this.isExternal(node.id)) { continue; }
+            totalFiles++;
             languages[node.language] = (languages[node.language] ?? 0) + 1;
-            const conns = node.dependencies.size + node.dependents.size;
+            const conns = [...node.dependencies, ...node.dependents]
+                .filter(file => !this.isExternal(file)).length;
             hubs.push({ path: node.relativePath, connections: conns });
             if (conns === 0) { orphans++; }
         }
         hubs.sort((a, b) => b.connections - a.connections);
 
         return {
-            totalFiles: this.graph.size,
+            totalFiles,
             totalEdges: this.getEdgeCount(),
             languages,
             hubFiles: hubs.slice(0, 15),
@@ -1296,7 +1305,6 @@ export class DependencyAnalyzer {
         if (!resolved) { return []; }
 
         const results: string[] = [];
-        const rel = this.toRelative(resolved);
         const dir = path.dirname(resolved);
         const ext = path.extname(resolved);
         const base = path.basename(resolved, ext);
@@ -1447,7 +1455,7 @@ export class DependencyAnalyzer {
                     const n = this.graph.get(id);
                     if (!n) continue;
                     for (const neighbor of [...n.dependencies, ...n.dependents]) {
-                        if (!distMap.has(neighbor)) {
+                        if (!this.isExternal(neighbor) && !distMap.has(neighbor)) {
                             distMap.set(neighbor, hop);
                             nextFrontier.push(neighbor);
                         }
@@ -1502,15 +1510,18 @@ export class DependencyAnalyzer {
                     label: n.label,
                     relativePath: n.relativePath,
                     language: n.language,
-                    connectionCount: n.dependencies.size + n.dependents.size,
+                    connectionCount: [...n.dependencies, ...n.dependents]
+                        .filter(file => !this.isExternal(file)).length,
                 })),
                 edges,
             };
         }
 
         // No focus file — return top-connected files as a fallback
-        let nodes = [...this.graph.values()];
-        nodes.sort((a, b) => (b.dependencies.size + b.dependents.size) - (a.dependencies.size + a.dependents.size));
+        let nodes = [...this.graph.values()].filter(node => !this.isExternal(node.id));
+        const internalConnections = (node: FileNode) => [...node.dependencies, ...node.dependents]
+            .filter(file => !this.isExternal(file)).length;
+        nodes.sort((a, b) => internalConnections(b) - internalConnections(a));
         nodes = nodes.slice(0, maxNodes);
 
         const nodeIds = new Set(nodes.map(n => n.id));
@@ -1529,7 +1540,7 @@ export class DependencyAnalyzer {
                 label: n.label,
                 relativePath: n.relativePath,
                 language: n.language,
-                connectionCount: n.dependencies.size + n.dependents.size,
+                connectionCount: internalConnections(n),
             })),
             edges,
         };

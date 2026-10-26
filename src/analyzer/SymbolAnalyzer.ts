@@ -202,8 +202,7 @@ export class SymbolAnalyzer {
 
     private flattenSymbols(
         symbols: vscode.DocumentSymbol[],
-        filePath: string,
-        parent?: SymbolInfo
+        filePath: string
     ): SymbolInfo[] {
         const result: SymbolInfo[] = [];
 
@@ -218,7 +217,7 @@ export class SymbolAnalyzer {
             };
 
             if (sym.children && sym.children.length > 0) {
-                info.children = this.flattenSymbols(sym.children, filePath, info);
+                info.children = this.flattenSymbols(sym.children, filePath);
             }
 
             result.push(info);

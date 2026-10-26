@@ -175,18 +175,16 @@ class GetRelatedFilesTool implements vscode.LanguageModelTool<GetRelatedInput> {
 // Tool: hivemind_getFullGraph
 // ─────────────────────────────────────────────────────────────────────────────
 
-interface GetFullGraphInput { maxNodes?: number; }
+type GetFullGraphInput = Record<string, never>;
 
 class GetFullGraphTool implements vscode.LanguageModelTool<GetFullGraphInput> {
     constructor(private readonly analyzer: DependencyAnalyzer) {}
 
     async invoke(
-        options: vscode.LanguageModelToolInvocationOptions<GetFullGraphInput>,
+        _options: vscode.LanguageModelToolInvocationOptions<GetFullGraphInput>,
         _token: vscode.CancellationToken
     ): Promise<vscode.LanguageModelToolResult> {
         const stats = this.analyzer.getStats();
-        const maxNodes = options.input.maxNodes ?? 150;
-
         const lines: string[] = [
             `## Hive Mind — Workspace Dependency Graph\n`,
             `| Metric | Value |`,
@@ -495,7 +493,7 @@ class GetContextTool implements vscode.LanguageModelTool<GetContextInput> {
             : [];
 
         // Symbol summary
-        const symbols = await this.symbolAnalyzer.getFileSymbolsAsync(resolved);
+        await this.symbolAnalyzer.getFileSymbolsAsync(resolved);
         const exported = this.symbolAnalyzer.getExportedSymbols(resolved);
 
         const parts: string[] = [];
@@ -505,7 +503,6 @@ class GetContextTool implements vscode.LanguageModelTool<GetContextInput> {
         if (task) { parts.push(`**Task:** ${task}\n`); }
 
         // ── File info
-        const node = this.analyzer.resolveFilePath(resolved);
         parts.push(`## File Overview`);
         parts.push(`- **Path:** \`${resolvedDisplay}\``);
         parts.push(`- **Imports:** ${dependencies.length} file(s)`);
@@ -2624,7 +2621,6 @@ class UnusedIncludesTool implements vscode.LanguageModelTool<UnusedIncludesInput
         lines.push(`|------|---------|--------|-------------------------|`);
 
         for (const r of unused) {
-            const headerRel = r.resolvedPath ? `\`${rel(this.analyzer, r.resolvedPath)}\`` : '(unresolved)';
             const exports = r.headerSymbols.length > 0
                 ? r.headerSymbols.slice(0, 5).join(', ') + (r.headerSymbols.length > 5 ? '...' : '')
                 : '(none detected)';

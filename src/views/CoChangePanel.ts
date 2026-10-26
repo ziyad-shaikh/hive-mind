@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { DependencyAnalyzer } from '../analyzer/DependencyAnalyzer';
-import { GitAnalyzer, CoChangeEntry } from '../analyzer/GitAnalyzer';
+import { GitAnalyzer } from '../analyzer/GitAnalyzer';
 
 /**
  * WebView panel showing a heat-map of co-changed files from git history.
@@ -77,7 +77,7 @@ export class CoChangePanel {
         CoChangePanel.currentPanel = new CoChangePanel(panel, analyzer, gitAnalyzer, target);
     }
 
-    static refresh(analyzer: DependencyAnalyzer, gitAnalyzer: GitAnalyzer): void {
+    static refresh(_analyzer: DependencyAnalyzer, _gitAnalyzer: GitAnalyzer): void {
         if (CoChangePanel.currentPanel) {
             CoChangePanel.currentPanel.update();
         }

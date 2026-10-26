@@ -123,7 +123,7 @@ All tool outputs are **Markdown**. Use tables for structured data, bullet lists 
 ## Do NOT
 
 - Add external runtime dependencies. The extension must be zero-dependency (only `vscode` and `fs`/`path` from Node).
-- Use `vscode.workspace.findTextInFiles` — it's not in the stable API for our minimum VS Code version (1.87.0).
+- Use `vscode.workspace.findTextInFiles` — it is not in the stable API for our minimum VS Code version (1.95.0).
 - Break the `headerIndex` type (`Map<string, string[]>`) — it's intentionally an array to handle basename collisions in large C/C++ codebases.
 - Add force-directed physics to the graph. The schema-diagram layout is intentional and final.
 - Ignore the `.vscodeignore` when packaging — `out/` must be included, `src/` must be excluded.

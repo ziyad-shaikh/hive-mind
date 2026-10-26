@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as cp from 'child_process';
+import * as os from 'os';
 import {
     detectCompiler,
     profileFlagsFor,
@@ -421,7 +422,7 @@ export class SanitizerRunner {
         const sanitizers = req.sanitizers ?? 'address';
         const perFileTimeoutMs = req.perFileTimeoutMs ?? 120_000;
         const runTimeoutMs = req.runTimeoutMs ?? 60_000;
-        const parallelism = Math.max(1, Math.min(8, req.parallelism ?? Math.min(4, require('os').cpus()?.length ?? 4)));
+        const parallelism = Math.max(1, Math.min(8, req.parallelism ?? Math.min(4, os.cpus()?.length ?? 4)));
 
         const compiler = this.locateCompiler();
         if (!compiler) {

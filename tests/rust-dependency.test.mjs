@@ -54,3 +54,15 @@ test('resolves Cargo library names across workspace crates', () => {
     assertEqual(rel(resolver.resolve('rust-use:core_engine::service', main)), 'crates/core-lib/src/service.rs');
     assertEqual(resolver.crateCount, 2);
 });
+
+test('resolves library imports from Cargo integration tests', () => {
+    const resolver = new RustDependencyResolver(walk(FIXTURE), [FIXTURE]);
+    const integration = join(FIXTURE, 'crates', 'core-lib', 'tests', 'integration.rs');
+    assertEqual(rel(resolver.resolve('rust-use:core_engine::service', integration)), 'crates/core-lib/src/service.rs');
+});
+
+test('does not map standard-library imports to the local crate root', () => {
+    const resolver = new RustDependencyResolver(walk(FIXTURE), [FIXTURE]);
+    const integration = join(FIXTURE, 'crates', 'core-lib', 'tests', 'integration.rs');
+    assertEqual(resolver.resolve('rust-use:std::path::PathBuf', integration), null);
+});

@@ -82,7 +82,7 @@ export class ModuleGraphPanel {
         ModuleGraphPanel.currentPanel = new ModuleGraphPanel(panel, analyzer);
     }
 
-    static refresh(analyzer: DependencyAnalyzer): void {
+    static refresh(_analyzer: DependencyAnalyzer): void {
         if (ModuleGraphPanel.currentPanel) {
             ModuleGraphPanel.currentPanel.update();
         }

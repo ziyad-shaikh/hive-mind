@@ -28,7 +28,6 @@
  * to verify with hivemind_buildSubset.
  */
 import * as fs from 'fs';
-import * as path from 'path';
 import type { DependencyAnalyzer } from './DependencyAnalyzer';
 import {
     parseCppDetailedSync,

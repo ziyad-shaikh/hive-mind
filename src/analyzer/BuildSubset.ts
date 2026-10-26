@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as cp from 'child_process';
+import * as os from 'os';
 import {
     detectCompiler,
     buildSyntaxOnlyArgs,
@@ -344,7 +345,7 @@ export class BuildSubset {
         const depth = Math.max(1, Math.min(20, req.depth ?? 8));
         const perFileTimeoutMs = Math.max(1000, req.perFileTimeoutMs ?? 60_000);
         const totalBudgetMs = Math.max(perFileTimeoutMs, req.totalBudgetMs ?? 5 * 60_000);
-        const parallelism = Math.max(1, Math.min(16, req.parallelism ?? Math.min(8, require('os').cpus()?.length ?? 4)));
+        const parallelism = Math.max(1, Math.min(16, req.parallelism ?? Math.min(8, os.cpus()?.length ?? 4)));
 
         const compiler = this.locateCompiler();
         if (!compiler) {

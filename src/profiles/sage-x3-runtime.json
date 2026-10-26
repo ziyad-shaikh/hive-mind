@@ -130,6 +130,8 @@
         { "name": "version.sha",  "generatedBy": "make version" }
     ],
 
+    "externalDirectories": ["extlib"],
+
     "customSources": [
         { "extension": ".y",   "kind": "bison",          "prologue": "%{...%}" },
         { "extension": ".ym4", "kind": "bison-m4",       "prologue": "%{...%}" },
